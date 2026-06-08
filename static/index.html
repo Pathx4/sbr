@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Word Memo Generator</title>
+    <!-- Google Fonts: Inter & Outfit & Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-decor">
+        <div class="circle c1"></div>
+        <div class="circle c2"></div>
+        <div class="circle c3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar or Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i class="fa-solid fa-file-word icon-word"></i>
+                <div class="logo-text">
+                    <h1>Auto Word</h1>
+                    <span>Memo Request Generator</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="btn-theme-toggle" class="btn-icon-toggle" title="เปลี่ยนธีม">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <button id="btn-settings" class="btn-secondary" title="ตั้งค่า API Key">
+                    <span id="key-status-dot" class="status-dot dot-gray"></span>
+                    <i class="fa-solid fa-key"></i> ตั้งค่า API Key
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace Grid -->
+        <main class="workspace-grid">
+            
+            <!-- Left Panel: Settings & Uploads -->
+            <section class="control-panel">
+                
+                <!-- Step 1: Upload Bills -->
+                <div class="card glass">
+                    <div class="card-header">
+                        <span class="step-num">1</span>
+                        <h2>อัปโหลดภาพใบเสร็จ / บิล</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="dropzone" class="upload-dropzone">
+                            <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                            <p>ลากไฟล์ภาพบิลมาวางที่นี่ หรือ <span>คลิกเพื่อเลือกไฟล์</span></p>
+                        </div>
+                        <input type="file" id="file-input" multiple accept="image/*" class="hidden-input">
+                        <div id="upload-list" class="upload-list">
+                            <!-- Upload items will appear here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Memo General Settings -->
+                <div class="card glass">
+                    <div class="card-header">
+                        <span class="step-num">2</span>
+                        <h2>ข้อมูลหัวข้อบันทึกข้อความ</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="input-dept">หน่วยงาน</label>
+                                <input type="text" id="input-dept" value="สคร.">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-phone">โทรศัพท์</label>
+                                <input type="text" id="input-phone" value="033 005 833  (ณัฐภัท)">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-memo-no">เลขที่หนังสือ</label>
+                                <input type="text" id="input-memo-no" value="สคร.             /2567">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-date">วันที่ลงบันทึก</label>
+                                <input type="text" id="input-date" value="พฤศจิกายน  2567">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="input-subject">เรื่อง</label>
+                                <input type="text" id="input-subject" value="รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน 25  รายการ">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="input-to">เรียน</label>
+                                <input type="text" id="input-to" value="ผอ.สคร.  ผ่าน รก.หน.ฝถท.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Signatures -->
+                <div class="card glass">
+                    <div class="card-header">
+                        <span class="step-num">3</span>
+                        <h2>ผู้ลงนามในบันทึกข้อความ</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid">
+                            <!-- Requester -->
+                            <div class="form-group">
+                                <label for="input-req-name">ชื่อผู้จัดทำ/ขออนุมัติ</label>
+                                <input type="text" id="input-req-name" value="นางสาวศิริพักตร์  เสมียนคิด">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-req-pos">ตำแหน่งผู้จัดทำ</label>
+                                <input type="text" id="input-req-pos" value="เจ้าหน้าที่/ผู้รับผิดชอบ">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="input-req-date">วันที่เซ็นจัดทำ</label>
+                                <input type="text" id="input-req-date" value="   / พฤศจิกายน / 2567">
+                            </div>
+                            <!-- Approver -->
+                            <div class="form-group">
+                                <label for="input-app-name">ชื่อผู้อนุมัติ</label>
+                                <input type="text" id="input-app-name" value="นางสาวปราณปริยา   วงค์ษา">
+                            </div>
+                            <div class="form-group">
+                                <label for="input-app-pos">ตำแหน่งผู้อนุมัติ</label>
+                                <input type="text" id="input-app-pos" value="ผอ.สคร.">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="input-app-date">วันที่เซ็นอนุมัติ</label>
+                                <input type="text" id="input-app-date" value="   / พฤศจิกายน / 2567">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Panel: Data Editor & Preview -->
+            <section class="editor-panel">
+                
+                <!-- Main Generation Action -->
+                <div id="summary-sticky-bar" class="grand-totals-bar glass">
+                    <div class="totals-info">
+                        <div class="total-stat">
+                            <span class="stat-lbl">รายการรวม</span>
+                            <span id="txt-summary-qty" class="stat-val">0 รายการ</span>
+                        </div>
+                        <div class="total-stat">
+                            <span class="stat-lbl">ยอดเงินรวม</span>
+                            <span id="txt-summary-total" class="stat-val text-primary">0.00 บาท</span>
+                        </div>
+                        <div class="total-stat text-desc-stat">
+                            <span class="stat-lbl">ตัวอักษรภาษาไทย</span>
+                            <span id="txt-summary-thai" class="stat-val text-thai-val">ศูนย์บาทถ้วน</span>
+                        </div>
+                    </div>
+                    <button id="btn-generate" class="btn-primary">
+                        <i class="fa-solid fa-file-word"></i> สร้างไฟล์ Word
+                    </button>
+                </div>
+
+                <!-- Text Blocks Edit -->
+                <div class="card glass">
+                    <div class="card-header">
+                        <h2>เนื้อหาข้อความ (ปรับปรุงข้อความเกริ่นนำและกฎระเบียบ)</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="textarea-intro">คำเกริ่นนำ (ย่อหน้าก่อนรายการพัสดุ)</label>
+                            <textarea id="textarea-intro" rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="textarea-regulatory">ย่อหน้าอ้างอิงกฎระเบียบจัดซื้อจัดจ้าง (ย่อหน้าหลังรายการพัสดุ)</label>
+                            <textarea id="textarea-regulatory" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoices List & Item Tables -->
+                <div class="card glass">
+                    <div class="card-header flex-header">
+                        <h2>ตารางรายการแยกตามใบเสร็จ</h2>
+                        <button id="btn-add-invoice" class="btn-success btn-sm">
+                            <i class="fa-solid fa-plus"></i> เพิ่มกลุ่มใบเสร็จ
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="invoices-container" class="invoices-list">
+                            <!-- Invoices and their items tables will render dynamically here -->
+                            <div id="empty-state" class="empty-state">
+                                <i class="fa-solid fa-receipt empty-icon"></i>
+                                <h3>ยังไม่มีข้อมูลใบเสร็จ</h3>
+                                <p>อัปโหลดภาพบิลทางซ้ายเพื่อถอดข้อมูลอัตโนมัติ หรือคลิก "เพิ่มกลุ่มใบเสร็จ" เพื่อพิมพ์ข้อมูลเอง</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- API Key Settings Modal -->
+    <div id="modal-settings" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-cog"></i> ตั้งค่าระบบ</h2>
+                <button class="modal-close" id="btn-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="input-api-key">Gemini API Key</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="password" id="input-api-key" placeholder="ป้อน AIzaSy..." style="flex: 1; margin: 0;">
+                        <button id="btn-test-key" class="btn-secondary" style="white-space: nowrap; padding: 10px 14px; border-radius: 12px;">
+                            <i class="fa-solid fa-circle-question"></i> ตรวจสอบคีย์
+                        </button>
+                    </div>
+                    <div id="key-status-container" style="margin-bottom: 8px;"></div>
+                    <span class="help-text">รับ API Key ของคุณได้ฟรีที่ <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank" rel="noopener noreferrer">Google AI Studio <i class="fa-solid fa-external-link"></i></a></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-settings" class="btn-primary">บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- App JavaScript -->
+    <script src="app.js" defer></script>
+</body>
+</html>

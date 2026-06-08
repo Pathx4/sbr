@@ -1,0 +1,16 @@
+# Temp and inspection files
+inspect_*
+*.xml
+*.txt
+!requirements.txt
+
+# Python environment and cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints
+.env
+.venv/
+env/
+venv/
