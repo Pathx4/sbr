@@ -511,6 +511,25 @@ button {
     background: var(--success-hover);
 }
 
+.btn-large-excel {
+    background: var(--success);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 14px;
+    font-size: 15px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-large-excel:hover {
+    background: var(--success-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+}
+
+.btn-large-excel:active {
+    transform: translateY(0);
+}
+
 .btn-danger {
     background: var(--danger);
     color: #fff;
@@ -558,7 +577,7 @@ button {
 
 .invoice-header-editor {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    grid-template-columns: 1.8fr 1.2fr 1.2fr 1.2fr 0.8fr auto;
     gap: 12px;
     margin-bottom: 16px;
 }
@@ -788,3 +807,342 @@ table.items-table input:focus {
 .upload-dropzone.disabled span {
     color: var(--text-muted) !important;
 }
+
+/* Date Input Styling */
+input[type="date"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-main);
+    transition: all 0.3s ease;
+    outline: none;
+    font-family: var(--font-body);
+}
+
+input[type="date"]:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+[data-theme="light"] input[type="date"]:focus {
+    background: #fff;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5) brightness(1.3);
+    cursor: pointer;
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: none;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-main);
+    transition: all 0.3s ease;
+    outline: none;
+    font-family: var(--font-body);
+}
+
+input[type="number"]:focus {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+}
+
+/* Contact Autocomplete Dropdown */
+.contact-autocomplete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 280px;
+    overflow-y: auto;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 200;
+    margin-top: 4px;
+}
+
+[data-theme="light"] .contact-autocomplete {
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+}
+
+.contact-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--divider);
+    transition: background 0.15s ease;
+}
+
+.contact-item:last-child {
+    border-bottom: none;
+}
+
+.contact-item:hover,
+.contact-item.active {
+    background: rgba(99, 102, 241, 0.12);
+}
+
+.contact-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.contact-item-info {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.contact-item-info span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.contact-no-result {
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Intro Template Box */
+.intro-template-box {
+    background: rgba(99, 102, 241, 0.04);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.intro-prefix,
+.intro-suffix {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 4px 0;
+    line-height: 1.5;
+}
+
+.intro-prefix {
+    margin-bottom: 8px;
+}
+
+.intro-suffix {
+    margin-top: 4px;
+}
+
+/* Image Preview Side Panel */
+.preview-side-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 50vw;
+    max-width: 720px;
+    min-width: 380px;
+    height: 100vh;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 15, 30, 0.92);
+    border-left: 1px solid rgba(99, 102, 241, 0.25);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    box-shadow: -12px 0 48px rgba(0, 0, 0, 0.5);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+[data-theme="light"] .preview-side-panel {
+    background: rgba(241, 245, 249, 0.96);
+    border-left-color: rgba(99, 102, 241, 0.2);
+    box-shadow: -12px 0 48px rgba(148, 163, 184, 0.3);
+}
+
+.preview-side-panel.open {
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+.preview-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--divider);
+    background: rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+[data-theme="light"] .preview-panel-header {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.preview-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.preview-panel-title i {
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.preview-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-preview-ctrl {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-preview-ctrl:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+[data-theme="light"] .btn-preview-ctrl {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.preview-zoom-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 36px;
+    text-align: center;
+    font-family: var(--font-heading);
+}
+
+.btn-preview-close-panel {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 6px;
+}
+
+.btn-preview-close-panel:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.preview-panel-body {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 16px;
+    cursor: grab;
+}
+
+.preview-panel-body:active {
+    cursor: grabbing;
+}
+
+.preview-panel-body img {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    object-fit: contain;
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Upload Item with Preview Button */
+.upload-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-preview-img {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-preview-img:hover {
+    background: rgba(99, 102, 241, 0.3);
+    transform: scale(1.1);
+}
+
+/* Scrollbar for autocomplete */
+.contact-autocomplete::-webkit-scrollbar {
+    width: 6px;
+}
+
+.contact-autocomplete::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.contact-autocomplete::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+}
+
+[data-theme="light"] .contact-autocomplete::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+

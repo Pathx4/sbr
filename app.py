@@ -4,6 +4,8 @@ import tempfile
 import copy
 import re
 import time
+import base64
+import requests
 from flask import Flask, request, jsonify, send_file
 from PIL import Image
 from google import genai
@@ -12,6 +14,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import docx
 from docx.shared import Pt
+import openpyxl
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from bahttext import bahttext
@@ -19,11 +22,141 @@ from bahttext import bahttext
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
+# ==========================================
+# Contacts Data from Excel (All Sheets)
+# ==========================================
+_contacts_cache = None
+
+def load_contacts_from_excel():
+    """Parse ALL sheets from the organization Excel file.
+    Each sheet has the same structure:
+    - Row 1: Office/Department title (merged, col A only)
+    - Row 2: Headers (ชื่อ-นามสกุล, ตำแหน่ง, หมายเลขโทรศัพท์, ..., Email)
+    - Row 3: Sub-headers (มือถือ, ตั้งโต๊ะ)
+    - Row 4+: Data rows
+      - Section headers: col A has value, col B is None
+      - Staff rows: col A has name, col B has position
+    """
+    global _contacts_cache
+    xlsx_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'รายชื่อติดต่อบุคลากรภายใน สทอภ. ตามโครงสร.xlsx')
+    if not os.path.exists(xlsx_path):
+        print(f"[Contacts] Excel file not found: {xlsx_path}")
+        _contacts_cache = []
+        return []
+    
+    try:
+        wb = openpyxl.load_workbook(xlsx_path, read_only=True, data_only=True)
+    except Exception as e:
+        print(f"[Contacts] Failed to load Excel: {e}")
+        _contacts_cache = []
+        return []
+    
+    all_contacts = []
+    
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        
+        # Get office name from row 1 col A
+        office_name = None
+        row1_val = ws.cell(row=1, column=1).value
+        if row1_val:
+            # Clean up newlines and extract short name
+            office_name = str(row1_val).split('\n')[0].strip()
+        
+        current_section = office_name or sheet_name
+        current_section_head = None  # Name of the head of current section
+        section_staff = []  # Buffer to assign section_head retroactively
+        
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row, max_col=6):
+            vals = [c.value for c in row]
+            
+            # Skip fully empty rows
+            if all(v is None for v in vals):
+                continue
+            
+            col_a = str(vals[0]).strip() if vals[0] else None
+            col_b = str(vals[1]).strip() if vals[1] else None
+            
+            if not col_a:
+                continue
+            
+            # Skip header rows
+            if col_a == 'ชื่อ-นามสกุล':
+                continue
+            
+            # Section header: col A has value, col B is None or empty
+            if not col_b:
+                # Finalize previous section: assign section_head
+                for s in section_staff:
+                    s['section_head'] = current_section_head
+                all_contacts.extend(section_staff)
+                
+                # Start new section
+                current_section = col_a
+                current_section_head = None
+                section_staff = []
+                continue
+            
+            # Staff row
+            name = col_a
+            position = col_b
+            mobile = str(vals[2]).strip() if vals[2] else None
+            desk = str(vals[3]).strip() if vals[3] else None
+            email = str(vals[4]).strip() if vals[4] else None
+            
+            is_head = any(kw in position for kw in [
+                'หัวหน้าฝ่าย', 'หัวหน้างาน', 'ผู้อำนวยการ',
+                'ผช.ผอ', 'รก.ผอ', 'รก.หน'
+            ])
+            
+            # Extract nickname from parentheses in name
+            nickname = None
+            nick_match = re.search(r'\(([^)]+)\)\s*$', name)
+            if nick_match:
+                nickname = nick_match.group(1)
+            
+            contact = {
+                'name': name,
+                'nickname': nickname,
+                'position': position,
+                'mobile': mobile,
+                'desk': desk,
+                'email': email,
+                'section': current_section,
+                'sheet': sheet_name,
+                'section_head': None,  # Will be set when section ends
+                'is_head': is_head
+            }
+            
+            # Track section head
+            if is_head and current_section_head is None:
+                current_section_head = name
+            
+            section_staff.append(contact)
+        
+        # Finalize last section in this sheet
+        for s in section_staff:
+            s['section_head'] = current_section_head
+        all_contacts.extend(section_staff)
+    
+    wb.close()
+    _contacts_cache = all_contacts
+    print(f"[Contacts] Loaded {len(all_contacts)} contacts from {len(wb.sheetnames)} sheets")
+    return all_contacts
+
+def get_contacts():
+    global _contacts_cache
+    if _contacts_cache is None:
+        load_contacts_from_excel()
+    return _contacts_cache
+
 # Define Schema for Gemini Bill Extraction
 class BillItem(BaseModel):
     item_code: Optional[str] = Field(None, description="The product code, SKU, or barcode (e.g. MS4-000939). If not available, leave null.")
     description: str = Field(description="Detailed item name or description in Thai or English as written on the bill. Keep serial numbers (S/N) if present.")
     quantity: int = Field(description="Quantity purchased")
+    unit: str = Field("ชิ้น", description="The unit of measurement in Thai (e.g. 'ชิ้น', 'อัน', 'ลัง', 'เครื่อง', 'ถัง', 'กระป๋อง', 'ตัว') as appeared on the document. Default to 'ชิ้น' if not specified.")
     unit_price: float = Field(description="Unit price of the item")
     total_price: float = Field(description="Total price of the item (quantity * unit_price)")
 
@@ -31,9 +164,14 @@ class BillExtraction(BaseModel):
     vendor_name: str = Field(description="Name of the company or store that issued the bill/receipt (in Thai, e.g. 'บริษัท ไอที ซิตี้ (มหาชน)' or 'บริษัท บีทูเอส จำกัด')")
     invoice_number: str = Field(description="Invoice or Receipt number (เลขที่/เลขที่ใบเสร็จ/เล่มที่-เลขที่) as it appears on the document")
     invoice_date: str = Field(description="Date of the invoice/receipt in Thai format (e.g. '28 ตุลาคม 2567')")
+    doc_type: str = Field("ใบเสร็จรับเงิน/ใบกำกับภาษี", description="Type of the document (e.g., 'ใบเสร็จรับเงิน', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน/ใบกำกับภาษี', 'บิลเงินสด', or other types as written on the header of the document. Default to 'ใบเสร็จรับเงิน/ใบกำกับภาษี' if not explicitly stated.)")
     items: List[BillItem] = Field(description="List of all purchased items")
     discount: float = Field(0.0, description="Total discount applied to the bill if any")
     grand_total: float = Field(description="Grand total / total amount paid in Baht")
+
+class MemoAnalysis(BaseModel):
+    intro_text: str = Field(description="A formal, polite Thai memo introduction paragraph starting with tab and '\\t\\tด้วย [หน่วยงาน] ได้ดำเนินการจัดซื้อวัสดุ...' explaining what was bought, summarizing key items naturally. Do not mention prices in this paragraph.")
+    regulatory_text: str = Field(description="The most appropriate procurement regulation clause reference. Choose between: 1) หนังสือคณะกรรมการวินิจฉัยปัญหาการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ กรมบัญชีกลาง ด่วนที่สุด ที่ กค (กวจ) 0405.2/ว 119 ลงวันที่ 7 มีนาคม 2561 เรื่องแนวทางการปฎิบัติในการดำเนินการจัดหาพัสดุที่เกี่ยวกับค่าใช้จ่ายในการบริหารงาน ค่าใช้จ่ายในการฝึกอบรม การจัดงาน และการประชุมของหน่วยงานของรัฐ ตาราง 1 ลำดับที่ 3 if items are related to training/seminars/catering/activities. 2) ระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ตาราง 1 ลำดับที่ 1 if items are general office/computer/common supplies.")
 
 # Font and formatting helpers for TH SarabunPSK
 def set_run_font_enhanced(run, font_name='TH SarabunPSK', font_size_pt=16, bold=False, italic=False, underline=None, spacing=None):
@@ -260,50 +398,59 @@ def add_item_paragraph(doc, current_anchor, ref_item_p, idx, item):
     current_anchor._element.addnext(new_p._element)
     copy_paragraph_format(ref_item_p, new_p)
     
+    # Override alignment to standard Justified to prevent weird stretching in thaiDistribute
+    new_p.alignment = docx.enum.text.WD_ALIGN_PARAGRAPH.JUSTIFY
+    
     desc_val = item["desc"]
     if item["code"]:
         desc_val = f"{item['code']} {desc_val}"
         
     price_str = format_price(item["price"])
     
-    # Precise run structures and spacings to match paragraph 8 of the template exactly
+    # Clean only date variable to use non-breaking spaces (keeps date on a single line)
+    invoice_date_clean = item["invoice_date"].replace(" ", "\xa0") if item["invoice_date"] else ""
+    
+    # Precise run structures and spacings to match paragraph 8 of the template exactly.
+    # We use non-breaking spaces only within small logical groups (e.g. qty+unit, price+currency, date)
+    # and normal spaces elsewhere to allow natural line breaking in long lines.
     runs_data = [
         ("\t", False, -6),
         (f"{idx}. ค่า", False, -6),
         ("\t", True, -6),
         (desc_val, True, -6),
-        (" ", True, -6),
+        (" ", True, -6), # Breaking space
         ("จำนวน", False, -6),
-        ("  ", True, -6),
+        ("\xa0\xa0", True, -6), # Non-breaking space
         (str(item["qty"]), True, -6),
-        ("  ", True, -6),
-        ("รายการ เป็นเงิน", False, -6),
-        ("  ", True, -6),
+        ("\xa0\xa0", True, -6), # Non-breaking space
+        ("รายการ", False, -6),
+        (" ", False, -6), # Breaking space
+        ("เป็นเงิน", False, -6),
+        ("  ", True, -6), # Breaking space
         (price_str, True, -6),
-        (" ", True, -6),
-        (" ", True, -6),
+        ("\xa0", True, -6), # Non-breaking space
+        ("\xa0", True, -6), # Non-breaking space
         ("บาท", False, -6),
         ("จากบริษัท", False, -6),
-        (" ", False, -6),
-        ("\t", True, None),
-        (f"{item['vendor']}", True, -6),
-        ("   ", True, None),
+        ("  ", True, -6), # Breaking space
+        (item["vendor"], True, -6), # Normal spaces allowed to break naturally if long
+        ("   ", True, None), # Breaking space
         ("ตามหลักฐานการจัดซื้อเป็น", False, -6),
-        (f"  {item['doc_type']}", True, -6),
+        (f"  {item['doc_type']}", True, -6), # Breaking space before doc_type
         (" ", False, -6),
         ("เล่มที่-เลขที่ ", False, -6),
         (" ", True, -6),
         (item["invoice_no"], True, -6),
         ("  ", True, -6),
         ("วันที่", False, -6),
-        (" ", True, -6),
-        (f"{item['invoice_date']}", True, -6),
+        ("\xa0", True, -6), # Non-breaking space before date
+        (invoice_date_clean, True, -6), # Date is kept together
         ("  ", True, -6)
     ]
     
     for text_val, is_underlined, spacing_val in runs_data:
         run = new_p.add_run(text_val)
-        underline_style = docx.enum.text.WD_UNDERLINE.DOTTED if is_underlined else None
+        underline_style = docx.enum.text.WD_UNDERLINE.DOTTED if is_underlined else False
         set_run_font_enhanced(run, 'TH SarabunPSK', 16, underline=underline_style, spacing=spacing_val)
         
     return new_p
@@ -316,7 +463,7 @@ def add_note_paragraph(doc, current_anchor, ref_note_p, start_num, end_num, subt
     subtotal_str = format_price(subtotal)
     discount_str = format_price(discount)
     
-    note_text = f"หมายเหตุ : รายการที่ {start_num} – {end_num} ยอดรวม {subtotal_str} บาท ได้รับส่วนลดทั้งหมด เป็นเงิน {discount_str} บาท    "
+    note_text = f"หมายเหตุ : รายการที่ {start_num}–{end_num} ยอดรวม\xa0{subtotal_str}\xa0บาท ได้รับส่วนลดทั้งหมด เป็นเงิน\xa0{discount_str}\xa0บาท    "
     
     run = new_p.add_run(note_text)
     set_run_font_enhanced(run, 'TH SarabunPSK', 16, underline=docx.enum.text.WD_UNDERLINE.DOTTED, spacing=-4)
@@ -328,36 +475,48 @@ def update_total_paragraph(total_p, total_items, grand_total, thai_text):
     for r in list(total_p.runs):
         total_p._p.remove(r._r)
         
-    grand_total_str = format_price(grand_total)
+    grand_total_str = f"{grand_total:,.2f}"
     
+    # New format: "                                         รวมเป็นจำนวนเงินทั้งสิ้น   7,618.00  บาท     "
+    # All bold, no trailing Thai text
     runs_data = [
-        ("\t", False, None),
-        ("รวม", False, None),
-        ("\t", True, None),
-        (str(total_items), True, None),
-        ("\t", True, None),
-        ("รายการ เป็นเงินทั้งสิ้น", False, None),
-        ("\t", True, None),
-        (grand_total_str, True, None),
-        ("  บาท", True, None),
-        ("\t", True, None),
-        (f"({thai_text})", True, None),
-        ("\t", True, None),
-        ("  ", True, None)
+        ("                                         ", False, False, None),
+        ("รวมเป็นจำนวนเงินทั้งสิ้น", True, False, None),
+        ("\xa0\xa0\xa0", True, False, None),
+        (grand_total_str, True, False, None),
+        ("\xa0\xa0บาท\xa0\xa0\xa0\xa0\xa0", True, False, None),
     ]
     
-    for text_val, is_underlined, spacing_val in runs_data:
+    for text_val, is_bold, is_underlined, spacing_val in runs_data:
         run = total_p.add_run(text_val)
-        underline_style = docx.enum.text.WD_UNDERLINE.DOTTED if is_underlined else None
-        set_run_font_enhanced(run, 'TH SarabunPSK', 16, underline=underline_style, spacing=spacing_val)
+        underline_style = docx.enum.text.WD_UNDERLINE.DOTTED if is_underlined else False
+        set_run_font_enhanced(run, 'TH SarabunPSK', 16, bold=is_bold, underline=underline_style, spacing=spacing_val)
 
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
+@app.route('/api/contacts')
+def api_contacts():
+    """Return all contacts from the organization Excel file."""
+    contacts = get_contacts()
+    return jsonify(contacts)
+
+@app.route('/api/contacts/search')
+def api_contacts_search():
+    """Search contacts by name substring (case-insensitive)."""
+    q = request.args.get('q', '').strip()
+    if not q or len(q) < 1:
+        return jsonify([])
+    
+    contacts = get_contacts()
+    results = [c for c in contacts if q.lower() in c['name'].lower()]
+    return jsonify(results[:20])  # Limit to 20 results
+
 @app.route('/api/validate_key', methods=['POST'])
 def validate_key():
     data = request.json or {}
+    provider = data.get('provider', 'gemini')
     api_key = data.get('api_key') or request.headers.get('Authorization')
     if api_key and api_key.startswith('Bearer '):
         api_key = api_key[len('Bearer '):]
@@ -365,6 +524,63 @@ def validate_key():
     if not api_key:
         return jsonify({"valid": False, "error": "กรุณากรอก API Key"}), 400
         
+    if provider == 'openai':
+        try:
+            # Validate OpenAI API key using the /v1/models endpoint
+            headers = {"Authorization": f"Bearer {api_key}"}
+            response = requests.get("https://api.openai.com/v1/models", headers=headers, timeout=10)
+            if response.status_code == 200:
+                return jsonify({
+                    "valid": True, 
+                    "message": "OpenAI API Key สามารถใช้งานได้ปกติ!"
+                })
+            else:
+                try:
+                    err_json = response.json()
+                    err_msg = err_json.get("error", {}).get("message", "API Key ไม่ถูกต้อง")
+                except:
+                    err_msg = response.text or "API Key ไม่ถูกต้อง"
+                return jsonify({
+                    "valid": False,
+                    "error": f"OpenAI API Key ไม่ถูกต้อง: {err_msg}",
+                    "tip": "กรุณาตรวจสอบเครดิตและการสะกดคำของ API Key หรือสร้างคีย์ใหม่ที่ OpenAI Platform"
+                })
+        except Exception as e:
+            return jsonify({
+                "valid": False,
+                "error": f"เชื่อมต่อไปยัง OpenAI ล้มเหลว: {str(e)}",
+                "tip": "กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของเครื่องเซิร์ฟเวอร์"
+            })
+            
+    if provider == 'groq':
+        try:
+            # Validate Groq API key using the /v1/models endpoint
+            headers = {"Authorization": f"Bearer {api_key}"}
+            response = requests.get("https://api.groq.com/openai/v1/models", headers=headers, timeout=10)
+            if response.status_code == 200:
+                return jsonify({
+                    "valid": True, 
+                    "message": "Groq API Key สามารถใช้งานได้ปกติ!"
+                })
+            else:
+                try:
+                    err_json = response.json()
+                    err_msg = err_json.get("error", {}).get("message", "API Key ไม่ถูกต้อง")
+                except:
+                    err_msg = response.text or "API Key ไม่ถูกต้อง"
+                return jsonify({
+                    "valid": False,
+                    "error": f"Groq API Key ไม่ถูกต้อง: {err_msg}",
+                    "tip": "กรุณาตรวจสอบการสะกดคำของ API Key หรือสร้างคีย์ใหม่ที่ Groq Console (https://console.groq.com/)"
+                })
+        except Exception as e:
+            return jsonify({
+                "valid": False,
+                "error": f"เชื่อมต่อไปยัง Groq ล้มเหลว: {str(e)}",
+                "tip": "กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของเครื่องเซิร์ฟเวอร์"
+            })
+            
+    # Default to Gemini
     try:
         client = genai.Client(api_key=api_key)
         
@@ -436,7 +652,7 @@ def call_gemini_with_retries(client, img, prompt, schema=None):
                         break # Go to next model immediately for 404, 403, etc.
                         
     # Fallback to plain text JSON prompts
-    plain_prompt = prompt + "\nRespond ONLY with a valid JSON matching this schema: {\"vendor_name\": \"...\", \"invoice_number\": \"...\", \"invoice_date\": \"...\", \"items\": [{\"item_code\": \"...\", \"description\": \"...\", \"quantity\": 1, \"unit_price\": 1.0, \"total_price\": 1.0}], \"discount\": 0.0, \"grand_total\": 0.0}. Do not include markdown formatting or backticks."
+    plain_prompt = prompt + "\nRespond ONLY with a valid JSON matching this schema: {\"vendor_name\": \"...\", \"invoice_number\": \"...\", \"invoice_date\": \"...\", \"doc_type\": \"...\", \"items\": [{\"item_code\": \"...\", \"description\": \"...\", \"quantity\": 1, \"unit\": \"ชิ้น\", \"unit_price\": 1.0, \"total_price\": 1.0}], \"discount\": 0.0, \"grand_total\": 0.0}. Do not include markdown formatting or backticks."
     
     for model_name in models_to_try:
         for attempt in range(3):
@@ -464,10 +680,179 @@ def call_gemini_with_retries(client, img, prompt, schema=None):
                 else:
                     break
                     
-    raise Exception("All models and formats failed. Please check your API key / Google Cloud settings, or try again later.")
+def call_openai_with_retries(api_key, img_bytes, prompt, mime_type="image/jpeg"):
+    # Base64 encode the image
+    base64_image = base64.b64encode(img_bytes).decode('utf-8')
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # We ask for a JSON object matching the BillExtraction structure
+    json_prompt = (
+        prompt + "\n"
+        "Return the output in JSON format matching this schema:\n"
+        "{\n"
+        "  \"vendor_name\": \"Name of the company/store (Thai/English)\",\n"
+        "  \"invoice_number\": \"Invoice/receipt number\",\n"
+        "  \"invoice_date\": \"Invoice date in Thai format (e.g. '28 ตุลาคม 2567')\",\n"
+        "  \"doc_type\": \"Type of the document (e.g. 'ใบเสร็จรับเงิน', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน/ใบกำกับภาษี', 'บิลเงินสด', or other types as written on the header of the document. Default to 'ใบเสร็จรับเงิน/ใบกำกับภาษี' if not explicitly stated.)\",\n"
+        "  \"items\": [\n"
+        "    {\n"
+        "      \"item_code\": \"Product code/SKU/barcode if available, else null\",\n"
+        "      \"description\": \"Item name/details (keep serial numbers if present)\",\n"
+        "      \"quantity\": 1,\n"
+        "      \"unit\": \"The unit of measurement in Thai (e.g. 'ชิ้น', 'อัน', 'ลัง', 'เครื่อง', 'ถัง', 'กระป๋อง', 'ตัว') as appeared on the document. Default to 'ชิ้น' if not specified.\",\n"
+        "      \"unit_price\": 100.0,\n"
+        "      \"total_price\": 100.0\n"
+        "    }\n"
+        "  ],\n"
+        "  \"discount\": 0.0,\n"
+        "  \"grand_total\": 100.0\n"
+        "}"
+    )
+    
+    payload = {
+        "model": "gpt-4o-mini",
+        "response_format": { "type": "json_object" },
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json_prompt
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{mime_type};base64,{base64_image}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 4096
+    }
+    
+    for attempt in range(3):
+        try:
+            print(f"Attempting OpenAI extraction (gpt-4o-mini), attempt {attempt+1}...")
+            response = requests.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60
+            )
+            if response.status_code == 200:
+                result_json = response.json()
+                content = result_json["choices"][0]["message"]["content"]
+                return content
+            else:
+                err_text = response.text
+                print(f"OpenAI failed with status {response.status_code}: {err_text}")
+                if response.status_code in [429, 500, 503]:
+                    if attempt == 2:
+                        raise Exception(f"OpenAI API Error: {err_text}")
+                    time.sleep(2 ** attempt)
+                else:
+                    raise Exception(f"OpenAI API Error: {err_text}")
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            time.sleep(2 ** attempt)
+            
+    raise Exception("OpenAI request timed out or failed.")
+
+def call_groq_with_retries(api_key, img_bytes, prompt, mime_type="image/jpeg"):
+    # Base64 encode the image
+    base64_image = base64.b64encode(img_bytes).decode('utf-8')
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # We ask for a JSON object matching the BillExtraction structure
+    json_prompt = (
+        prompt + "\n"
+        "Return the output in JSON format matching this schema:\n"
+        "{\n"
+        "  \"vendor_name\": \"Name of the company/store (Thai/English)\",\n"
+        "  \"invoice_number\": \"Invoice/receipt number\",\n"
+        "  \"invoice_date\": \"Invoice date in Thai format (e.g. '28 ตุลาคม 2567')\",\n"
+        "  \"doc_type\": \"Type of the document (e.g. 'ใบเสร็จรับเงิน', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน/ใบกำกับภาษี', 'บิลเงินสด', or other types as written on the header of the document. Default to 'ใบเสร็จรับเงิน/ใบกำกับภาษี' if not explicitly stated.)\",\n"
+        "  \"items\": [\n"
+        "    {\n"
+        "      \"item_code\": \"Product code/SKU/barcode if available, else null\",\n"
+        "      \"description\": \"Item name/details (keep serial numbers if present)\",\n"
+        "      \"quantity\": 1,\n"
+        "      \"unit\": \"The unit of measurement in Thai (e.g. 'ชิ้น', 'อัน', 'ลัง', 'เครื่อง', 'ถัง', 'กระป๋อง', 'ตัว') as appeared on the document. Default to 'ชิ้น' if not specified.\",\n"
+        "      \"unit_price\": 100.0,\n"
+        "      \"total_price\": 100.0\n"
+        "    }\n"
+        "  ],\n"
+        "  \"discount\": 0.0,\n"
+        "  \"grand_total\": 100.0\n"
+        "}"
+    )
+    
+    payload = {
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "response_format": { "type": "json_object" },
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json_prompt
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{mime_type};base64,{base64_image}"
+                        }
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 4096
+    }
+    
+    for attempt in range(3):
+        try:
+            print(f"Attempting Groq extraction (llama-3.2-11b-vision-preview), attempt {attempt+1}...")
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60
+            )
+            if response.status_code == 200:
+                result_json = response.json()
+                content = result_json["choices"][0]["message"]["content"]
+                return content
+            else:
+                err_text = response.text
+                print(f"Groq failed with status {response.status_code}: {err_text}")
+                if response.status_code in [429, 500, 503]:
+                    if attempt == 2:
+                        raise Exception(f"Groq API Error: {err_text}")
+                    time.sleep(2 ** attempt)
+                else:
+                    raise Exception(f"Groq API Error: {err_text}")
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            time.sleep(2 ** attempt)
+            
+    raise Exception("Groq request timed out or failed.")
 
 @app.route('/api/extract', methods=['POST'])
 def extract_bill():
+    provider = request.form.get('provider', 'gemini')
     api_key = request.headers.get('Authorization')
     if api_key and api_key.startswith('Bearer '):
         api_key = api_key[len('Bearer '):]
@@ -476,7 +861,7 @@ def extract_bill():
         api_key = request.form.get('api_key')
         
     if not api_key:
-        return jsonify({"error": "Gemini API key is required"}), 400
+        return jsonify({"error": "API Key is required"}), 400
         
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
@@ -485,20 +870,59 @@ def extract_bill():
     if file.filename == '':
         return jsonify({"error": "No file selected"}), 400
         
+    mime_type = file.content_type or "image/jpeg"
+    
+    prompt = """
+    คุณคือผู้เชี่ยวชาญด้านการถอดข้อมูลบิลและใบเสร็จ (OCR & Receipt Parsing Specialist)
+    หน้าที่ของคุณคือการวิเคราะห์ภาพถ่ายบิล/ใบเสร็จนี้อย่างแม่นยำ และแปลงข้อมูลเป็น JSON ตามโครงสร้างที่กำหนด
+    
+    คำแนะนำที่ต้องปฏิบัติตามอย่างเคร่งครัด:
+    1. **ชื่อร้านค้า/บริษัทผู้ขาย (vendor_name)**: 
+       - ต้องเป็นชื่อของห้างร้านหรือบริษัทที่ออกเอกสารนี้ (เช่น "บริษัท ไอที ซิตี้ (มหาชน)", "บริษัท ซีโอแอล จำกัด (มหาชน)") ซึ่งมักจะอยู่ด้านบนสุดของบิล
+       - ห้ามสับสนกับชื่อผู้ซื้อ (เช่น "สำนักงาน...", "สคร.") หรือชื่อสินค้าเด็ดขาด!
+       - หากชื่อร้านเป็นภาษาไทย ให้ใช้ภาษาไทย
+    2. **เลขที่เอกสาร/ใบเสร็จ (invoice_number)**:
+       - มองหาคำว่า "เลขที่", "เลขที่ใบเสร็จ", "เลขที่ใบกำกับภาษี", "Invoice No.", "Receipt No.", "Tax Invoice No.", "Doc No."
+       - ห้ามใช้เลขประจำตัวผู้เสียภาษี (Tax ID ซึ่งเป็นเลข 13 หลัก) หรือเลขที่สาขา มาเป็นเลขที่เอกสารเด็ดขาด!
+    3. **วันที่เอกสาร (invoice_date)**:
+       - ต้องแปลงเป็นฟอร์แมตภาษาไทย เช่น "28 ตุลาคม 2567" หรือ "9 มิถุนายน 2569" 
+       - หากบิลระบุปีคริสตศักราช (ค.ศ. เช่น 2024, 2025, 2026) ต้องแปลงเป็นปีพุทธศักราช (พ.ศ. โดยบวก 543 เช่น 2024 -> 2567, 2026 -> 2569)
+    4. **ประเภทเอกสาร (doc_type)**:
+       - ตรวจสอบและระบุประเภทเอกสารตามที่ปรากฏบนหัวเอกสาร เช่น "ใบเสร็จรับเงิน", "ใบกำกับภาษี", "ใบเสร็จรับเงิน/ใบกำกับภาษี", "บิลเงินสด" หรือคำระบุประเภทเอกสารอื่นๆ
+       - หากไม่แน่ใจหรือไม่มีระบุไว้ให้ใช้ "ใบเสร็จรับเงิน/ใบกำกับภาษี" เป็นค่าเริ่มต้น
+    5. **รายการสินค้า (items)**:
+       - ดึงรายการสินค้าทั้งหมดออกมาในรูปแบบอาร์เรย์
+       - **รหัสสินค้า (item_code)**: หากมีรหัสสินค้า (SKU, Barcode, Product Code เช่น MS4-000939 หรือเลขบาร์โค้ด) ให้ดึงมาใส่ในฟิลด์นี้ หากไม่มีให้ใส่ null
+       - **รายละเอียดสินค้า (description)**: ต้องเป็นชื่อสินค้าและรายละเอียดพัสดุ (เช่น "SANDISK SDSSDE30 Portable SSD 1TB") ห้ามมีชื่อร้านค้าหรือคำอื่นๆ ที่ไม่ใช่ชื่อสินค้าปนมาเด็ดขาด!
+       - **จำนวน (quantity)**: ต้องเป็นจำนวนชิ้น (จำนวนเต็ม)
+       - **ราคาต่อหน่วย (unit_price)**: ราคาต่อหน่วยก่อนหักส่วนลด (ทศนิยม)
+       - **ราคารวม (total_price)**: ราคารวมของรายการนั้น (quantity * unit_price)
+       - **ความถูกต้องของตัวเลข**: ตรวจสอบคำนวณทางคณิตศาสตร์ให้ถูกต้องเสมอ!
+    6. **ส่วนลด (discount)**:
+       - ยอดส่วนลดรวมท้ายบิล (ถ้ามี) หากไม่มีให้ใส่ 0.0
+    7. **ยอดเงินรวมทั้งสิ้น (grand_total)**:
+       - ยอดเงินสุทธิรวมที่ต้องจ่ายจริงท้ายบิล ตรวจสอบให้มั่นใจว่าตัวเลขราคาและยอดรวมถูกต้องตรงตามใบเสร็จ
+    """
+    
     try:
-        img = Image.open(file.stream)
-        client = genai.Client(api_key=api_key)
-        
-        prompt = """
-        Extract the bill information in detail. Make sure to:
-        1. Identify the vendor name, invoice/receipt number, and invoice date (convert to Thai format e.g. "28 ตุลาคม 2567").
-        2. List every item in the bill with its code (SKU/barcode if available), description, quantity, unit price, and total price.
-        3. If there is a product code (e.g. MS4-000939 or a barcode V 885...), place it in item_code.
-        4. Extract any discount and the grand total.
-        """
-        
-        response_text = call_gemini_with_retries(client, img, prompt, schema=BillExtraction)
-        return response_text, 200, {'Content-Type': 'application/json'}
+        if provider == 'openai':
+            # Read file bytes for base64 encoding
+            file.stream.seek(0)
+            img_bytes = file.stream.read()
+            response_text = call_openai_with_retries(api_key, img_bytes, prompt, mime_type=mime_type)
+            return response_text, 200, {'Content-Type': 'application/json'}
+        elif provider == 'groq':
+            # Read file bytes for base64 encoding
+            file.stream.seek(0)
+            img_bytes = file.stream.read()
+            response_text = call_groq_with_retries(api_key, img_bytes, prompt, mime_type=mime_type)
+            return response_text, 200, {'Content-Type': 'application/json'}
+        else:
+            # Default to Gemini
+            img = Image.open(file.stream)
+            client = genai.Client(api_key=api_key)
+            response_text = call_gemini_with_retries(client, img, prompt, schema=BillExtraction)
+            return response_text, 200, {'Content-Type': 'application/json'}
         
     except Exception as e:
         import traceback
@@ -506,10 +930,111 @@ def extract_bill():
         
         err_msg = str(e)
         tip_msg = ""
-        if "NOT_FOUND" in err_msg or "not found" in err_msg.lower() or "404" in err_msg:
-            tip_msg = "\n\n💡 Tip: This usually means the Generative Language API is not enabled for your project, or your API key is invalid. Please create a key from Google AI Studio (https://aistudio.google.com/) and try again."
+        if provider == 'gemini':
+            if "NOT_FOUND" in err_msg or "not found" in err_msg.lower() or "404" in err_msg:
+                tip_msg = "\n\n💡 Tip: This usually means the Generative Language API is not enabled for your project, or your API key is invalid. Please create a key from Google AI Studio (https://aistudio.google.com/) and try again."
+        elif provider == 'openai':
+            tip_msg = "\n\n💡 Tip: Please verify that your OpenAI API key is correct, has credits available, and the OpenAI service is online."
+        elif provider == 'groq':
+            tip_msg = "\n\n💡 Tip: Please verify that your Groq API key is correct and you have not exceeded your Groq rate limits. Check console.groq.com."
             
         return jsonify({"error": f"Failed during bill extraction: {err_msg}{tip_msg}"}), 500
+
+@app.route('/api/analyze_purchase', methods=['POST'])
+def analyze_purchase():
+    data = request.json or {}
+    provider = data.get('provider', 'gemini')
+    api_key = data.get('api_key') or request.headers.get('Authorization')
+    if api_key and api_key.startswith('Bearer '):
+        api_key = api_key[len('Bearer '):]
+    
+    if not api_key:
+        return jsonify({"error": "API Key is required"}), 400
+        
+    items = data.get('items', [])
+    department = data.get('department', 'สคร.')
+    
+    if not items:
+        return jsonify({"error": "No items provided for analysis"}), 400
+        
+    items_list_str = "\n".join([f"- {item.get('description', '')} (จำนวน {item.get('quantity', 1)})" for item in items])
+    
+    prompt = f"""
+    Analyze the following list of items purchased by the department '{department}':
+    {items_list_str}
+    
+    Task:
+    1. Write a professional, formal Thai memo introduction paragraph starting with two tabs: '\\t\\tด้วย {department} ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด ...' or 'ด้วย {department} ได้ดำเนินการจัดซื้อวัสดุ ...'. Describe what was bought by summarizing the key items naturally and politely. Do not mention total prices in this paragraph.
+    2. Suggest the most appropriate Thai procurement regulation clause from these choices:
+       - Choose "หนังสือคณะกรรมการวินิจฉัยปัญหาการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ กรมบัญชีกลาง ด่วนที่สุด ที่ กค (กวจ) 0405.2/ว 119 ลงวันที่ 7 มีนาคม 2561 เรื่องแนวทางการปฎิบัติในการดำเนินการจัดหาพัสดุที่เกี่ยวกับค่าใช้จ่ายในการบริหารงาน ค่าใช้จ่ายในการฝึกอบรม การจัดงาน และการประชุมของหน่วยงานของรัฐ ตาราง 1 ลำดับที่ 3" if the items are for training, seminars, workshops, meetings, catering, or similar educational activities.
+       - Choose "ระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 ตาราง 1 ลำดับที่ 1" if the items are general office supplies, computer equipment, network materials, hardware, or standard utility items.
+    """
+    
+    try:
+        if provider == 'openai' or provider == 'groq':
+            # Call OpenAI or Groq (since their completions format is identical)
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            json_prompt = (
+                prompt + "\n"
+                "Return the output in JSON format matching this schema:\n"
+                "{\n"
+                "  \"intro_text\": \"Generated intro paragraph...\",\n"
+                "  \"regulatory_text\": \"Selected regulation text...\"\n"
+                "}"
+            )
+            payload = {
+                "model": "gpt-4o-mini" if provider == 'openai' else "llama-3.3-70b-versatile",
+                "response_format": { "type": "json_object" },
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": json_prompt
+                    }
+                ],
+                "max_tokens": 1024
+            }
+            api_url = "https://api.openai.com/v1/chat/completions" if provider == 'openai' else "https://api.groq.com/openai/v1/chat/completions"
+            response = requests.post(
+                api_url,
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            if response.status_code == 200:
+                result_json = response.json()
+                content = result_json["choices"][0]["message"]["content"]
+                return content, 200, {'Content-Type': 'application/json'}
+            else:
+                raise Exception(f"{provider.capitalize()} error: {response.text}")
+                
+        else:
+            # Default to Gemini
+            client = genai.Client(api_key=api_key)
+            models_to_try = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
+            
+            for model_name in models_to_try:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=MemoAnalysis,
+                        ),
+                    )
+                    return response.text, 200, {'Content-Type': 'application/json'}
+                except Exception as e:
+                    print(f"Gemini {model_name} analysis failed: {str(e)}")
+                    continue
+            raise Exception("All Gemini models failed to analyze the purchase.")
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed to analyze purchase: {str(e)}"}), 500
 
 @app.route('/api/generate', methods=['POST'])
 def generate_docx():
@@ -534,13 +1059,39 @@ def generate_docx():
             items_list = inv.get('items', [])
             if not items_list:
                 continue
-            start_num = item_counter
+            
+            # Merge duplicate items within this invoice (same code and description)
+            merged_items = []
             for item in items_list:
+                code = (item.get('item_code') or '').strip()
+                desc = (item.get('description') or '').strip()
+                qty = int(item.get('quantity', 1))
+                unit_p = float(item.get('unit_price', 0.0))
+                tot_p = float(item.get('total_price', 0.0))
+                
+                found = False
+                for m in merged_items:
+                    if m['code_key'].lower() == code.lower() and m['desc'].lower() == desc.lower():
+                        m['qty'] += qty
+                        m['price'] += tot_p
+                        found = True
+                        break
+                if not found:
+                    merged_items.append({
+                        "code_key": code,
+                        "code": code if code else None,
+                        "desc": desc,
+                        "qty": qty,
+                        "price": tot_p
+                    })
+            
+            start_num = item_counter
+            for item in merged_items:
                 flat_items.append({
-                    "code": item.get('item_code'),
-                    "desc": item.get('description'),
-                    "qty": item.get('quantity', 1),
-                    "price": item.get('total_price', 0.0),
+                    "code": item["code"],
+                    "desc": item["desc"],
+                    "qty": item["qty"],
+                    "price": item["price"],
                     "vendor": inv.get('vendor_name'),
                     "invoice_no": inv.get('invoice_number'),
                     "invoice_date": inv.get('invoice_date'),
@@ -553,7 +1104,7 @@ def generate_docx():
                 "start": start_num,
                 "end": end_num,
                 "discount": inv.get('discount', 0.0),
-                "subtotal": sum(item.get('total_price', 0.0) for item in items_list),
+                "subtotal": sum(item["price"] for item in merged_items),
                 "vendor": inv.get('vendor_name')
             })
             
@@ -564,7 +1115,9 @@ def generate_docx():
         update_paragraph_3(doc.paragraphs[3], data.get('department', 'สคร.'), data.get('phone', ''))
         
         # Paragraph 4: Memo No & Date
-        update_paragraph_4(doc.paragraphs[4], data.get('memo_no', 'สคร.             /2567'), data.get('date', 'พฤศจิกายน  2567'))
+        # Clean date values to prevent wrapping
+        doc_date = data.get('date', 'พฤศจิกายน  2567').replace(' ', '\xa0')
+        update_paragraph_4(doc.paragraphs[4], data.get('memo_no', 'สคร.             /2567'), doc_date)
         
         # Paragraph 5: Subject
         subject_text = f"รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน {total_items_count}  รายการ"
@@ -625,7 +1178,7 @@ def generate_docx():
                     matching_range = r
                     break
                     
-            if matching_range and matching_range["discount"] > 0:
+            if matching_range and matching_range["discount"] > 0 and idx == matching_range["end"]:
                 # Add note paragraph
                 new_note_p = add_note_paragraph(doc, current_anchor, ref_note_p, matching_range['start'], matching_range['end'], matching_range['subtotal'], matching_range['discount'])
                 current_anchor = new_note_p
@@ -658,6 +1211,10 @@ def generate_docx():
             
         # 5. Update signature blocks
         # Replace names and positions in the remaining paragraphs
+        # Clean date values to prevent wrapping
+        req_date = data.get('requester_date', '   / พฤศจิกายน / 2567').replace(' ', '\xa0')
+        app_date = data.get('approver_date', '   / พฤศจิกายน / 2567').replace(' ', '\xa0')
+        
         for p in doc.paragraphs[reg_p_idx + 1:]:
             p_text = p.text
             
@@ -682,9 +1239,9 @@ def generate_docx():
                         date_start_idx = idx
                         break
                 if date_start_idx is not None:
-                    # Put new date in the first date run (Run 18)
-                    p.runs[date_start_idx].text = data.get('requester_date', '   / พฤศจิกายน / 2567')
-                    # Clear subsequent runs (Runs 19 to 23) in-place to preserve trailing tabs
+                    # Put new date in the first date run
+                    p.runs[date_start_idx].text = req_date
+                    # Clear subsequent runs in-place to preserve trailing tabs
                     for i in range(date_start_idx + 1, date_start_idx + 6):
                         if i < len(p.runs):
                             p.runs[i].text = ""
@@ -711,9 +1268,9 @@ def generate_docx():
                         date_start_idx = idx
                         break
                 if date_start_idx is not None:
-                    # Put new date in the first date run (Run 8)
-                    p.runs[date_start_idx].text = data.get('approver_date', '   / พฤศจิกายน / 2567')
-                    # Clear subsequent runs (Runs 9 and 10) in-place to preserve trailing tabs
+                    # Put new date in the first date run
+                    p.runs[date_start_idx].text = app_date
+                    # Clear subsequent runs in-place to preserve trailing tabs
                     for i in range(date_start_idx + 1, date_start_idx + 3):
                         if i < len(p.runs):
                             p.runs[i].text = ""
@@ -732,6 +1289,273 @@ def generate_docx():
         traceback.print_exc()
         return jsonify({"error": f"Failed during document generation: {str(e)}"}), 500
 
+
+@app.route('/api/generate_excel', methods=['POST'])
+def generate_excel():
+    data = request.json or {}
+    try:
+        # Load the workbook
+        src_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx')
+        if not os.path.exists(src_file):
+            return jsonify({"error": "Template file 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx' not found."}), 404
+            
+        wb = openpyxl.load_workbook(src_file, data_only=False)
+        
+        # ---------------------------------------------
+        # 1. Update Cover Sheet (Sheet 1)
+        # ---------------------------------------------
+        sheet1 = wb.worksheets[0]
+        
+        sheet1['F5'] = data.get('requester_name', '')
+        sheet1['Q5'] = data.get('requester_position', '')
+        
+        course_name = data.get('intro_course', '').strip()
+        purpose = f"ขอส่งใช้เงินยืมค่าใช้จ่ายในการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร {course_name}" if course_name else "ขอส่งใช้เงินยืมค่าใช้จ่ายในการจัดซื้อวัสดุอุปกรณ์ในการสนับสนุนการดำเนินการเปิดให้บริการ Space Inspirium"
+        sheet1['B6'] = purpose
+        
+        sheet1['F8'] = data.get('loan_contract_no', '')
+        sheet1['P8'] = data.get('loan_date_thai', '')
+        
+        try:
+            loan_amt = float(data.get('loan_amount', 0.0))
+        except:
+            loan_amt = 0.0
+        sheet1['C13'] = loan_amt
+        
+        sheet1['Q24'] = data.get('intro_budgetcode', '')
+        sheet1['Q25'] = data.get('department', '')
+        sheet1['G26'] = data.get('intro_budgetname', '')
+        
+        # ---------------------------------------------
+        # 2. Update Expense Summary Sheet (Sheet 2)
+        # ---------------------------------------------
+        sheet2 = wb.worksheets[1]
+        
+        # Cache styles before deletions
+        vendor_style_cells = [sheet2.cell(row=5, column=c) for c in range(1, 27)]
+        item_style_cells = [sheet2.cell(row=6, column=c) for c in range(1, 27)]
+        discount_style_cells = [sheet2.cell(row=26, column=c) for c in range(1, 27)]
+        total_style_cells = [sheet2.cell(row=46, column=c) for c in range(1, 27)]
+        
+        deduction_styles = {}
+        for r in range(48, 57):
+            deduction_styles[r] = [sheet2.cell(row=r, column=c) for c in range(1, 27)]
+            
+        vendor_row_height = sheet2.row_dimensions[5].height
+        item_row_height = sheet2.row_dimensions[6].height
+        discount_row_height = sheet2.row_dimensions[26].height
+        total_row_height = sheet2.row_dimensions[46].height
+        
+        deduction_row_heights = {}
+        for r in range(48, 57):
+            deduction_row_heights[r] = sheet2.row_dimensions[r].height
+            
+        # Clear merged cells in dynamic area
+        ranges_to_remove = [r for r in list(sheet2.merged_cells.ranges) if r.min_row >= 5]
+        for r in ranges_to_remove:
+            sheet2.merged_cells.remove(r)
+            
+        # Delete rows 5 to max_row
+        sheet2.delete_rows(5, sheet2.max_row - 4)
+        
+        # Update titles
+        loan_contract_no = data.get('loan_contract_no', '')
+        loan_date_thai = data.get('loan_date_thai', '')
+        sheet2['A2'] = f"รายการขอส่งใช้เงินยืมสัญญายืมเงินเลขที่ {loan_contract_no} ลงวันที่ {loan_date_thai}"
+        sheet2['A3'] = f"หลักสูตร \"{course_name}\""
+        
+        first_vendor_row = current_row = 5
+        
+        def apply_cached_style(sheet, row_idx, cached_row_cells):
+            for col_idx, src_cell in enumerate(cached_row_cells, 1):
+                dst_cell = sheet.cell(row=row_idx, column=col_idx)
+                if src_cell.font:
+                    dst_cell.font = copy.copy(src_cell.font)
+                if src_cell.fill:
+                    dst_cell.fill = copy.copy(src_cell.fill)
+                if src_cell.alignment:
+                    dst_cell.alignment = copy.copy(src_cell.alignment)
+                if src_cell.border:
+                    dst_cell.border = copy.copy(src_cell.border)
+                if src_cell.number_format:
+                    dst_cell.number_format = src_cell.number_format
+                    
+        # Write invoices
+        for inv_idx, inv in enumerate(data.get('invoices', []), 1):
+            items = inv.get('items', [])
+            discount = float(inv.get('discount', 0.0))
+            
+            vendor_header_row = current_row
+            start_item_row = current_row + 1
+            end_item_row = current_row + len(items)
+            
+            # 2.1 Write Vendor Header Row
+            sheet2.cell(row=vendor_header_row, column=1, value=inv_idx)
+            sheet2.cell(row=vendor_header_row, column=2, value=inv.get('vendor_name', ''))
+            sheet2.cell(row=vendor_header_row, column=15, value="=")
+            
+            # Vendor total formula
+            if discount > 0:
+                discount_row_idx = end_item_row + 1
+                vendor_total_formula = f"=SUM(N{start_item_row}:N{end_item_row})-E{discount_row_idx}"
+            else:
+                vendor_total_formula = f"=SUM(N{start_item_row}:N{end_item_row})"
+                
+            sheet2.cell(row=vendor_header_row, column=16, value=vendor_total_formula)
+            sheet2.cell(row=vendor_header_row, column=17, value="บาท")
+            sheet2.cell(row=vendor_header_row, column=18, value=f"=P{vendor_header_row}")
+            
+            # Styles & heights
+            apply_cached_style(sheet2, vendor_header_row, vendor_style_cells)
+            sheet2.row_dimensions[vendor_header_row].height = vendor_row_height
+            
+            # Recreate merges
+            sheet2.merge_cells(start_row=vendor_header_row, start_column=2, end_row=vendor_header_row, end_column=14)
+            sheet2.merge_cells(start_row=vendor_header_row, start_column=18, end_row=vendor_header_row, end_column=20)
+            
+            current_row += 1
+            
+            # 2.2 Write Item Rows
+            for item_idx, item in enumerate(items, 1):
+                item_row = current_row
+                
+                code = item.get('item_code', '').strip()
+                desc = item.get('description', '').strip()
+                desc_val = f"{code} {desc}" if code else desc
+                
+                sheet2.cell(row=item_row, column=1, value=f"{inv_idx}.{item_idx}")
+                sheet2.cell(row=item_row, column=2, value=desc_val)
+                sheet2.cell(row=item_row, column=4, value="(")
+                sheet2.cell(row=item_row, column=5, value=float(item.get('unit_price', 0.0)))
+                sheet2.cell(row=item_row, column=6, value="บาท * ")
+                sheet2.cell(row=item_row, column=7, value=int(item.get('quantity', 1)))
+                sheet2.cell(row=item_row, column=8, value=item.get('unit', 'ชิ้น'))
+                sheet2.cell(row=item_row, column=9, value=")")
+                sheet2.cell(row=item_row, column=13, value="=")
+                sheet2.cell(row=item_row, column=14, value=f"=E{item_row}*G{item_row}")
+                sheet2.cell(row=item_row, column=15, value="บาท")
+                
+                apply_cached_style(sheet2, item_row, item_style_cells)
+                sheet2.row_dimensions[item_row].height = item_row_height
+                
+                current_row += 1
+                
+            # 2.3 Write Discount Row
+            if discount > 0:
+                discount_row = current_row
+                sheet2.cell(row=discount_row, column=2, value="ส่วนลด")
+                sheet2.cell(row=discount_row, column=5, value=discount)
+                sheet2.cell(row=discount_row, column=6, value="บาท")
+                
+                apply_cached_style(sheet2, discount_row, discount_style_cells)
+                sheet2.row_dimensions[discount_row].height = discount_row_height
+                
+                sheet2.merge_cells(start_row=discount_row, start_column=2, end_row=discount_row, end_column=3)
+                current_row += 1
+                
+        # ---------------------------------------------
+        # 3. Write Total Row
+        # ---------------------------------------------
+        total_row = current_row
+        sheet2.cell(row=total_row, column=1, value="รวม")
+        sheet2.cell(row=total_row, column=2, value=f"=BAHTTEXT(R{total_row})")
+        
+        sheet2.cell(row=total_row, column=18, value=f"=SUM(R{first_vendor_row}:R{total_row - 1})")
+        
+        apply_cached_style(sheet2, total_row, total_style_cells)
+        sheet2.row_dimensions[total_row].height = total_row_height
+        
+        sheet2.merge_cells(start_row=total_row, start_column=2, end_row=total_row, end_column=17)
+        sheet2.merge_cells(start_row=total_row, start_column=18, end_row=total_row, end_column=20)
+        
+        # Update Sheet 1 Cover U13 link to this total cell
+        sheet1['U13'] = f"= '{sheet2.title}'!R{total_row}"
+        
+        current_row += 1
+        
+        # ---------------------------------------------
+        # 4. Write Bottom Section (Relativized)
+        # ---------------------------------------------
+        # Empty Row
+        empty_row = current_row
+        sheet2.row_dimensions[empty_row].height = 8.25
+        current_row += 1
+        
+        # Note Row
+        note_row = current_row
+        sheet2.cell(row=note_row, column=1, value="หมายเหตุ:  รายการที่ 15 ถังขยะอัตโนมัติมีเซ็นเซอร์ สแตนเลสขนาด 15 ลิตร ยังไม่ได้ดำเนินการจัดซื้อในครั้งนี้ เนื่องจากเป็นครุภัณฑ์สำนักงาน")
+        apply_cached_style(sheet2, note_row, deduction_styles[48])
+        sheet2.row_dimensions[note_row].height = deduction_row_heights[48]
+        current_row += 1
+        
+        # Deduction Header Row
+        hdr_row = current_row
+        sheet2.cell(row=hdr_row, column=1, value="รายการ")
+        sheet2.cell(row=hdr_row, column=19, value="จำนวน")
+        apply_cached_style(sheet2, hdr_row, deduction_styles[49])
+        sheet2.row_dimensions[hdr_row].height = deduction_row_heights[49]
+        sheet2.merge_cells(start_row=hdr_row, start_column=19, end_row=hdr_row, end_column=20)
+        current_row += 1
+        
+        # Deduction Rows (50 to 56)
+        ded_start_row = current_row
+        
+        for orig_r in range(50, 57):
+            r = current_row
+            
+            # Copy values and adapt formulas
+            if orig_r == 50:
+                sheet2.cell(row=r, column=1, value=1)
+                sheet2.cell(row=r, column=2, value="ยอดเงินยืม สทอภ. ")
+                sheet2.cell(row=r, column=5, value=data.get('loan_contract_no', ''))
+                sheet2.cell(row=r, column=19, value=loan_amt)
+            elif orig_r == 51:
+                sheet2.cell(row=r, column=1, value=2)
+                sheet2.cell(row=r, column=2, value="หักภาษี ณ ที่จ่าย (จะกรอกต่อเมื่อ มีการหักภาษี ณ ที่จ่าย จากสัญญายืมเงิน \nตั้งแต่ได้รับเงินยืม)")
+            elif orig_r == 52:
+                sheet2.cell(row=r, column=1, value=3)
+                sheet2.cell(row=r, column=2, value="ยอดเงินสุทธิ (1-2)")
+                sheet2.cell(row=r, column=19, value=f"=S{ded_start_row}-S{ded_start_row+1}")
+            elif orig_r == 53:
+                sheet2.cell(row=r, column=1, value=4)
+                sheet2.cell(row=r, column=2, value="ค่าใช้จ่ายทั้งหมด")
+                sheet2.cell(row=r, column=19, value=f"=R{total_row}")
+            elif orig_r == 54:
+                sheet2.cell(row=r, column=1, value=5)
+                sheet2.cell(row=r, column=2, value="เงินยืม หัก ยอดค่าใช้จ่าย  (1-4)")
+                sheet2.cell(row=r, column=19, value=f"=S{ded_start_row+2}-S{ded_start_row+3}")
+            elif orig_r == 55:
+                sheet2.cell(row=r, column=1, value=6)
+                sheet2.cell(row=r, column=2, value="กำไร/ขาดทุนจากอัตราแลกเปลี่ยน ")
+            elif orig_r == 56:
+                sheet2.cell(row=r, column=2, value="คงเหลือเงินคืน สทอภ.   (5-6)")
+                sheet2.cell(row=r, column=19, value=f"=S{ded_start_row+4}-S{ded_start_row+5}")
+                
+            apply_cached_style(sheet2, r, deduction_styles[orig_r])
+            sheet2.row_dimensions[r].height = deduction_row_heights[orig_r]
+            
+            # Merge S and T, and U to W
+            sheet2.merge_cells(start_row=r, start_column=19, end_row=r, end_column=20)
+            sheet2.merge_cells(start_row=r, start_column=21, end_row=r, end_column=23)
+            
+            current_row += 1
+            
+        # Save to temporary file and return
+        temp_dir = tempfile.gettempdir()
+        out_filename = "สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx"
+        out_path = os.path.join(temp_dir, out_filename)
+        
+        wb.save(out_path)
+        wb.close()
+        
+        return send_file(out_path, as_attachment=True, download_name=out_filename)
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Failed during Excel generation: {str(e)}"}), 500
+
 if __name__ == "__main__":
-    # Run server on port 5000
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    # Run server on port 5000, allowing local network access (host="0.0.0.0")
+    app.run(host="0.0.0.0", port=5000, debug=True)
+
