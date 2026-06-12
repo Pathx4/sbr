@@ -41,11 +41,13 @@ let state = {
     approver_position: 'ผอ.สคร.',
     approver_date: '',
     
-    // Excel loan details
-    loan_contract_no: '',
-    loan_date: '',
-    loan_amount: '',
-    loan_date_thai: ''
+    // Excel summary details
+    excel_date_range: '',
+    excel_location: '',
+    intro_course: '',
+    intro_budget: '',
+    intro_budgetcode: '',
+    intro_budgetname: ''
 };
 
 // Thai month names for date formatting
@@ -129,9 +131,8 @@ const elements = {
     txtSummaryThai: document.getElementById('txt-summary-thai'),
     
     // Excel-specific bindings
-    inputExcelLoanNo: document.getElementById('input-excel-loan-no'),
-    inputExcelLoanDate: document.getElementById('input-excel-loan-date'),
-    inputExcelLoanAmount: document.getElementById('input-excel-loan-amount'),
+    inputExcelDateRange: document.getElementById('input-excel-date-range'),
+    inputExcelLocation: document.getElementById('input-excel-location'),
     btnGenerateExcel: document.getElementById('btn-generate-excel')
 };
 
@@ -1088,11 +1089,13 @@ const syncInputs = () => {
     state.approver_position = elements.inputAppPos.value;
     state.approver_date = formatDateForDoc(elements.inputAppDate.value);
     
-    // Sync Excel loan inputs
-    state.loan_contract_no = elements.inputExcelLoanNo.value.trim();
-    state.loan_date = elements.inputExcelLoanDate.value;
-    state.loan_amount = parseFloat(elements.inputExcelLoanAmount.value) || 0;
-    state.loan_date_thai = formatDateToThai(state.loan_date);
+    // Sync Excel summary inputs
+    state.excel_date_range = elements.inputExcelDateRange.value.trim();
+    state.excel_location = elements.inputExcelLocation.value.trim();
+    state.intro_course = elements.inputIntroCourse.value.trim();
+    state.intro_budget = elements.inputIntroBudget.value.trim();
+    state.intro_budgetcode = elements.inputIntroBudgetCode.value.trim();
+    state.intro_budgetname = elements.inputIntroBudgetName.value.trim();
 };
 
 const formInputs = [
@@ -1102,7 +1105,7 @@ const formInputs = [
     elements.inputAppName, elements.inputAppPos, elements.inputAppDate,
     elements.inputIntroCourse, elements.inputIntroBudget, elements.inputIntroBudgetCode,
     elements.inputIntroBudgetName, elements.textareaRegulatory,
-    elements.inputExcelLoanNo, elements.inputExcelLoanDate, elements.inputExcelLoanAmount
+    elements.inputExcelDateRange, elements.inputExcelLocation
 ];
 formInputs.forEach(input => input.addEventListener('input', syncInputs));
 
@@ -1360,7 +1363,68 @@ async function validateSavedKeyOnLoad() {
     }
 }
 
+// ==========================================
+// Mode Tabs Switcher
+// ==========================================
+function initTabs() {
+    const tabWord = document.getElementById('tab-word');
+    const tabExcel = document.getElementById('tab-excel');
+    
+    if (tabWord && tabExcel) {
+        // Set default mode
+        const activeTab = localStorage.getItem('active_tab') || 'word';
+        setMode(activeTab);
+        
+        tabWord.addEventListener('click', () => setMode('word'));
+        tabExcel.addEventListener('click', () => setMode('excel'));
+    }
+}
+
+function setMode(mode) {
+    localStorage.setItem('active_tab', mode);
+    const tabWord = document.getElementById('tab-word');
+    const tabExcel = document.getElementById('tab-excel');
+    
+    // Update logo and headers dynamically based on mode
+    const logoIcon = document.getElementById('logo-icon');
+    const logoTitle = document.getElementById('logo-title');
+    const logoSubtitle = document.getElementById('logo-subtitle');
+    const step2Title = document.getElementById('step-2-title');
+    const step3Title = document.getElementById('step-3-title');
+    
+    if (mode === 'excel') {
+        document.body.classList.remove('route-word');
+        document.body.classList.add('route-excel');
+        if (tabWord) tabWord.classList.remove('active');
+        if (tabExcel) tabExcel.classList.add('active');
+        
+        if (logoIcon) logoIcon.className = 'fa-solid fa-file-excel icon-excel';
+        if (logoTitle) logoTitle.textContent = 'Auto Excel';
+        if (logoSubtitle) logoSubtitle.textContent = 'Expense Summary';
+        if (step2Title) step2Title.textContent = 'ข้อมูลทั่วไป';
+        if (step3Title) step3Title.textContent = 'ข้อมูลผู้จัดทำ / ผู้ขอส่งใช้เงินยืม';
+        
+        const stepExcelNum = document.getElementById('step-excel-num');
+        if (stepExcelNum) stepExcelNum.textContent = '2';
+    } else {
+        document.body.classList.remove('route-excel');
+        document.body.classList.add('route-word');
+        if (tabExcel) tabExcel.classList.remove('active');
+        if (tabWord) tabWord.classList.add('active');
+        
+        if (logoIcon) logoIcon.className = 'fa-solid fa-file-word icon-word';
+        if (logoTitle) logoTitle.textContent = 'Auto Word';
+        if (logoSubtitle) logoSubtitle.textContent = 'Memo Request Generator';
+        if (step2Title) step2Title.textContent = 'ข้อมูลทั่วไปและบันทึกข้อความ';
+        if (step3Title) step3Title.textContent = 'ผู้ลงนามในเอกสาร';
+        
+        const stepExcelNum = document.getElementById('step-excel-num');
+        if (stepExcelNum) stepExcelNum.textContent = '4';
+    }
+}
+
 window.addEventListener('load', async () => {
+    initTabs();
     validateSavedKeyOnLoad();
     calculateTotals();
     await fetchContacts();

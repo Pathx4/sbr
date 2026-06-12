@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +8,15 @@
     <!-- Google Fonts: Inter & Outfit & Sarabun -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="favicon.png">
 </head>
+
 <body>
     <div class="background-decor">
         <div class="circle c1"></div>
@@ -24,10 +28,10 @@
         <!-- Sidebar or Header -->
         <header class="app-header">
             <div class="header-logo">
-                <i class="fa-solid fa-file-word icon-word"></i>
+                <i id="logo-icon" class="fa-solid fa-file-word icon-word"></i>
                 <div class="logo-text">
-                    <h1>Auto Word</h1>
-                    <span>Memo Request Generator</span>
+                    <h1 id="logo-title">Auto Word</h1>
+                    <span id="logo-subtitle">Memo Request Generator</span>
                 </div>
             </div>
             <div class="header-actions">
@@ -44,12 +48,24 @@
             </div>
         </header>
 
+        <!-- Tab Navigation Mode Switcher -->
+        <div class="mode-tabs glass">
+            <button id="tab-word" class="tab-btn active" data-tab="word">
+                <i class="fa-solid fa-file-word icon-word-tab"></i>
+                <span>สร้างบันทึกข้อความ (Word)</span>
+            </button>
+            <button id="tab-excel" class="tab-btn" data-tab="excel">
+                <i class="fa-solid fa-file-excel icon-excel-tab"></i>
+                <span>สร้างใบสรุปค่าใช้จ่าย / ส่งใช้เงินยืม (Excel)</span>
+            </button>
+        </div>
+
         <!-- Main Workspace Grid -->
         <main class="workspace-grid">
-            
+
             <!-- Left Panel: Settings & Uploads -->
             <section class="control-panel">
-                
+
                 <!-- Step 1: Upload Bills -->
                 <div class="card glass">
                     <div class="card-header">
@@ -69,10 +85,10 @@
                 </div>
 
                 <!-- Step 2: Memo General Settings -->
-                <div class="card glass">
+                <div class="card glass word-only">
                     <div class="card-header">
                         <span class="step-num">2</span>
-                        <h2>ข้อมูลหัวข้อบันทึกข้อความ</h2>
+                        <h2 id="step-2-title">ข้อมูลทั่วไปและบันทึกข้อความ</h2>
                     </div>
                     <div class="card-body">
                         <div class="form-grid">
@@ -80,24 +96,27 @@
                                 <label for="input-dept">หน่วยงาน</label>
                                 <input type="text" id="input-dept" value="สคร.">
                             </div>
-                            <div class="form-group" style="position: relative;">
-                                <label for="input-phone">ผู้จัดทำ / โทรศัพท์ <small style="color: var(--text-muted);">(พิมพ์ชื่อเพื่อค้นหา)</small></label>
-                                <input type="text" id="input-phone" placeholder="พิมพ์ชื่อบุคลากรเพื่อค้นหา..." autocomplete="off">
+                            <div class="form-group word-only" style="position: relative;">
+                                <label for="input-phone">ผู้จัดทำ / โทรศัพท์ <small
+                                        style="color: var(--text-muted);">(พิมพ์ชื่อเพื่อค้นหา)</small></label>
+                                <input type="text" id="input-phone" placeholder="พิมพ์ชื่อบุคลากรเพื่อค้นหา..."
+                                    autocomplete="off">
                                 <div id="contact-dropdown" class="contact-autocomplete" style="display: none;"></div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group word-only">
                                 <label for="input-memo-no">เลขที่หนังสือ</label>
                                 <input type="text" id="input-memo-no" value="" placeholder="สคร.             /25xx">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group word-only">
                                 <label for="input-date">วันที่ลงบันทึก</label>
                                 <input type="date" id="input-date">
                             </div>
-                            <div class="form-group full-width">
+                            <div class="form-group full-width word-only">
                                 <label for="input-subject">เรื่อง</label>
-                                <input type="text" id="input-subject" value="รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน 0  รายการ">
+                                <input type="text" id="input-subject"
+                                    value="รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน 0  รายการ">
                             </div>
-                            <div class="form-group full-width">
+                            <div class="form-group full-width word-only">
                                 <label for="input-to">เรียน</label>
                                 <input type="text" id="input-to" value="ผอ.สคร.">
                             </div>
@@ -106,10 +125,10 @@
                 </div>
 
                 <!-- Step 3: Signatures -->
-                <div class="card glass">
+                <div class="card glass word-only">
                     <div class="card-header">
                         <span class="step-num">3</span>
-                        <h2>ผู้ลงนามในบันทึกข้อความ</h2>
+                        <h2 id="step-3-title">ผู้ลงนามในเอกสาร</h2>
                     </div>
                     <div class="card-body">
                         <div class="form-grid">
@@ -122,46 +141,43 @@
                                 <label for="input-req-pos">ตำแหน่งผู้จัดทำ</label>
                                 <input type="text" id="input-req-pos" placeholder="เจ้าหน้าที่/ผู้รับผิดชอบ">
                             </div>
-                            <div class="form-group full-width">
-                                <label for="input-req-date">วันที่เซ็นจัดทำ</label>
+                            <div class="form-group full-width word-only">
+                                <label for="input-req-date">วันที่เซ็นจัดทำ (ระบุในบันทึกข้อความ)</label>
                                 <input type="date" id="input-req-date">
                             </div>
                             <!-- Approver -->
-                            <div class="form-group">
+                            <div class="form-group word-only">
                                 <label for="input-app-name">ชื่อผู้อนุมัติ</label>
                                 <input type="text" id="input-app-name" value="นางสาวปราณปริยา   วงค์ษา">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group word-only">
                                 <label for="input-app-pos">ตำแหน่งผู้อนุมัติ</label>
                                 <input type="text" id="input-app-pos" value="ผอ.สคร.">
                             </div>
-                            <div class="form-group full-width">
-                                <label for="input-app-date">วันที่เซ็นอนุมัติ</label>
+                            <div class="form-group full-width word-only">
+                                <label for="input-app-date">วันที่เซ็นอนุมัติ (ระบุในบันทึกข้อความ)</label>
                                 <input type="date" id="input-app-date">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Step 4: Loan Details for Excel -->
-                <div class="card glass">
+                <!-- Step 4: Expense Details for Excel -->
+                <div class="card glass excel-only">
                     <div class="card-header">
-                        <span class="step-num">4</span>
-                        <h2>ข้อมูลการยืมเงิน (สำหรับ Excel)</h2>
+                        <span class="step-num" id="step-excel-num">4</span>
+                        <h2>ข้อมูลสรุปค่าใช้จ่าย (สำหรับ Excel)</h2>
                     </div>
                     <div class="card-body">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="input-excel-loan-no">เลขที่สัญญายืมเงิน</label>
-                                <input type="text" id="input-excel-loan-no" placeholder="เช่น 69G2PA030">
+                                <label for="input-excel-date-range">วันที่ / ระหว่างวันที่</label>
+                                <input type="text" id="input-excel-date-range"
+                                    placeholder="เช่น 10 มิถุนายน 2569 หรือ 4 - 10 มิถุนายน 2569">
                             </div>
                             <div class="form-group">
-                                <label for="input-excel-loan-amount">จำนวนเงินยืม (บาท)</label>
-                                <input type="number" id="input-excel-loan-amount" placeholder="เช่น 49000" min="0">
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="input-excel-loan-date">วันที่รับเงินยืม</label>
-                                <input type="date" id="input-excel-loan-date">
+                                <label for="input-excel-location">สถานที่ / ณ</label>
+                                <input type="text" id="input-excel-location" placeholder="เช่น สทอภ. (ศรีราชา)">
                             </div>
                         </div>
                     </div>
@@ -171,7 +187,7 @@
 
             <!-- Right Panel: Data Editor & Preview -->
             <section class="editor-panel">
-                
+
                 <!-- Main Generation Action -->
                 <div id="summary-sticky-bar" class="grand-totals-bar glass">
                     <div class="totals-info">
@@ -189,48 +205,64 @@
                         </div>
                     </div>
                     <div style="display: flex; gap: 12px;">
-                        <button id="btn-generate" class="btn-primary">
+                        <button id="btn-generate" class="btn-primary word-only">
                             <i class="fa-solid fa-file-word"></i> สร้างไฟล์ Word
                         </button>
-                        <button id="btn-generate-excel" class="btn-success btn-large-excel">
+                        <button id="btn-generate-excel" class="btn-success btn-large-excel excel-only">
                             <i class="fa-solid fa-file-excel"></i> สร้างไฟล์ Excel
                         </button>
                     </div>
                 </div>
 
-                <!-- Text Blocks Edit -->
+                <!-- Card 1: Project & Budget Details (Shared) -->
                 <div class="card glass">
-                    <div class="card-header flex-header">
-                        <h2>เนื้อหาข้อความ (คำเกริ่นนำและกฎระเบียบ)</h2>
-                        <button id="btn-ai-analyze" class="btn-primary btn-sm" style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border-radius: 12px; display: none;">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> ให้ AI วิเคราะห์จากรายการบิล
-                        </button>
+                    <div class="card-header">
+                        <h2>ข้อมูลโครงการและงบประมาณ</h2>
                     </div>
                     <div class="card-body">
                         <!-- Structured Intro Text Inputs -->
                         <div class="intro-template-box">
-                            <div class="intro-prefix">ด้วย สคร. ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด</div>
+                            <div class="intro-prefix word-only">ด้วย สคร. ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด</div>
                             <div class="form-group" style="margin-bottom: 8px;">
                                 <label for="input-intro-course">หลักสูตร / รายการ</label>
-                                <input type="text" id="input-intro-course" placeholder='เช่น "ด้านการประยุกต์เทคโนโลยี Internet of Thing"'>
+                                <input type="text" id="input-intro-course"
+                                    placeholder='เช่น "ด้านการประยุกต์เทคโนโลยี Internet of Thing"'>
                             </div>
-                            <div class="form-group" style="margin-bottom: 8px;">
+                            <div class="form-group word-only" style="margin-bottom: 8px;">
                                 <label for="input-intro-budget">โดยใช้งบประมาณ</label>
-                                <input type="text" id="input-intro-budget" placeholder="เช่น กองทุน บพค. หรือ งบดำเนินงานปกติ">
+                                <input type="text" id="input-intro-budget"
+                                    placeholder="เช่น กองทุน บพค. หรือ งบดำเนินงานปกติ">
                             </div>
-                            <div class="form-group" style="margin-bottom: 8px;">
+                            <div class="form-group word-only" style="margin-bottom: 8px;">
                                 <label for="input-intro-budgetcode">รหัสงบประมาณ</label>
-                                <input type="text" id="input-intro-budgetcode" placeholder="xxxx/xxxxx/xxx/xxxxxx/xxxxx/xxxxxxxxxxx">
+                                <input type="text" id="input-intro-budgetcode"
+                                    placeholder="xxxx/xxxxx/xxx/xxxxxx/xxxxx/xxxxxxxxxxx">
                             </div>
-                            <div class="form-group" style="margin-bottom: 8px;">
+                            <div class="form-group word-only" style="margin-bottom: 8px;">
                                 <label for="input-intro-budgetname">ชื่องบประมาณ / โครงการ</label>
-                                <input type="text" id="input-intro-budgetname" placeholder="เช่น โครงการพัฒนากำลังคนฯ (กองทุน บพค.)">
+                                <input type="text" id="input-intro-budgetname"
+                                    placeholder="เช่น โครงการพัฒนากำลังคนฯ (กองทุน บพค.)">
                             </div>
-                            <div class="intro-suffix">ซึ่งมีรายละเอียดดังต่อไปนี้</div>
+                            <div class="intro-suffix word-only">ซึ่งมีรายละเอียดดังต่อไปนี้</div>
                         </div>
-                        <div class="form-group" style="margin-top: 12px;">
-                            <label for="textarea-regulatory">ย่อหน้าอ้างอิงกฎระเบียบจัดซื้อจัดจ้าง (ย่อหน้าหลังรายการพัสดุ)</label>
-                            <textarea id="textarea-regulatory" rows="5">ทั้งนี้ การดำเนินการจัดซื้อ/จัดจ้างดังกล่าว เป็นการดำเนินการตามหนังสือคณะกรรมการวินิจฉัยปัญหาการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ กรมบัญชีกลาง ด่วนที่สุด ที่ กค (กวจ) 0405.2/ว 119 ลงวันที่ 7 มีนาคม 2561 เรื่องแนวทางการปฎิบัติในการดำเนินการจัดหาพัสดุที่เกี่ยวกับค่าใช้จ่ายในการบริหารงาน ค่าใช้จ่ายในการฝึกอบรม การจัดงาน และการประชุมของหน่วยงานของรัฐ ตาราง 1 ลำดับที่ 3</textarea>
+                    </div>
+                </div>
+
+                <!-- Card 2: Regulatory Clause (Word Only) -->
+                <div class="card glass word-only">
+                    <div class="card-header flex-header">
+                        <h2>ย่อหน้าอ้างอิงกฎระเบียบจัดซื้อจัดจ้าง</h2>
+                        <button id="btn-ai-analyze" class="btn-primary btn-sm"
+                            style="background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border-radius: 12px; display: none;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> ให้ AI วิเคราะห์จากรายการบิล
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="textarea-regulatory">ย่อหน้าอ้างอิงกฎระเบียบจัดซื้อจัดจ้าง
+                                (ย่อหน้าหลังรายการพัสดุ)</label>
+                            <textarea id="textarea-regulatory"
+                                rows="5">ทั้งนี้ การดำเนินการจัดซื้อ/จัดจ้างดังกล่าว เป็นการดำเนินการตามหนังสือคณะกรรมการวินิจฉัยปัญหาการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ กรมบัญชีกลาง ด่วนที่สุด ที่ กค (กวจ) 0405.2/ว 119 ลงวันที่ 7 มีนาคม 2561 เรื่องแนวทางการปฎิบัติในการดำเนินการจัดหาพัสดุที่เกี่ยวกับค่าใช้จ่ายในการบริหารงาน ค่าใช้จ่ายในการฝึกอบรม การจัดงาน และการประชุมของหน่วยงานของรัฐ ตาราง 1 ลำดับที่ 3</textarea>
                         </div>
                     </div>
                 </div>
@@ -249,7 +281,8 @@
                             <div id="empty-state" class="empty-state">
                                 <i class="fa-solid fa-receipt empty-icon"></i>
                                 <h3>ยังไม่มีข้อมูลใบเสร็จ</h3>
-                                <p>อัปโหลดภาพบิลทางซ้ายเพื่อถอดข้อมูลอัตโนมัติ หรือคลิก "เพิ่มกลุ่มใบเสร็จ" เพื่อพิมพ์ข้อมูลเอง</p>
+                                <p>อัปโหลดภาพบิลทางซ้ายเพื่อถอดข้อมูลอัตโนมัติ หรือคลิก "เพิ่มกลุ่มใบเสร็จ"
+                                    เพื่อพิมพ์ข้อมูลเอง</p>
                             </div>
                         </div>
                     </div>
@@ -278,13 +311,18 @@
                 <div class="form-group">
                     <label id="label-api-key" for="input-api-key">Gemini API Key</label>
                     <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                        <input type="password" id="input-api-key" placeholder="ป้อน AIzaSy..." style="flex: 1; margin: 0;">
-                        <button id="btn-test-key" class="btn-secondary" style="white-space: nowrap; padding: 10px 14px; border-radius: 12px;">
+                        <input type="password" id="input-api-key" placeholder="ป้อน AIzaSy..."
+                            style="flex: 1; margin: 0;">
+                        <button id="btn-test-key" class="btn-secondary"
+                            style="white-space: nowrap; padding: 10px 14px; border-radius: 12px;">
                             <i class="fa-solid fa-circle-question"></i> ตรวจสอบคีย์
                         </button>
                     </div>
                     <div id="key-status-container" style="margin-bottom: 8px;"></div>
-                    <span id="help-api-key" class="help-text">รับ API Key ของคุณได้ฟรีที่ <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank" rel="noopener noreferrer">Google AI Studio <i class="fa-solid fa-external-link"></i></a></span>
+                    <span id="help-api-key" class="help-text">รับ API Key ของคุณได้ฟรีที่ <a
+                            href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank"
+                            rel="noopener noreferrer">Google AI Studio <i
+                                class="fa-solid fa-external-link"></i></a></span>
                 </div>
             </div>
             <div class="modal-footer">
@@ -302,32 +340,49 @@
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                 <div class="guide-section">
-                    <h3 style="color: var(--primary); margin-top: 0; margin-bottom: 8px;"><i class="fa-solid fa-play"></i> ขั้นตอนการใช้งานจัดทำบันทึกข้อความ</h3>
+                    <h3 style="color: var(--primary); margin-top: 0; margin-bottom: 8px;"><i
+                            class="fa-solid fa-play"></i> ขั้นตอนการใช้งานจัดทำบันทึกข้อความ</h3>
                     <ol style="padding-left: 20px; line-height: 1.6; color: var(--text-main);">
-                        <li style="margin-bottom: 6px;"><strong>ตั้งค่า API Key</strong>: คลิกปุ่ม "ตั้งค่า API Key" ป้อนคีย์ (แนะนำคีย์ Groq API ใช้งานฟรี 100%) และกดบันทึก</li>
-                        <li style="margin-bottom: 6px;"><strong>อัปโหลดภาพบิล/ใบเสร็จ</strong>: ลากไฟล์รูปภาพบิลมาวางที่กล่องอัปโหลดด้านซ้าย (รองรับการอัปโหลดหลายใบเสร็จพร้อมกัน)</li>
-                        <li style="margin-bottom: 6px;"><strong>เลือกผู้จัดทำ</strong>: พิมพ์ชื่อบุคลากรในช่อง "ผู้จัดทำ / โทรศัพท์" → ระบบจะค้นหาและกรอกเบอร์โทร ชื่อ ตำแหน่ง ให้อัตโนมัติ</li>
-                        <li style="margin-bottom: 6px;"><strong>แต่งข้อความด้วย AI</strong>: คลิกปุ่ม <strong>"ให้ AI วิเคราะห์จากรายการบิล"</strong> สีม่วง-น้ำเงิน AI จะวิเคราะห์สินค้าทั้งหมดแล้วกรอกข้ออ้างอิงกฎระเบียบพัสดุภาครัฐให้อัตโนมัติ</li>
-                        <li style="margin-bottom: 6px;"><strong>ตรวจสอบและแก้ไข</strong>: ปรับแต่งรายการสินค้า เลขที่บิล ราคา วันที่ หรือแต่งเนื้อหาข้อความเกริ่นนำเองได้อิสระทางตารางฝั่งขวา</li>
-                        <li style="margin-bottom: 6px;"><strong>สร้างไฟล์ Word</strong>: คลิกปุ่ม <strong>"สร้างไฟล์ Word"</strong> เพื่อดาวน์โหลดไฟล์บันทึกข้อความจัดซื้อจัดจ้าง (.docx) สำเร็จรูป</li>
+                        <li style="margin-bottom: 6px;"><strong>ตั้งค่า API Key</strong>: คลิกปุ่ม "ตั้งค่า API Key"
+                            ป้อนคีย์ (แนะนำคีย์ Groq API ใช้งานฟรี 100%) และกดบันทึก</li>
+                        <li style="margin-bottom: 6px;"><strong>อัปโหลดภาพบิล/ใบเสร็จ</strong>:
+                            ลากไฟล์รูปภาพบิลมาวางที่กล่องอัปโหลดด้านซ้าย (รองรับการอัปโหลดหลายใบเสร็จพร้อมกัน)</li>
+                        <li style="margin-bottom: 6px;"><strong>เลือกผู้จัดทำ</strong>: พิมพ์ชื่อบุคลากรในช่อง "ผู้จัดทำ
+                            / โทรศัพท์" → ระบบจะค้นหาและกรอกเบอร์โทร ชื่อ ตำแหน่ง ให้อัตโนมัติ</li>
+                        <li style="margin-bottom: 6px;"><strong>แต่งข้อความด้วย AI</strong>: คลิกปุ่ม <strong>"ให้ AI
+                                วิเคราะห์จากรายการบิล"</strong> สีม่วง-น้ำเงิน AI
+                            จะวิเคราะห์สินค้าทั้งหมดแล้วกรอกข้ออ้างอิงกฎระเบียบพัสดุภาครัฐให้อัตโนมัติ</li>
+                        <li style="margin-bottom: 6px;"><strong>ตรวจสอบและแก้ไข</strong>: ปรับแต่งรายการสินค้า เลขที่บิล
+                            ราคา วันที่ หรือแต่งเนื้อหาข้อความเกริ่นนำเองได้อิสระทางตารางฝั่งขวา</li>
+                        <li style="margin-bottom: 6px;"><strong>สร้างไฟล์ Word</strong>: คลิกปุ่ม <strong>"สร้างไฟล์
+                                Word"</strong> เพื่อดาวน์โหลดไฟล์บันทึกข้อความจัดซื้อจัดจ้าง (.docx) สำเร็จรูป</li>
                     </ol>
                 </div>
                 <hr style="border: 0; border-top: 1px solid var(--divider); margin: 16px 0;">
                 <div class="guide-section">
-                    <h3 style="color: var(--primary); margin-bottom: 8px;"><i class="fa-solid fa-share-nodes"></i> วิธีแชร์ให้เพื่อนร่วมงานใช้งานร่วมกัน</h3>
-                    <p style="color: var(--text-main); line-height: 1.5; margin-top: 0;">ระบบนี้เปิดให้เข้าใช้งานร่วมกันผ่านเครือข่ายภายในหน่วยงาน (Local Wi-Fi / LAN เดียวกัน) ได้ง่ายๆ:</p>
+                    <h3 style="color: var(--primary); margin-bottom: 8px;"><i class="fa-solid fa-share-nodes"></i>
+                        วิธีแชร์ให้เพื่อนร่วมงานใช้งานร่วมกัน</h3>
+                    <p style="color: var(--text-main); line-height: 1.5; margin-top: 0;">
+                        ระบบนี้เปิดให้เข้าใช้งานร่วมกันผ่านเครือข่ายภายในหน่วยงาน (Local Wi-Fi / LAN เดียวกัน) ได้ง่ายๆ:
+                    </p>
                     <ol style="padding-left: 20px; line-height: 1.6; color: var(--text-main);">
-                        <li style="margin-bottom: 6px;"><strong>ค้นหา IP เครื่องเซิร์ฟเวอร์ (คอมพิวเตอร์ที่เปิดเซิร์ฟเวอร์)</strong>:
+                        <li style="margin-bottom: 6px;"><strong>ค้นหา IP เครื่องเซิร์ฟเวอร์
+                                (คอมพิวเตอร์ที่เปิดเซิร์ฟเวอร์)</strong>:
                             <ul style="padding-left: 20px; margin-top: 4px; color: var(--text-muted);">
                                 <li>เปิดโปรแกรม <strong>CMD (Command Prompt)</strong> ใน Windows</li>
                                 <li>พิมพ์คำสั่ง <code>ipconfig</code> แล้วกด Enter</li>
                                 <li>มองหาบรรทัด <strong>IPv4 Address</strong> (เช่น <code>192.168.1.100</code>)</li>
                             </ul>
                         </li>
-                        <li style="margin-bottom: 6px;"><strong>ให้ผู้อื่นเข้าใช้งาน</strong>: เปิดเบราว์เซอร์แล้วพิมพ์ URL: <strong><code>http://[IP_เครื่องของคุณ]:5000</code></strong> (เช่น <code>http://192.168.1.100:5000</code>)</li>
+                        <li style="margin-bottom: 6px;"><strong>ให้ผู้อื่นเข้าใช้งาน</strong>: เปิดเบราว์เซอร์แล้วพิมพ์
+                            URL: <strong><code>http://[IP_เครื่องของคุณ]:5000</code></strong> (เช่น
+                            <code>http://192.168.1.100:5000</code>)</li>
                     </ol>
-                    <div style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; font-size: 13px; color: var(--danger); line-height: 1.4;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> <strong>ข้อสำคัญ:</strong> คอมพิวเตอร์เซิร์ฟเวอร์ต้องเชื่อมต่อเครือข่ายเดียวกับเพื่อนร่วมงาน และเปิดโปรแกรมเซิร์ฟเวอร์รันอยู่ตลอด (มีหน้าต่างรันคำสั่ง <code>py app.py</code> เปิดอยู่)
+                    <div
+                        style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; font-size: 13px; color: var(--danger); line-height: 1.4;">
+                        <i class="fa-solid fa-triangle-exclamation"></i> <strong>ข้อสำคัญ:</strong>
+                        คอมพิวเตอร์เซิร์ฟเวอร์ต้องเชื่อมต่อเครือข่ายเดียวกับเพื่อนร่วมงาน
+                        และเปิดโปรแกรมเซิร์ฟเวอร์รันอยู่ตลอด (มีหน้าต่างรันคำสั่ง <code>py app.py</code> เปิดอยู่)
                     </div>
                 </div>
             </div>
@@ -342,11 +397,15 @@
                 <span id="preview-filename">ดูภาพบิล</span>
             </div>
             <div class="preview-panel-actions">
-                <button id="btn-preview-zoom-out" class="btn-preview-ctrl" title="ซูมออก"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                <button id="btn-preview-zoom-out" class="btn-preview-ctrl" title="ซูมออก"><i
+                        class="fa-solid fa-magnifying-glass-minus"></i></button>
                 <span id="preview-zoom-level" class="preview-zoom-text">100%</span>
-                <button id="btn-preview-zoom-in" class="btn-preview-ctrl" title="ซูมเข้า"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-                <button id="btn-preview-fit" class="btn-preview-ctrl" title="พอดีหน้าจอ"><i class="fa-solid fa-expand"></i></button>
-                <button class="btn-preview-close-panel" id="btn-preview-close" title="ปิดหน้าดูภาพ"><i class="fa-solid fa-xmark"></i></button>
+                <button id="btn-preview-zoom-in" class="btn-preview-ctrl" title="ซูมเข้า"><i
+                        class="fa-solid fa-magnifying-glass-plus"></i></button>
+                <button id="btn-preview-fit" class="btn-preview-ctrl" title="พอดีหน้าจอ"><i
+                        class="fa-solid fa-expand"></i></button>
+                <button class="btn-preview-close-panel" id="btn-preview-close" title="ปิดหน้าดูภาพ"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
         <div class="preview-panel-body" id="preview-panel-body">
@@ -360,4 +419,5 @@
     <!-- App JavaScript -->
     <script src="app.js" defer></script>
 </body>
+
 </html>

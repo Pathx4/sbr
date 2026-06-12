@@ -250,6 +250,67 @@ def format_price(val):
     else:
         return f"{val:,.2f}"
 
+def parse_thai_date(date_str):
+    if not date_str:
+        return (9999, 12, 31)
+    
+    date_str = str(date_str).strip()
+    
+    # Slash format: D/M/YYYY or D/M/B.E.
+    slash_match = re.match(r'^(\d+)/(\d+)/(\d+)', date_str)
+    if slash_match:
+        d, m, y = map(int, slash_match.groups())
+        if y > 2400:
+            y -= 543
+        return (y, m, d)
+        
+    # ISO Format: YYYY-MM-DD
+    iso_match = re.match(r'^(\d{4})-(\d{2})-(\d{2})', date_str)
+    if iso_match:
+        y, m, d = map(int, iso_match.groups())
+        if y > 2400:
+            y -= 543
+        return (y, m, d)
+        
+    THAI_MONTHS = {
+        'มกราคม': 1, 'กุมภาพันธ์': 2, 'มีนาคม': 3, 'เมษายน': 4,
+        'พฤษภาคม': 5, 'มิถุนายน': 6, 'กรกฎาคม': 7, 'สิงหาคม': 8,
+        'กันยายน': 9, 'ตุลาคม': 10, 'พฤศจิกายน': 11, 'ธันวาคม': 12,
+        'ม.ค.': 1, 'ก.พ.': 2, 'มี.ค.': 3, 'เม.ย.': 4,
+        'พ.ค.': 5, 'มิ.ย.': 6, 'ก.ค.': 7, 'ส.ค.': 8,
+        'ก.ย.': 9, 'ต.ค.': 10, 'พ.ย.': 11, 'ธ.ค.': 12
+    }
+    
+    date_str = re.sub(r'\s+', ' ', date_str)
+    parts = date_str.split(' ')
+    
+    day = 1
+    month = 1
+    year = 2026
+    found_day = False
+    
+    for p in parts:
+        p_clean = p.strip()
+        if not p_clean:
+            continue
+            
+        for m_name, m_val in THAI_MONTHS.items():
+            if m_name in p_clean:
+                month = m_val
+                break
+        else:
+            if p_clean.isdigit():
+                val = int(p_clean)
+                if val > 2000:
+                    year = val - 543 if val > 2400 else val
+                else:
+                    if not found_day:
+                        day = val
+                        found_day = True
+                        
+    return (year, month, day)
+
+
 def update_paragraph_3(p, dept, phone):
     # Change department run
     for r in p.runs:
@@ -407,45 +468,39 @@ def add_item_paragraph(doc, current_anchor, ref_item_p, idx, item):
         
     price_str = format_price(item["price"])
     
-    # Clean only date variable to use non-breaking spaces (keeps date on a single line)
-    invoice_date_clean = item["invoice_date"].replace(" ", "\xa0") if item["invoice_date"] else ""
-    
-    # Precise run structures and spacings to match paragraph 8 of the template exactly.
-    # We use non-breaking spaces only within small logical groups (e.g. qty+unit, price+currency, date)
-    # and normal spaces elsewhere to allow natural line breaking in long lines.
+    # Precise run structures matching paragraph 8 but using regular spaces and no character spacing compression.
     runs_data = [
-        ("\t", False, -6),
-        (f"{idx}. ค่า", False, -6),
-        ("\t", True, -6),
-        (desc_val, True, -6),
-        (" ", True, -6), # Breaking space
-        ("จำนวน", False, -6),
-        ("\xa0\xa0", True, -6), # Non-breaking space
-        (str(item["qty"]), True, -6),
-        ("\xa0\xa0", True, -6), # Non-breaking space
-        ("รายการ", False, -6),
-        (" ", False, -6), # Breaking space
-        ("เป็นเงิน", False, -6),
-        ("  ", True, -6), # Breaking space
-        (price_str, True, -6),
-        ("\xa0", True, -6), # Non-breaking space
-        ("\xa0", True, -6), # Non-breaking space
-        ("บาท", False, -6),
-        ("จากบริษัท", False, -6),
-        ("  ", True, -6), # Breaking space
-        (item["vendor"], True, -6), # Normal spaces allowed to break naturally if long
+        ("\t", False, None),
+        (f"{idx}. ค่า", False, None),
+        ("\t", True, None),
+        (desc_val, True, None),
+        (" ", True, None), # Breaking space
+        ("จำนวน", False, None),
+        ("  ", True, None), # Regular spaces
+        (str(item["qty"]), True, None),
+        ("  ", True, None), # Regular spaces
+        ("รายการ", False, None),
+        (" ", False, None), # Breaking space
+        ("เป็นเงิน", False, None),
+        ("  ", True, None), # Breaking space
+        (price_str, True, None),
+        ("  ", True, None), # Regular spaces
+        ("บาท", False, None),
+        ("จากบริษัท", False, None),
+        ("  ", True, None), # Breaking space
+        (item["vendor"], True, None), # Normal spaces allowed to break naturally if long
         ("   ", True, None), # Breaking space
-        ("ตามหลักฐานการจัดซื้อเป็น", False, -6),
-        (f"  {item['doc_type']}", True, -6), # Breaking space before doc_type
-        (" ", False, -6),
-        ("เล่มที่-เลขที่ ", False, -6),
-        (" ", True, -6),
-        (item["invoice_no"], True, -6),
-        ("  ", True, -6),
-        ("วันที่", False, -6),
-        ("\xa0", True, -6), # Non-breaking space before date
-        (invoice_date_clean, True, -6), # Date is kept together
-        ("  ", True, -6)
+        ("ตามหลักฐานการจัดซื้อเป็น", False, None),
+        (f"  {item['doc_type']}", True, None), # Breaking space before doc_type
+        (" ", False, None),
+        ("เล่มที่-เลขที่ ", False, None),
+        (" ", True, None),
+        (item["invoice_no"], True, None),
+        ("  ", True, None),
+        ("วันที่", False, None),
+        (" ", True, None), # Regular space before date
+        (item["invoice_date"] if item["invoice_date"] else "", True, None), # Date with regular spaces
+        ("  ", True, None)
     ]
     
     for text_val, is_underlined, spacing_val in runs_data:
@@ -463,10 +518,10 @@ def add_note_paragraph(doc, current_anchor, ref_note_p, start_num, end_num, subt
     subtotal_str = format_price(subtotal)
     discount_str = format_price(discount)
     
-    note_text = f"หมายเหตุ : รายการที่ {start_num}–{end_num} ยอดรวม\xa0{subtotal_str}\xa0บาท ได้รับส่วนลดทั้งหมด เป็นเงิน\xa0{discount_str}\xa0บาท    "
+    note_text = f"หมายเหตุ : รายการที่ {start_num}–{end_num} ยอดรวม {subtotal_str} บาท ได้รับส่วนลดทั้งหมด เป็นเงิน {discount_str} บาท    "
     
     run = new_p.add_run(note_text)
-    set_run_font_enhanced(run, 'TH SarabunPSK', 16, underline=docx.enum.text.WD_UNDERLINE.DOTTED, spacing=-4)
+    set_run_font_enhanced(run, 'TH SarabunPSK', 16, underline=docx.enum.text.WD_UNDERLINE.DOTTED, spacing=None)
     
     return new_p
 
@@ -482,9 +537,9 @@ def update_total_paragraph(total_p, total_items, grand_total, thai_text):
     runs_data = [
         ("                                         ", False, False, None),
         ("รวมเป็นจำนวนเงินทั้งสิ้น", True, False, None),
-        ("\xa0\xa0\xa0", True, False, None),
+        ("   ", True, False, None),
         (grand_total_str, True, False, None),
-        ("\xa0\xa0บาท\xa0\xa0\xa0\xa0\xa0", True, False, None),
+        ("  บาท     ", True, False, None),
     ]
     
     for text_val, is_bold, is_underlined, spacing_val in runs_data:
@@ -1051,6 +1106,8 @@ def generate_docx():
         
         # Process items to list first to get total_items_count
         invoices = data.get('invoices', [])
+        # Sort invoices chronologically by date
+        invoices = sorted(invoices, key=lambda x: parse_thai_date(x.get('invoice_date')))
         flat_items = []
         item_counter = 1
         invoice_ranges = []
@@ -1116,7 +1173,7 @@ def generate_docx():
         
         # Paragraph 4: Memo No & Date
         # Clean date values to prevent wrapping
-        doc_date = data.get('date', 'พฤศจิกายน  2567').replace(' ', '\xa0')
+        doc_date = data.get('date', 'พฤศจิกายน  2567')
         update_paragraph_4(doc.paragraphs[4], data.get('memo_no', 'สคร.             /2567'), doc_date)
         
         # Paragraph 5: Subject
@@ -1212,8 +1269,8 @@ def generate_docx():
         # 5. Update signature blocks
         # Replace names and positions in the remaining paragraphs
         # Clean date values to prevent wrapping
-        req_date = data.get('requester_date', '   / พฤศจิกายน / 2567').replace(' ', '\xa0')
-        app_date = data.get('approver_date', '   / พฤศจิกายน / 2567').replace(' ', '\xa0')
+        req_date = data.get('requester_date', '   / พฤศจิกายน / 2567')
+        app_date = data.get('approver_date', '   / พฤศจิกายน / 2567')
         
         for p in doc.paragraphs[reg_p_idx + 1:]:
             p_text = p.text
@@ -1302,69 +1359,92 @@ def generate_excel():
         wb = openpyxl.load_workbook(src_file, data_only=False)
         
         # ---------------------------------------------
-        # 1. Update Cover Sheet (Sheet 1)
-        # ---------------------------------------------
-        sheet1 = wb.worksheets[0]
-        
-        sheet1['F5'] = data.get('requester_name', '')
-        sheet1['Q5'] = data.get('requester_position', '')
-        
-        course_name = data.get('intro_course', '').strip()
-        purpose = f"ขอส่งใช้เงินยืมค่าใช้จ่ายในการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร {course_name}" if course_name else "ขอส่งใช้เงินยืมค่าใช้จ่ายในการจัดซื้อวัสดุอุปกรณ์ในการสนับสนุนการดำเนินการเปิดให้บริการ Space Inspirium"
-        sheet1['B6'] = purpose
-        
-        sheet1['F8'] = data.get('loan_contract_no', '')
-        sheet1['P8'] = data.get('loan_date_thai', '')
-        
-        try:
-            loan_amt = float(data.get('loan_amount', 0.0))
-        except:
-            loan_amt = 0.0
-        sheet1['C13'] = loan_amt
-        
-        sheet1['Q24'] = data.get('intro_budgetcode', '')
-        sheet1['Q25'] = data.get('department', '')
-        sheet1['G26'] = data.get('intro_budgetname', '')
-        
-        # ---------------------------------------------
-        # 2. Update Expense Summary Sheet (Sheet 2)
+        # Update Expense Summary Sheet (Sheet 2)
         # ---------------------------------------------
         sheet2 = wb.worksheets[1]
         
-        # Cache styles before deletions
-        vendor_style_cells = [sheet2.cell(row=5, column=c) for c in range(1, 27)]
-        item_style_cells = [sheet2.cell(row=6, column=c) for c in range(1, 27)]
-        discount_style_cells = [sheet2.cell(row=26, column=c) for c in range(1, 27)]
-        total_style_cells = [sheet2.cell(row=46, column=c) for c in range(1, 27)]
+        # 1. Shift all merged cell ranges starting from row 3 down by 1 row
+        ranges = list(sheet2.merged_cells.ranges)
+        for r in ranges:
+            if r.min_row >= 3:
+                sheet2.merged_cells.remove(r)
+                r.shift(row_shift=1)
+                sheet2.merged_cells.add(r)
+
+        # 2. Insert 1 row at index 3 for the date/location range
+        sheet2.insert_rows(3, 1)
         
-        deduction_styles = {}
-        for r in range(48, 57):
-            deduction_styles[r] = [sheet2.cell(row=r, column=c) for c in range(1, 27)]
-            
-        vendor_row_height = sheet2.row_dimensions[5].height
-        item_row_height = sheet2.row_dimensions[6].height
-        discount_row_height = sheet2.row_dimensions[26].height
-        total_row_height = sheet2.row_dimensions[46].height
+        # Merge A3:U3 (columns 1 to 21)
+        sheet2.merge_cells(start_row=3, start_column=1, end_row=3, end_column=21)
         
-        deduction_row_heights = {}
-        for r in range(48, 57):
-            deduction_row_heights[r] = sheet2.row_dimensions[r].height
-            
-        # Clear merged cells in dynamic area
-        ranges_to_remove = [r for r in list(sheet2.merged_cells.ranges) if r.min_row >= 5]
+        # Copy style from A2 to A3
+        sheet2.cell(row=3, column=1).font = copy.copy(sheet2.cell(row=2, column=1).font)
+        sheet2.cell(row=3, column=1).alignment = copy.copy(sheet2.cell(row=2, column=1).alignment)
+        
+        # 3. Cache styles from the shifted template rows (after insertion)
+        vendor_style_cells = [sheet2.cell(row=6, column=c) for c in range(1, 27)]
+        item_style_cells = [sheet2.cell(row=7, column=c) for c in range(1, 27)]
+        discount_style_cells = [sheet2.cell(row=27, column=c) for c in range(1, 27)]
+        total_style_cells = [sheet2.cell(row=47, column=c) for c in range(1, 27)]
+        
+        vendor_row_height = sheet2.row_dimensions[6].height
+        item_row_height = sheet2.row_dimensions[7].height
+        discount_row_height = sheet2.row_dimensions[27].height
+        total_row_height = sheet2.row_dimensions[47].height
+        
+        # Clear merged cells in dynamic area (starting at row 6 now)
+        ranges_to_remove = [r for r in list(sheet2.merged_cells.ranges) if r.min_row >= 6]
         for r in ranges_to_remove:
             sheet2.merged_cells.remove(r)
             
-        # Delete rows 5 to max_row
-        sheet2.delete_rows(5, sheet2.max_row - 4)
+        # Delete template data rows (starting at row 6, deleting everything after)
+        sheet2.delete_rows(6, sheet2.max_row - 5)
         
         # Update titles
-        loan_contract_no = data.get('loan_contract_no', '')
-        loan_date_thai = data.get('loan_date_thai', '')
-        sheet2['A2'] = f"รายการขอส่งใช้เงินยืมสัญญายืมเงินเลขที่ {loan_contract_no} ลงวันที่ {loan_date_thai}"
-        sheet2['A3'] = f"หลักสูตร \"{course_name}\""
+        course_name = data.get('intro_course', '').strip()
+        dept = data.get('department', 'สคร.').strip()
+        date_range = data.get('excel_date_range', '').strip()
+        location = data.get('excel_location', '').strip()
         
-        first_vendor_row = current_row = 5
+        # Row 2: รายการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร / การดำเนินงาน ...
+        if course_name:
+            clean_course = course_name.strip(' "\'')
+            if clean_course.startswith("รายการจัดซื้อวัสดุอุปกรณ์"):
+                sheet2['A2'] = clean_course
+            else:
+                has_prefix = any(clean_course.startswith(prefix) for prefix in [
+                    "สำหรับการจัด", "สำหรับ", "สนับสนุน", "เพื่อ", "การจัด"
+                ])
+                if has_prefix:
+                    sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์{clean_course}"
+                elif clean_course.startswith("ดำเนินงาน"):
+                    sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์สำหรับการ{clean_course}"
+                else:
+                    sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร {clean_course}"
+        else:
+            sheet2['A2'] = "รายการจัดซื้อวัสดุอุปกรณ์"
+            
+        # Row 3: วันที่ / ระหว่างวันที่ ... ณ ...
+        date_loc_text = ""
+        if date_range:
+            # Check if it already has a prefix
+            if date_range.startswith("ระหว่างวันที่") or date_range.startswith("วันที่"):
+                date_loc_text += date_range
+            else:
+                has_range_indicator = any(sep in date_range for sep in ["-", "ถึง", "–", "—"])
+                if has_range_indicator:
+                    date_loc_text += f"ระหว่างวันที่ {date_range}"
+                else:
+                    date_loc_text += f"วันที่ {date_range}"
+        if location:
+            if date_loc_text:
+                date_loc_text += f" ณ {location}"
+            else:
+                date_loc_text += f"ณ {location}"
+        sheet2['A3'] = date_loc_text
+
+        
+        first_vendor_row = current_row = 6
         
         def apply_cached_style(sheet, row_idx, cached_row_cells):
             for col_idx, src_cell in enumerate(cached_row_cells, 1):
@@ -1380,8 +1460,10 @@ def generate_excel():
                 if src_cell.number_format:
                     dst_cell.number_format = src_cell.number_format
                     
-        # Write invoices
-        for inv_idx, inv in enumerate(data.get('invoices', []), 1):
+        # Write invoices sorted chronologically by date
+        invoices = data.get('invoices', [])
+        invoices = sorted(invoices, key=lambda x: parse_thai_date(x.get('invoice_date')))
+        for inv_idx, inv in enumerate(invoices, 1):
             items = inv.get('items', [])
             discount = float(inv.get('discount', 0.0))
             
@@ -1389,10 +1471,12 @@ def generate_excel():
             start_item_row = current_row + 1
             end_item_row = current_row + len(items)
             
-            # 2.1 Write Vendor Header Row
+            # Write Vendor Header Row
             sheet2.cell(row=vendor_header_row, column=1, value=inv_idx)
             sheet2.cell(row=vendor_header_row, column=2, value=inv.get('vendor_name', ''))
             sheet2.cell(row=vendor_header_row, column=15, value="=")
+            
+
             
             # Vendor total formula
             if discount > 0:
@@ -1415,7 +1499,7 @@ def generate_excel():
             
             current_row += 1
             
-            # 2.2 Write Item Rows
+            # Write Item Rows
             for item_idx, item in enumerate(items, 1):
                 item_row = current_row
                 
@@ -1440,7 +1524,7 @@ def generate_excel():
                 
                 current_row += 1
                 
-            # 2.3 Write Discount Row
+            # Write Discount Row
             if discount > 0:
                 discount_row = current_row
                 sheet2.cell(row=discount_row, column=2, value="ส่วนลด")
@@ -1452,6 +1536,12 @@ def generate_excel():
                 
                 sheet2.merge_cells(start_row=discount_row, start_column=2, end_row=discount_row, end_column=3)
                 current_row += 1
+                
+            # Merge Column U (Remarks / หมายเหตุ) vertically for the invoice items/discount rows
+            merge_start_row = start_item_row
+            merge_end_row = current_row - 1
+            if merge_end_row > merge_start_row:
+                sheet2.merge_cells(start_row=merge_start_row, start_column=21, end_row=merge_end_row, end_column=21)
                 
         # ---------------------------------------------
         # 3. Write Total Row
@@ -1468,77 +1558,35 @@ def generate_excel():
         sheet2.merge_cells(start_row=total_row, start_column=2, end_row=total_row, end_column=17)
         sheet2.merge_cells(start_row=total_row, start_column=18, end_row=total_row, end_column=20)
         
-        # Update Sheet 1 Cover U13 link to this total cell
-        sheet1['U13'] = f"= '{sheet2.title}'!R{total_row}"
-        
-        current_row += 1
+        # Ensure outer left/right borders (Column A and Column U) are consistently medium to prevent clipping
+        from openpyxl.styles import Border, Side
+        medium_side = Side(border_style="medium", color="000000")
+        for r in range(5, total_row + 1):
+            # Column A (1)
+            c_a = sheet2.cell(row=r, column=1)
+            c_a.border = Border(
+                left=medium_side,
+                right=c_a.border.right if c_a.border else None,
+                top=c_a.border.top if c_a.border else None,
+                bottom=c_a.border.bottom if c_a.border else None
+            )
+            # Column U (21)
+            c_u = sheet2.cell(row=r, column=21)
+            c_u.border = Border(
+                left=c_u.border.left if c_u.border else None,
+                right=medium_side,
+                top=c_u.border.top if c_u.border else None,
+                bottom=c_u.border.bottom if c_u.border else None
+            )
+            
+        # Update print area to exactly fit the populated table range
+        sheet2.print_area = f"A1:U{total_row}"
         
         # ---------------------------------------------
-        # 4. Write Bottom Section (Relativized)
+        # 4. Keep ONLY Sheet 2 (Summary Sheet)
         # ---------------------------------------------
-        # Empty Row
-        empty_row = current_row
-        sheet2.row_dimensions[empty_row].height = 8.25
-        current_row += 1
-        
-        # Note Row
-        note_row = current_row
-        sheet2.cell(row=note_row, column=1, value="หมายเหตุ:  รายการที่ 15 ถังขยะอัตโนมัติมีเซ็นเซอร์ สแตนเลสขนาด 15 ลิตร ยังไม่ได้ดำเนินการจัดซื้อในครั้งนี้ เนื่องจากเป็นครุภัณฑ์สำนักงาน")
-        apply_cached_style(sheet2, note_row, deduction_styles[48])
-        sheet2.row_dimensions[note_row].height = deduction_row_heights[48]
-        current_row += 1
-        
-        # Deduction Header Row
-        hdr_row = current_row
-        sheet2.cell(row=hdr_row, column=1, value="รายการ")
-        sheet2.cell(row=hdr_row, column=19, value="จำนวน")
-        apply_cached_style(sheet2, hdr_row, deduction_styles[49])
-        sheet2.row_dimensions[hdr_row].height = deduction_row_heights[49]
-        sheet2.merge_cells(start_row=hdr_row, start_column=19, end_row=hdr_row, end_column=20)
-        current_row += 1
-        
-        # Deduction Rows (50 to 56)
-        ded_start_row = current_row
-        
-        for orig_r in range(50, 57):
-            r = current_row
-            
-            # Copy values and adapt formulas
-            if orig_r == 50:
-                sheet2.cell(row=r, column=1, value=1)
-                sheet2.cell(row=r, column=2, value="ยอดเงินยืม สทอภ. ")
-                sheet2.cell(row=r, column=5, value=data.get('loan_contract_no', ''))
-                sheet2.cell(row=r, column=19, value=loan_amt)
-            elif orig_r == 51:
-                sheet2.cell(row=r, column=1, value=2)
-                sheet2.cell(row=r, column=2, value="หักภาษี ณ ที่จ่าย (จะกรอกต่อเมื่อ มีการหักภาษี ณ ที่จ่าย จากสัญญายืมเงิน \nตั้งแต่ได้รับเงินยืม)")
-            elif orig_r == 52:
-                sheet2.cell(row=r, column=1, value=3)
-                sheet2.cell(row=r, column=2, value="ยอดเงินสุทธิ (1-2)")
-                sheet2.cell(row=r, column=19, value=f"=S{ded_start_row}-S{ded_start_row+1}")
-            elif orig_r == 53:
-                sheet2.cell(row=r, column=1, value=4)
-                sheet2.cell(row=r, column=2, value="ค่าใช้จ่ายทั้งหมด")
-                sheet2.cell(row=r, column=19, value=f"=R{total_row}")
-            elif orig_r == 54:
-                sheet2.cell(row=r, column=1, value=5)
-                sheet2.cell(row=r, column=2, value="เงินยืม หัก ยอดค่าใช้จ่าย  (1-4)")
-                sheet2.cell(row=r, column=19, value=f"=S{ded_start_row+2}-S{ded_start_row+3}")
-            elif orig_r == 55:
-                sheet2.cell(row=r, column=1, value=6)
-                sheet2.cell(row=r, column=2, value="กำไร/ขาดทุนจากอัตราแลกเปลี่ยน ")
-            elif orig_r == 56:
-                sheet2.cell(row=r, column=2, value="คงเหลือเงินคืน สทอภ.   (5-6)")
-                sheet2.cell(row=r, column=19, value=f"=S{ded_start_row+4}-S{ded_start_row+5}")
-                
-            apply_cached_style(sheet2, r, deduction_styles[orig_r])
-            sheet2.row_dimensions[r].height = deduction_row_heights[orig_r]
-            
-            # Merge S and T, and U to W
-            sheet2.merge_cells(start_row=r, start_column=19, end_row=r, end_column=20)
-            sheet2.merge_cells(start_row=r, start_column=21, end_row=r, end_column=23)
-            
-            current_row += 1
+        if len(wb.worksheets) > 1:
+            wb.remove(wb.worksheets[0])
             
         # Save to temporary file and return
         temp_dir = tempfile.gettempdir()
