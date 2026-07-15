@@ -133,7 +133,8 @@ const elements = {
     // Excel-specific bindings
     inputExcelDateRange: document.getElementById('input-excel-date-range'),
     inputExcelLocation: document.getElementById('input-excel-location'),
-    btnGenerateExcel: document.getElementById('btn-generate-excel')
+    btnGenerateExcel: document.getElementById('btn-generate-excel'),
+    btnGenerateIllusExcel: document.getElementById('btn-generate-illus-excel')
 };
 
 // ==========================================
@@ -451,6 +452,47 @@ const ZOOM_STEP = 25;
 const ZOOM_MIN = 50;
 const ZOOM_MAX = 300;
 
+function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const max_size = 1200;
+            
+            if (width > height) {
+                if (width > max_size) {
+                    height *= max_size / width;
+                    width = max_size;
+                }
+            } else {
+                if (height > max_size) {
+                    width *= max_size / height;
+                    height = max_size;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            callback(dataUrl);
+        };
+        img.onerror = function() {
+            callback(e.target.result);
+        };
+        img.src = e.target.result;
+    };
+    reader.onerror = function() {
+        console.error("FileReader failed to read image");
+    };
+    reader.readAsDataURL(file);
+}
+
 function showImagePreview(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -662,7 +704,8 @@ function addInvoiceToState(data, fileId = null) {
             quantity: item.quantity || 1,
             unit: item.unit || 'ชิ้น',
             unit_price: item.unit_price || 0,
-            total_price: item.total_price || (item.quantity * item.unit_price) || 0
+            total_price: item.total_price || (item.quantity * item.unit_price) || 0,
+            image: item.image || null
         }))
     };
     state.invoices.push(invoice);
@@ -694,13 +737,28 @@ function renderInvoices() {
             itemsHtml += `
                 <tr data-id="${item.id}">
                     <td style="width: 5%; text-align: center;">${itemIdx + 1}</td>
-                    <td style="width: 15%;"><input type="text" class="cell-code" value="${item.item_code}" placeholder="รหัสสินค้า"></td>
-                    <td style="width: 40%;"><input type="text" class="cell-desc" value="${item.description}" placeholder="รายละเอียดสินค้า"></td>
+                    <td style="width: 12%;"><input type="text" class="cell-code" value="${item.item_code || ''}" placeholder="รหัสสินค้า"></td>
+                    <td style="width: 33%;"><input type="text" class="cell-desc" value="${item.description || ''}" placeholder="รายละเอียดสินค้า"></td>
                     <td style="width: 8%;"><input type="number" class="cell-qty" value="${item.quantity}" style="width: 100%; text-align: center; border: 1px solid var(--divider);" min="1"></td>
-                    <td style="width: 10%;"><input type="text" class="cell-unit" value="${item.unit || 'ชิ้น'}" style="width: 100%; text-align: center; border: 1px solid var(--divider);" placeholder="หน่วย"></td>
+                    <td style="width: 8%;"><input type="text" class="cell-unit" value="${item.unit || 'ชิ้น'}" style="width: 100%; text-align: center; border: 1px solid var(--divider);" placeholder="หน่วย"></td>
                     <td style="width: 12%;"><input type="number" class="cell-price" value="${item.unit_price}" style="width: 100%; text-align: right; border: 1px solid var(--divider);" min="0"></td>
                     <td style="width: 10%; text-align: right; font-weight: 600;" class="cell-total">${item.total_price.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    <td style="width: 5%; text-align: center;">
+                    <td style="width: 8%; text-align: center; vertical-align: middle;">
+                        <div class="item-image-upload-wrapper">
+                            ${item.image ? `
+                                <div class="item-image-preview-container">
+                                    <img src="${item.image}" class="item-image-thumb" title="คลิกเพื่อดูภาพขยาย">
+                                    <button class="btn-remove-item-image" title="ลบรูปภาพ"><i class="fa-solid fa-xmark"></i></button>
+                                </div>
+                            ` : `
+                                <button class="btn-upload-item-image" title="อัปโหลดภาพประกอบ">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                                <input type="file" class="item-image-file-input" accept="image/*" style="display: none;">
+                            `}
+                        </div>
+                    </td>
+                    <td style="width: 4%; text-align: center;">
                         <button class="btn-delete-item" style="color: var(--danger); background: transparent; font-size: 14px;" title="ลบรายการ">
                             <i class="fa-solid fa-trash"></i>
                         </button>
@@ -754,6 +812,7 @@ function renderInvoices() {
                             <th style="text-align: center;">หน่วย</th>
                             <th style="text-align: right;">ราคา/หน่วย</th>
                             <th style="text-align: right;">จำนวนเงิน</th>
+                            <th style="text-align: center;">ภาพประกอบ</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -826,7 +885,7 @@ function bindInvoiceEvents(card, invIdx) {
     card.querySelector('.btn-add-item').addEventListener('click', () => {
         state.invoices[invIdx].items.push({
             id: 'item-' + Math.random().toString(36).substr(2, 9),
-            item_code: '', description: '', quantity: 1, unit: 'ชิ้น', unit_price: 0, total_price: 0
+            item_code: '', description: '', quantity: 1, unit: 'ชิ้น', unit_price: 0, total_price: 0, image: null
         });
         renderInvoices();
         calculateTotals();
@@ -861,6 +920,49 @@ function bindInvoiceEvents(card, invIdx) {
             renderInvoices();
             calculateTotals();
         });
+
+        // Image Upload Event Handlers
+        const uploadBtn = row.querySelector('.btn-upload-item-image');
+        const fileInput = row.querySelector('.item-image-file-input');
+        const removeBtn = row.querySelector('.btn-remove-item-image');
+        const thumbImg = row.querySelector('.item-image-thumb');
+        
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    compressImage(file, (compressedBase64) => {
+                        item.image = compressedBase64;
+                        renderInvoices();
+                        calculateTotals();
+                    });
+                }
+            });
+        }
+        
+        if (removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                item.image = null;
+                renderInvoices();
+                calculateTotals();
+            });
+        }
+        
+        if (thumbImg) {
+            thumbImg.addEventListener('click', (e) => {
+                e.stopPropagation();
+                elements.previewImage.src = item.image;
+                elements.previewFilename.textContent = item.description || 'ภาพประกอบสินค้า';
+                previewZoomLevel = 100;
+                updatePreviewZoom();
+                document.getElementById('image-preview-panel').classList.add('open');
+            });
+        }
     });
     
     updateCardTotals(card, state.invoices[invIdx]);
@@ -1260,6 +1362,57 @@ elements.btnGenerateExcel.addEventListener('click', async () => {
     } finally {
         elements.btnGenerateExcel.disabled = false;
         elements.btnGenerateExcel.innerHTML = originalBtnText;
+    }
+});
+
+// ==========================================
+// Generate Excel Document (Illustration)
+// ==========================================
+elements.btnGenerateIllusExcel.addEventListener('click', async () => {
+    if (state.invoices.length === 0) {
+        showToast('กรุณาอัปโหลดภาพบิลหรือเพิ่มบิลอย่างน้อย 1 ใบก่อนสร้างไฟล์ภาพประกอบ Excel', true);
+        return;
+    }
+    
+    syncInputs();
+    
+    const originalBtnText = elements.btnGenerateIllusExcel.innerHTML;
+    elements.btnGenerateIllusExcel.disabled = true;
+    elements.btnGenerateIllusExcel.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังสร้างไฟล์...';
+    
+    try {
+        const response = await fetch('/api/generate_excel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...state,
+                is_illustration: true
+            })
+        });
+        
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'สร้าง Excel ภาพประกอบล้มเหลว');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'ภาพประกอบ.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        showToast('สร้างและดาวน์โหลดไฟล์ Excel ภาพประกอบสำเร็จ!');
+        
+    } catch (error) {
+        console.error(error);
+        showToast(`เกิดข้อผิดพลาด: ${error.message}`, true);
+    } finally {
+        elements.btnGenerateIllusExcel.disabled = false;
+        elements.btnGenerateIllusExcel.innerHTML = originalBtnText;
     }
 });
 

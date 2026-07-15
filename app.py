@@ -15,6 +15,9 @@ from typing import List, Optional
 import docx
 from docx.shared import Pt
 import openpyxl
+from openpyxl.drawing.spreadsheet_drawing import OneCellAnchor, AnchorMarker
+from openpyxl.drawing.xdr import XDRPositiveSize2D
+from openpyxl.utils.units import pixels_to_EMU
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from bahttext import bahttext
@@ -1350,6 +1353,7 @@ def generate_docx():
 @app.route('/api/generate_excel', methods=['POST'])
 def generate_excel():
     data = request.json or {}
+    is_illus = data.get('is_illustration', False)
     try:
         # Load the workbook
         src_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx')
@@ -1357,247 +1361,491 @@ def generate_excel():
             return jsonify({"error": "Template file 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx' not found."}), 404
             
         wb = openpyxl.load_workbook(src_file, data_only=False)
-        
-        # ---------------------------------------------
-        # Update Expense Summary Sheet (Sheet 2)
-        # ---------------------------------------------
         sheet2 = wb.worksheets[1]
         
-        # 1. Shift all merged cell ranges starting from row 3 down by 1 row
-        ranges = list(sheet2.merged_cells.ranges)
-        for r in ranges:
-            if r.min_row >= 3:
-                sheet2.merged_cells.remove(r)
-                r.shift(row_shift=1)
-                sheet2.merged_cells.add(r)
-
-        # 2. Insert 1 row at index 3 for the date/location range
-        sheet2.insert_rows(3, 1)
-        
-        # Merge A3:U3 (columns 1 to 21)
-        sheet2.merge_cells(start_row=3, start_column=1, end_row=3, end_column=21)
-        
-        # Copy style from A2 to A3
-        sheet2.cell(row=3, column=1).font = copy.copy(sheet2.cell(row=2, column=1).font)
-        sheet2.cell(row=3, column=1).alignment = copy.copy(sheet2.cell(row=2, column=1).alignment)
-        
-        # 3. Cache styles from the shifted template rows (after insertion)
-        vendor_style_cells = [sheet2.cell(row=6, column=c) for c in range(1, 27)]
-        item_style_cells = [sheet2.cell(row=7, column=c) for c in range(1, 27)]
-        discount_style_cells = [sheet2.cell(row=27, column=c) for c in range(1, 27)]
-        total_style_cells = [sheet2.cell(row=47, column=c) for c in range(1, 27)]
-        
-        vendor_row_height = sheet2.row_dimensions[6].height
-        item_row_height = sheet2.row_dimensions[7].height
-        discount_row_height = sheet2.row_dimensions[27].height
-        total_row_height = sheet2.row_dimensions[47].height
-        
-        # Clear merged cells in dynamic area (starting at row 6 now)
-        ranges_to_remove = [r for r in list(sheet2.merged_cells.ranges) if r.min_row >= 6]
-        for r in ranges_to_remove:
-            sheet2.merged_cells.remove(r)
+        # ---------------------------------------------
+        # Generate Illustration Excel (is_illustration = True)
+        # ---------------------------------------------
+        if is_illus:
+            # 1. Cache styles from template before clearing
+            title_font = copy.copy(sheet2.cell(row=1, column=1).font)
+            title_align = copy.copy(sheet2.cell(row=1, column=1).alignment)
             
-        # Delete template data rows (starting at row 6, deleting everything after)
-        sheet2.delete_rows(6, sheet2.max_row - 5)
-        
-        # Update titles
-        course_name = data.get('intro_course', '').strip()
-        dept = data.get('department', 'สคร.').strip()
-        date_range = data.get('excel_date_range', '').strip()
-        location = data.get('excel_location', '').strip()
-        
-        # Row 2: รายการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร / การดำเนินงาน ...
-        if course_name:
-            clean_course = course_name.strip(' "\'')
-            if clean_course.startswith("รายการจัดซื้อวัสดุอุปกรณ์"):
-                sheet2['A2'] = clean_course
-            else:
-                has_prefix = any(clean_course.startswith(prefix) for prefix in [
-                    "สำหรับการจัด", "สำหรับ", "สนับสนุน", "เพื่อ", "การจัด"
-                ])
-                if has_prefix:
-                    sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์{clean_course}"
-                elif clean_course.startswith("ดำเนินงาน"):
-                    sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์สำหรับการ{clean_course}"
-                else:
-                    sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร {clean_course}"
-        else:
-            sheet2['A2'] = "รายการจัดซื้อวัสดุอุปกรณ์"
+            # Row 4 is header: A4 is 'ลำดับ' style, B4 is 'รายละเอียด' style, U4 is 'หมายเหตุ' style
+            header_col1_font = copy.copy(sheet2.cell(row=4, column=1).font)
+            header_col1_fill = copy.copy(sheet2.cell(row=4, column=1).fill)
+            header_col1_align = copy.copy(sheet2.cell(row=4, column=1).alignment)
             
-        # Row 3: วันที่ / ระหว่างวันที่ ... ณ ...
-        date_loc_text = ""
-        if date_range:
-            # Check if it already has a prefix
-            if date_range.startswith("ระหว่างวันที่") or date_range.startswith("วันที่"):
-                date_loc_text += date_range
+            header_col2_font = copy.copy(sheet2.cell(row=4, column=2).font)
+            header_col2_fill = copy.copy(sheet2.cell(row=4, column=2).fill)
+            header_col2_align = copy.copy(sheet2.cell(row=4, column=2).alignment)
+            
+            header_colU_font = copy.copy(sheet2.cell(row=4, column=21).font)
+            header_colU_fill = copy.copy(sheet2.cell(row=4, column=21).fill)
+            header_colU_align = copy.copy(sheet2.cell(row=4, column=21).alignment)
+            
+            # Row 5 and 6 of original template are vendor header and item style cells
+            vendor_style_cells = [sheet2.cell(row=5, column=c) for c in range(1, 22)]
+            item_style_cells = [sheet2.cell(row=6, column=c) for c in range(1, 22)]
+            
+            vendor_row_height = sheet2.row_dimensions[5].height or 52.2
+            item_row_height = sheet2.row_dimensions[6].height or 36.0
+            
+            # Clear all merged cell ranges
+            for merged_range in list(sheet2.merged_cells.ranges):
+                sheet2.merged_cells.remove(merged_range)
+                
+            # Clear all rows from row 1 to max_row
+            sheet2.delete_rows(1, sheet2.max_row)
+            
+            # Set target column width for Column P
+            sheet2.column_dimensions['P'].width = 56.25
+            
+            # Set page setup and print options
+            sheet2.page_setup.orientation = sheet2.ORIENTATION_PORTRAIT
+            sheet2.page_setup.paperSize = sheet2.PAPERSIZE_A4
+            sheet2.page_setup.fitToWidth = 1
+            sheet2.page_setup.fitToHeight = 0
+            sheet2.sheet_properties.pageSetUpPr.fitToPage = True
+            sheet2.print_options.gridLines = True
+            if sheet2.views.sheetView:
+                for view in sheet2.views.sheetView:
+                    view.showGridLines = True
             else:
-                has_range_indicator = any(sep in date_range for sep in ["-", "ถึง", "–", "—"])
-                if has_range_indicator:
-                    date_loc_text += f"ระหว่างวันที่ {date_range}"
-                else:
-                    date_loc_text += f"วันที่ {date_range}"
-        if location:
-            if date_loc_text:
-                date_loc_text += f" ณ {location}"
-            else:
-                date_loc_text += f"ณ {location}"
-        sheet2['A3'] = date_loc_text
-
-        
-        first_vendor_row = current_row = 6
-        
-        def apply_cached_style(sheet, row_idx, cached_row_cells):
-            for col_idx, src_cell in enumerate(cached_row_cells, 1):
-                dst_cell = sheet.cell(row=row_idx, column=col_idx)
-                if src_cell.font:
-                    dst_cell.font = copy.copy(src_cell.font)
-                if src_cell.fill:
-                    dst_cell.fill = copy.copy(src_cell.fill)
-                if src_cell.alignment:
-                    dst_cell.alignment = copy.copy(src_cell.alignment)
-                if src_cell.border:
-                    dst_cell.border = copy.copy(src_cell.border)
-                if src_cell.number_format:
-                    dst_cell.number_format = src_cell.number_format
+                sheet2.views.sheetView.append(openpyxl.worksheet.views.SheetView(showGridLines=True))
+            
+            # 2. Write Row 1: 'ภาพประกอบ' title
+            c_title = sheet2.cell(row=1, column=1, value='ภาพประกอบ')
+            c_title.font = title_font
+            c_title.alignment = title_align
+            sheet2.row_dimensions[1].height = 35.0
+            sheet2.merge_cells(start_row=1, start_column=1, end_row=1, end_column=16)
+            
+            # 3. Write Row 2: Headers ('ลำดับ', 'รายละเอียด', 'ภาพ')
+            c_h1 = sheet2.cell(row=2, column=1, value='ลำดับ')
+            c_h1.font = header_col1_font
+            c_h1.fill = header_col1_fill
+            c_h1.alignment = header_col1_align
+            
+            c_h2 = sheet2.cell(row=2, column=2, value='รายละเอียด')
+            c_h2.font = header_col2_font
+            c_h2.fill = header_col2_fill
+            c_h2.alignment = header_col2_align
+            
+            c_h3 = sheet2.cell(row=2, column=16, value='ภาพ')
+            c_h3.font = header_colU_font
+            c_h3.fill = header_colU_fill
+            c_h3.alignment = header_colU_align
+            
+            # Apply header font and styling across the merged range
+            for col in range(2, 16):
+                cell = sheet2.cell(row=2, column=col)
+                cell.font = header_col2_font
+                cell.fill = header_col2_fill
+                cell.alignment = header_col2_align
+                
+            sheet2.merge_cells(start_row=2, start_column=2, end_row=2, end_column=15)
+            sheet2.row_dimensions[2].height = 74.25
+            
+            # Draw header borders
+            from openpyxl.styles import Border, Side
+            thin_side = Side(border_style="thin", color="000000")
+            medium_side = Side(border_style="medium", color="000000")
+            
+            sheet2.cell(row=2, column=1).border = Border(left=thin_side, right=thin_side, bottom=medium_side)
+            for col in range(2, 15):
+                sheet2.cell(row=2, column=col).border = Border(bottom=medium_side)
+            sheet2.cell(row=2, column=15).border = Border(right=thin_side, bottom=medium_side)
+            sheet2.cell(row=2, column=16).border = Border(left=thin_side, right=thin_side, bottom=medium_side)
+            
+            # 4. Write data rows
+            current_row = 3
+            invoices = data.get('invoices', [])
+            invoices = sorted(invoices, key=lambda x: parse_thai_date(x.get('invoice_date')))
+            
+            temp_files = []
+            
+            def apply_style_illus(sheet, row_idx, style_cells):
+                for col_idx, src_cell in enumerate(style_cells, 1):
+                    dst_cell = sheet.cell(row=row_idx, column=col_idx)
+                    if src_cell.font: dst_cell.font = copy.copy(src_cell.font)
+                    if src_cell.fill: dst_cell.fill = copy.copy(src_cell.fill)
+                    if src_cell.alignment: dst_cell.alignment = copy.copy(src_cell.alignment)
+                    if src_cell.number_format: dst_cell.number_format = src_cell.number_format
+            
+            for inv_idx, inv in enumerate(invoices, 1):
+                items = inv.get('items', [])
+                
+                # Vendor Header Row
+                sheet2.cell(row=current_row, column=1, value=inv_idx)
+                sheet2.cell(row=current_row, column=2, value=inv.get('vendor_name', ''))
+                
+                apply_style_illus(sheet2, current_row, vendor_style_cells)
+                for c in [15, 16]:
+                    src_c = vendor_style_cells[c-1] if c-1 < len(vendor_style_cells) else vendor_style_cells[-1]
+                    dst_c = sheet2.cell(row=current_row, column=c)
+                    if src_c.font: dst_c.font = copy.copy(src_c.font)
+                    if src_c.fill: dst_c.fill = copy.copy(src_c.fill)
+                    if src_c.alignment: dst_c.alignment = copy.copy(src_c.alignment)
+                
+                sheet2.row_dimensions[current_row].height = vendor_row_height
+                sheet2.merge_cells(start_row=current_row, start_column=2, end_row=current_row, end_column=14)
+                
+                sheet2.cell(row=current_row, column=1).border = Border(left=thin_side, right=thin_side)
+                sheet2.cell(row=current_row, column=2).border = Border(left=thin_side)
+                sheet2.cell(row=current_row, column=15).border = Border(right=thin_side)
+                sheet2.cell(row=current_row, column=16).border = Border(left=thin_side, right=thin_side)
+                
+                current_row += 1
+                
+                # Item Rows
+                for item_idx, item in enumerate(items, 1):
+                    item_row = current_row
                     
-        # Write invoices sorted chronologically by date
-        invoices = data.get('invoices', [])
-        invoices = sorted(invoices, key=lambda x: parse_thai_date(x.get('invoice_date')))
-        for inv_idx, inv in enumerate(invoices, 1):
-            items = inv.get('items', [])
-            discount = float(inv.get('discount', 0.0))
+                    code = item.get('item_code', '').strip()
+                    desc = item.get('description', '').strip()
+                    desc_val = f"{code} {desc}" if code else desc
+                    
+                    sheet2.cell(row=item_row, column=1, value=f"{inv_idx}.{item_idx}")
+                    sheet2.cell(row=item_row, column=2, value=desc_val)
+                    sheet2.cell(row=item_row, column=4, value="(")
+                    sheet2.cell(row=item_row, column=5, value=float(item.get('unit_price', 0.0)))
+                    sheet2.cell(row=item_row, column=6, value="บาท * ")
+                    sheet2.cell(row=item_row, column=7, value=int(item.get('quantity', 1)))
+                    sheet2.cell(row=item_row, column=8, value=item.get('unit', 'ชิ้น'))
+                    sheet2.cell(row=item_row, column=9, value=")")
+                    sheet2.cell(row=item_row, column=13, value="=")
+                    sheet2.cell(row=item_row, column=14, value=f"=E{item_row}*G{item_row}")
+                    sheet2.cell(row=item_row, column=15, value="บาท")
+                    
+                    apply_style_illus(sheet2, item_row, item_style_cells)
+                    # Apply styles to column P
+                    src_c = item_style_cells[15] if 15 < len(item_style_cells) else item_style_cells[-1]
+                    dst_c = sheet2.cell(row=item_row, column=16)
+                    if src_c.font: dst_c.font = copy.copy(src_c.font)
+                    if src_c.fill: dst_c.fill = copy.copy(src_c.fill)
+                    if src_c.alignment: dst_c.alignment = copy.copy(src_c.alignment)
+                    
+                    # Apply item cell borders
+                    sheet2.cell(row=item_row, column=1).border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
+                    for col in range(2, 15):
+                        sheet2.cell(row=item_row, column=col).border = Border(top=thin_side, bottom=thin_side)
+                    sheet2.cell(row=item_row, column=15).border = Border(right=thin_side, top=thin_side, bottom=thin_side)
+                    sheet2.cell(row=item_row, column=16).border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
+                    
+                    # Embed Image
+                    img_base64 = item.get('image')
+                    has_image = False
+                    if img_base64 and ',' in img_base64:
+                        try:
+                            header, encoded = img_base64.split(',', 1)
+                            img_data = base64.b64decode(encoded)
+                            
+                            ext = ".png"
+                            if "jpeg" in header or "jpg" in header:
+                                ext = ".jpg"
+                                
+                            temp_fd, temp_path = tempfile.mkstemp(suffix=ext)
+                            os.write(temp_fd, img_data)
+                            os.close(temp_fd)
+                            temp_files.append(temp_path)
+                            
+                            with Image.open(temp_path) as pil_img:
+                                orig_w, orig_h = pil_img.size
+                                
+                            max_w, max_h = 380, 180
+                            scale = min(max_w / orig_w, max_h / orig_h)
+                            new_w = int(orig_w * scale)
+                            new_h = int(orig_h * scale)
+                            
+                            # Center the image inside the cell (Cell P dimensions: 399px width, 200px height)
+                            cell_w_px = 399
+                            cell_h_px = 200
+                            
+                            offset_x = max(0, int((cell_w_px - new_w) / 2))
+                            offset_y = max(0, int((cell_h_px - new_h) / 2))
+                            
+                            img = openpyxl.drawing.image.Image(temp_path)
+                            img.width = new_w
+                            img.height = new_h
+                            
+                            # Column P is 0-indexed column 15, Row is 0-indexed item_row - 1
+                            col_idx = 15
+                            row_idx = item_row - 1
+                            
+                            p2e = pixels_to_EMU
+                            col_offset = p2e(offset_x)
+                            row_offset = p2e(offset_y)
+                            
+                            marker = AnchorMarker(col=col_idx, colOff=col_offset, row=row_idx, rowOff=row_offset)
+                            size = XDRPositiveSize2D(p2e(new_w), p2e(new_h))
+                            
+                            img.anchor = OneCellAnchor(_from=marker, ext=size)
+                            sheet2.add_image(img)
+                            has_image = True
+                        except Exception as eImg:
+                            print(f"[Excel Generation] Failed to embed image: {eImg}")
+                            
+                    if has_image:
+                        sheet2.row_dimensions[item_row].height = 150.0
+                    else:
+                        sheet2.row_dimensions[item_row].height = item_row_height
+                        
+                    current_row += 1
+                    
+            sheet2.print_area = f"A1:P{current_row - 1}"
             
-            vendor_header_row = current_row
-            start_item_row = current_row + 1
-            end_item_row = current_row + len(items)
+            # Keep ONLY Sheet 2 (Summary Sheet)
+            if len(wb.worksheets) > 1:
+                wb.remove(wb.worksheets[0])
+                
+            temp_dir = tempfile.gettempdir()
+            out_filename = "ภาพประกอบ.xlsx"
+            out_path = os.path.join(temp_dir, out_filename)
             
-            # Write Vendor Header Row
-            sheet2.cell(row=vendor_header_row, column=1, value=inv_idx)
-            sheet2.cell(row=vendor_header_row, column=2, value=inv.get('vendor_name', ''))
-            sheet2.cell(row=vendor_header_row, column=15, value="=")
+            wb.save(out_path)
+            wb.close()
             
+            # Cleanup temp image files
+            for f in temp_files:
+                try: os.remove(f)
+                except: pass
+                
+            return send_file(out_path, as_attachment=True, download_name=out_filename)
 
+        # ---------------------------------------------
+        # Generate Expense Summary Excel (is_illustration = False)
+        # ---------------------------------------------
+        else:
+            # 1. Shift all merged cell ranges starting from row 3 down by 1 row
+            ranges = list(sheet2.merged_cells.ranges)
+            for r in ranges:
+                if r.min_row >= 3:
+                    sheet2.merged_cells.remove(r)
+                    r.shift(row_shift=1)
+                    sheet2.merged_cells.add(r)
+
+            # 2. Insert 1 row at index 3 for the date/location range
+            sheet2.insert_rows(3, 1)
             
-            # Vendor total formula
-            if discount > 0:
-                discount_row_idx = end_item_row + 1
-                vendor_total_formula = f"=SUM(N{start_item_row}:N{end_item_row})-E{discount_row_idx}"
+            # Merge A3:U3 (columns 1 to 21)
+            sheet2.merge_cells(start_row=3, start_column=1, end_row=3, end_column=21)
+            
+            # Copy style from A2 to A3
+            sheet2.cell(row=3, column=1).font = copy.copy(sheet2.cell(row=2, column=1).font)
+            sheet2.cell(row=3, column=1).alignment = copy.copy(sheet2.cell(row=2, column=1).alignment)
+            
+            # 3. Cache styles from the shifted template rows (after insertion)
+            vendor_style_cells = [sheet2.cell(row=6, column=c) for c in range(1, 27)]
+            item_style_cells = [sheet2.cell(row=7, column=c) for c in range(1, 27)]
+            discount_style_cells = [sheet2.cell(row=27, column=c) for c in range(1, 27)]
+            total_style_cells = [sheet2.cell(row=47, column=c) for c in range(1, 27)]
+            
+            vendor_row_height = sheet2.row_dimensions[6].height
+            item_row_height = sheet2.row_dimensions[7].height
+            discount_row_height = sheet2.row_dimensions[27].height
+            total_row_height = sheet2.row_dimensions[47].height
+            
+            # Clear merged cells in dynamic area (starting at row 6 now)
+            ranges_to_remove = [r for r in list(sheet2.merged_cells.ranges) if r.min_row >= 6]
+            for r in ranges_to_remove:
+                sheet2.merged_cells.remove(r)
+                
+            # Delete template data rows (starting at row 6, deleting everything after)
+            sheet2.delete_rows(6, sheet2.max_row - 5)
+            
+            # Update titles
+            course_name = data.get('intro_course', '').strip()
+            dept = data.get('department', 'สคร.').strip()
+            date_range = data.get('excel_date_range', '').strip()
+            location = data.get('excel_location', '').strip()
+            
+            # Row 2: รายการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร / การดำเนินงาน ...
+            if course_name:
+                clean_course = course_name.strip(' "\'')
+                if clean_course.startswith("รายการจัดซื้อวัสดุอุปกรณ์"):
+                    sheet2['A2'] = clean_course
+                else:
+                    has_prefix = any(clean_course.startswith(prefix) for prefix in [
+                        "สำหรับการจัด", "สำหรับ", "สนับสนุน", "เพื่อ", "การจัด"
+                    ])
+                    if has_prefix:
+                        sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์{clean_course}"
+                    elif clean_course.startswith("ดำเนินงาน"):
+                        sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์สำหรับการ{clean_course}"
+                    else:
+                        sheet2['A2'] = f"รายการจัดซื้อวัสดุอุปกรณ์สำหรับการจัด หลักสูตร {clean_course}"
             else:
-                vendor_total_formula = f"=SUM(N{start_item_row}:N{end_item_row})"
+                sheet2['A2'] = "รายการจัดซื้อวัสดุอุปกรณ์"
                 
-            sheet2.cell(row=vendor_header_row, column=16, value=vendor_total_formula)
-            sheet2.cell(row=vendor_header_row, column=17, value="บาท")
-            sheet2.cell(row=vendor_header_row, column=18, value=f"=P{vendor_header_row}")
+            # Row 3: วันที่ / ระหว่างวันที่ ... ณ ...
+            date_loc_text = ""
+            if date_range:
+                if date_range.startswith("ระหว่างวันที่") or date_range.startswith("วันที่"):
+                    date_loc_text += date_range
+                else:
+                    has_range_indicator = any(sep in date_range for sep in ["-", "ถึง", "–", "—"])
+                    if has_range_indicator:
+                        date_loc_text += f"ระหว่างวันที่ {date_range}"
+                    else:
+                        date_loc_text += f"วันที่ {date_range}"
+            if location:
+                if date_loc_text:
+                    date_loc_text += f" ณ {location}"
+                else:
+                    date_loc_text += f"ณ {location}"
+            sheet2['A3'] = date_loc_text
             
-            # Styles & heights
-            apply_cached_style(sheet2, vendor_header_row, vendor_style_cells)
-            sheet2.row_dimensions[vendor_header_row].height = vendor_row_height
+            first_vendor_row = current_row = 6
             
-            # Recreate merges
-            sheet2.merge_cells(start_row=vendor_header_row, start_column=2, end_row=vendor_header_row, end_column=14)
-            sheet2.merge_cells(start_row=vendor_header_row, start_column=18, end_row=vendor_header_row, end_column=20)
-            
-            current_row += 1
-            
-            # Write Item Rows
-            for item_idx, item in enumerate(items, 1):
-                item_row = current_row
+            def apply_cached_style(sheet, row_idx, cached_row_cells):
+                for col_idx, src_cell in enumerate(cached_row_cells, 1):
+                    dst_cell = sheet.cell(row=row_idx, column=col_idx)
+                    if src_cell.font: dst_cell.font = copy.copy(src_cell.font)
+                    if src_cell.fill: dst_cell.fill = copy.copy(src_cell.fill)
+                    if src_cell.alignment: dst_cell.alignment = copy.copy(src_cell.alignment)
+                    if src_cell.border: dst_cell.border = copy.copy(src_cell.border)
+                    if src_cell.number_format: dst_cell.number_format = src_cell.number_format
+                        
+            # Write invoices sorted chronologically by date
+            invoices = data.get('invoices', [])
+            invoices = sorted(invoices, key=lambda x: parse_thai_date(x.get('invoice_date')))
+            for inv_idx, inv in enumerate(invoices, 1):
+                items = inv.get('items', [])
+                discount = float(inv.get('discount', 0.0))
                 
-                code = item.get('item_code', '').strip()
-                desc = item.get('description', '').strip()
-                desc_val = f"{code} {desc}" if code else desc
+                vendor_header_row = current_row
+                start_item_row = current_row + 1
+                end_item_row = current_row + len(items)
                 
-                sheet2.cell(row=item_row, column=1, value=f"{inv_idx}.{item_idx}")
-                sheet2.cell(row=item_row, column=2, value=desc_val)
-                sheet2.cell(row=item_row, column=4, value="(")
-                sheet2.cell(row=item_row, column=5, value=float(item.get('unit_price', 0.0)))
-                sheet2.cell(row=item_row, column=6, value="บาท * ")
-                sheet2.cell(row=item_row, column=7, value=int(item.get('quantity', 1)))
-                sheet2.cell(row=item_row, column=8, value=item.get('unit', 'ชิ้น'))
-                sheet2.cell(row=item_row, column=9, value=")")
-                sheet2.cell(row=item_row, column=13, value="=")
-                sheet2.cell(row=item_row, column=14, value=f"=E{item_row}*G{item_row}")
-                sheet2.cell(row=item_row, column=15, value="บาท")
+                # Write Vendor Header Row
+                sheet2.cell(row=vendor_header_row, column=1, value=inv_idx)
+                sheet2.cell(row=vendor_header_row, column=2, value=inv.get('vendor_name', ''))
+                sheet2.cell(row=vendor_header_row, column=15, value="=")
                 
-                apply_cached_style(sheet2, item_row, item_style_cells)
-                sheet2.row_dimensions[item_row].height = item_row_height
+                # Vendor total formula
+                if discount > 0:
+                    discount_row_idx = end_item_row + 1
+                    vendor_total_formula = f"=SUM(N{start_item_row}:N{end_item_row})-E{discount_row_idx}"
+                else:
+                    vendor_total_formula = f"=SUM(N{start_item_row}:N{end_item_row})"
+                    
+                sheet2.cell(row=vendor_header_row, column=16, value=vendor_total_formula)
+                sheet2.cell(row=vendor_header_row, column=17, value="บาท")
+                sheet2.cell(row=vendor_header_row, column=18, value=f"=P{vendor_header_row}")
+                
+                apply_cached_style(sheet2, vendor_header_row, vendor_style_cells)
+                sheet2.row_dimensions[vendor_header_row].height = vendor_row_height
+                
+                # Recreate merges
+                sheet2.merge_cells(start_row=vendor_header_row, start_column=2, end_row=vendor_header_row, end_column=14)
+                sheet2.merge_cells(start_row=vendor_header_row, start_column=18, end_row=vendor_header_row, end_column=20)
                 
                 current_row += 1
                 
-            # Write Discount Row
-            if discount > 0:
-                discount_row = current_row
-                sheet2.cell(row=discount_row, column=2, value="ส่วนลด")
-                sheet2.cell(row=discount_row, column=5, value=discount)
-                sheet2.cell(row=discount_row, column=6, value="บาท")
-                
-                apply_cached_style(sheet2, discount_row, discount_style_cells)
-                sheet2.row_dimensions[discount_row].height = discount_row_height
-                
-                sheet2.merge_cells(start_row=discount_row, start_column=2, end_row=discount_row, end_column=3)
-                current_row += 1
-                
-            # Merge Column U (Remarks / หมายเหตุ) vertically for the invoice items/discount rows
-            merge_start_row = start_item_row
-            merge_end_row = current_row - 1
-            if merge_end_row > merge_start_row:
-                sheet2.merge_cells(start_row=merge_start_row, start_column=21, end_row=merge_end_row, end_column=21)
-                
-        # ---------------------------------------------
-        # 3. Write Total Row
-        # ---------------------------------------------
-        total_row = current_row
-        sheet2.cell(row=total_row, column=1, value="รวม")
-        sheet2.cell(row=total_row, column=2, value=f"=BAHTTEXT(R{total_row})")
-        
-        sheet2.cell(row=total_row, column=18, value=f"=SUM(R{first_vendor_row}:R{total_row - 1})")
-        
-        apply_cached_style(sheet2, total_row, total_style_cells)
-        sheet2.row_dimensions[total_row].height = total_row_height
-        
-        sheet2.merge_cells(start_row=total_row, start_column=2, end_row=total_row, end_column=17)
-        sheet2.merge_cells(start_row=total_row, start_column=18, end_row=total_row, end_column=20)
-        
-        # Ensure outer left/right borders (Column A and Column U) are consistently medium to prevent clipping
-        from openpyxl.styles import Border, Side
-        medium_side = Side(border_style="medium", color="000000")
-        for r in range(5, total_row + 1):
-            # Column A (1)
-            c_a = sheet2.cell(row=r, column=1)
-            c_a.border = Border(
-                left=medium_side,
-                right=c_a.border.right if c_a.border else None,
-                top=c_a.border.top if c_a.border else None,
-                bottom=c_a.border.bottom if c_a.border else None
-            )
-            # Column U (21)
-            c_u = sheet2.cell(row=r, column=21)
-            c_u.border = Border(
-                left=c_u.border.left if c_u.border else None,
-                right=medium_side,
-                top=c_u.border.top if c_u.border else None,
-                bottom=c_u.border.bottom if c_u.border else None
-            )
+                # Write Item Rows
+                for item_idx, item in enumerate(items, 1):
+                    item_row = current_row
+                    
+                    code = item.get('item_code', '').strip()
+                    desc = item.get('description', '').strip()
+                    desc_val = f"{code} {desc}" if code else desc
+                    
+                    sheet2.cell(row=item_row, column=1, value=f"{inv_idx}.{item_idx}")
+                    sheet2.cell(row=item_row, column=2, value=desc_val)
+                    sheet2.cell(row=item_row, column=4, value="(")
+                    sheet2.cell(row=item_row, column=5, value=float(item.get('unit_price', 0.0)))
+                    sheet2.cell(row=item_row, column=6, value="บาท * ")
+                    sheet2.cell(row=item_row, column=7, value=int(item.get('quantity', 1)))
+                    sheet2.cell(row=item_row, column=8, value=item.get('unit', 'ชิ้น'))
+                    sheet2.cell(row=item_row, column=9, value=")")
+                    sheet2.cell(row=item_row, column=13, value="=")
+                    sheet2.cell(row=item_row, column=14, value=f"=E{item_row}*G{item_row}")
+                    sheet2.cell(row=item_row, column=15, value="บาท")
+                    
+                    apply_cached_style(sheet2, item_row, item_style_cells)
+                    sheet2.row_dimensions[item_row].height = item_row_height
+                    
+                    current_row += 1
+                    
+                # Write Discount Row
+                if discount > 0:
+                    discount_row = current_row
+                    sheet2.cell(row=discount_row, column=2, value="ส่วนลด")
+                    sheet2.cell(row=discount_row, column=5, value=discount)
+                    sheet2.cell(row=discount_row, column=6, value="บาท")
+                    
+                    apply_cached_style(sheet2, discount_row, discount_style_cells)
+                    sheet2.row_dimensions[discount_row].height = discount_row_height
+                    
+                    sheet2.merge_cells(start_row=discount_row, start_column=2, end_row=discount_row, end_column=3)
+                    current_row += 1
+                    
+                # Merge Column U vertically
+                merge_start_row = start_item_row
+                merge_end_row = current_row - 1
+                if merge_end_row > merge_start_row:
+                    sheet2.merge_cells(start_row=merge_start_row, start_column=21, end_row=merge_end_row, end_column=21)
+                    
+            # Write Total Row
+            total_row = current_row
+            sheet2.cell(row=total_row, column=1, value="รวม")
+            sheet2.cell(row=total_row, column=2, value=f"=BAHTTEXT(R{total_row})")
+            sheet2.cell(row=total_row, column=18, value=f"=SUM(R{first_vendor_row}:R{total_row - 1})")
             
-        # Update print area to exactly fit the populated table range
-        sheet2.print_area = f"A1:U{total_row}"
-        
-        # ---------------------------------------------
-        # 4. Keep ONLY Sheet 2 (Summary Sheet)
-        # ---------------------------------------------
-        if len(wb.worksheets) > 1:
-            wb.remove(wb.worksheets[0])
+            apply_cached_style(sheet2, total_row, total_style_cells)
+            sheet2.row_dimensions[total_row].height = total_row_height
             
-        # Save to temporary file and return
-        temp_dir = tempfile.gettempdir()
-        out_filename = "สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx"
-        out_path = os.path.join(temp_dir, out_filename)
-        
-        wb.save(out_path)
-        wb.close()
-        
-        return send_file(out_path, as_attachment=True, download_name=out_filename)
-        
+            sheet2.merge_cells(start_row=total_row, start_column=2, end_row=total_row, end_column=17)
+            sheet2.merge_cells(start_row=total_row, start_column=18, end_row=total_row, end_column=20)
+            
+            # Ensure outer left/right borders are medium
+            from openpyxl.styles import Border, Side
+            medium_side = Side(border_style="medium", color="000000")
+            for r in range(5, total_row + 1):
+                c_a = sheet2.cell(row=r, column=1)
+                c_a.border = Border(
+                    left=medium_side,
+                    right=c_a.border.right if c_a.border else None,
+                    top=c_a.border.top if c_a.border else None,
+                    bottom=c_a.border.bottom if c_a.border else None
+                )
+                c_u = sheet2.cell(row=r, column=21)
+                c_u.border = Border(
+                    left=c_u.border.left if c_u.border else None,
+                    right=medium_side,
+                    top=c_u.border.top if c_u.border else None,
+                    bottom=c_u.border.bottom if c_u.border else None
+                )
+                
+            sheet2.print_area = f"A1:U{total_row}"
+            
+            # Page setup and print options for summary sheet
+            sheet2.page_setup.orientation = sheet2.ORIENTATION_PORTRAIT
+            sheet2.page_setup.paperSize = sheet2.PAPERSIZE_A4
+            sheet2.page_setup.fitToWidth = 1
+            sheet2.page_setup.fitToHeight = 0
+            sheet2.sheet_properties.pageSetUpPr.fitToPage = True
+            sheet2.print_options.gridLines = True
+            if sheet2.views.sheetView:
+                for view in sheet2.views.sheetView:
+                    view.showGridLines = True
+            else:
+                sheet2.views.sheetView.append(openpyxl.worksheet.views.SheetView(showGridLines=True))
+
+            # Keep ONLY Sheet 2 (Summary Sheet)
+            if len(wb.worksheets) > 1:
+                wb.remove(wb.worksheets[0])
+                
+            temp_dir = tempfile.gettempdir()
+            out_filename = "สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx"
+            out_path = os.path.join(temp_dir, out_filename)
+            
+            wb.save(out_path)
+            wb.close()
+            
+            return send_file(out_path, as_attachment=True, download_name=out_filename)
+            
     except Exception as e:
         import traceback
         traceback.print_exc()
