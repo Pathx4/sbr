@@ -21,10 +21,14 @@ from openpyxl.utils.units import pixels_to_EMU
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from bahttext import bahttext
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 
+# API Key Placeholder
+HARDCODED_API_KEY = os.environ.get("API_KEY", "")
 # ==========================================
 # Contacts Data from Excel (All Sheets)
 # ==========================================
@@ -576,6 +580,8 @@ def validate_key():
     data = request.json or {}
     provider = data.get('provider', 'gemini')
     api_key = data.get('api_key') or request.headers.get('Authorization')
+    if not api_key:
+        api_key = HARDCODED_API_KEY
     if api_key and api_key.startswith('Bearer '):
         api_key = api_key[len('Bearer '):]
     
@@ -919,6 +925,9 @@ def extract_bill():
         api_key = request.form.get('api_key')
         
     if not api_key:
+        api_key = HARDCODED_API_KEY
+        
+    if not api_key:
         return jsonify({"error": "API Key is required"}), 400
         
     if 'file' not in request.files:
@@ -1003,6 +1012,8 @@ def analyze_purchase():
     data = request.json or {}
     provider = data.get('provider', 'gemini')
     api_key = data.get('api_key') or request.headers.get('Authorization')
+    if not api_key:
+        api_key = HARDCODED_API_KEY
     if api_key and api_key.startswith('Bearer '):
         api_key = api_key[len('Bearer '):]
     
@@ -1100,7 +1111,7 @@ def generate_docx():
     if not data:
         return jsonify({"error": "Missing payload"}), 400
         
-    template_path = r"d:\AutoWord\แบบฟอร์ม รายงานขอความเห็นชอบซื้อจ้าง.docx"
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'แบบฟอร์ม รายงานขอความเห็นชอบซื้อจ้าง.docx')
     if not os.path.exists(template_path):
         return jsonify({"error": "Template document file not found on server"}), 500
         
@@ -1400,6 +1411,7 @@ def generate_excel():
             
             # Set target column width for Column P
             sheet2.column_dimensions['P'].width = 56.25
+            sheet2.column_dimensions['N'].width = 15.0
             
             # Set page setup and print options
             sheet2.page_setup.orientation = sheet2.ORIENTATION_PORTRAIT
@@ -1519,6 +1531,10 @@ def generate_excel():
                     sheet2.cell(row=item_row, column=15, value="บาท")
                     
                     apply_style_illus(sheet2, item_row, item_style_cells)
+                    from openpyxl.styles import Alignment
+                    desc_c = sheet2.cell(row=item_row, column=2)
+                    desc_c.alignment = Alignment(wrapText=True, vertical='top', horizontal='left')
+                    sheet2.merge_cells(start_row=item_row, start_column=2, end_row=item_row, end_column=3)
                     # Apply styles to column P
                     src_c = item_style_cells[15] if 15 < len(item_style_cells) else item_style_cells[-1]
                     dst_c = sheet2.cell(row=item_row, column=16)
@@ -1589,7 +1605,7 @@ def generate_excel():
                     if has_image:
                         sheet2.row_dimensions[item_row].height = 150.0
                     else:
-                        sheet2.row_dimensions[item_row].height = item_row_height
+                        sheet2.row_dimensions[item_row].height = None
                         
                     current_row += 1
                     
@@ -1653,6 +1669,9 @@ def generate_excel():
                 
             # Delete template data rows (starting at row 6, deleting everything after)
             sheet2.delete_rows(6, sheet2.max_row - 5)
+            
+            # Increase Column N width to prevent #####
+            sheet2.column_dimensions['N'].width = 15.0
             
             # Update titles
             course_name = data.get('intro_course', '').strip()
@@ -1764,7 +1783,11 @@ def generate_excel():
                     sheet2.cell(row=item_row, column=15, value="บาท")
                     
                     apply_cached_style(sheet2, item_row, item_style_cells)
-                    sheet2.row_dimensions[item_row].height = item_row_height
+                    from openpyxl.styles import Alignment
+                    desc_c = sheet2.cell(row=item_row, column=2)
+                    desc_c.alignment = Alignment(wrapText=True, vertical='top', horizontal='left')
+                    sheet2.merge_cells(start_row=item_row, start_column=2, end_row=item_row, end_column=3)
+                    sheet2.row_dimensions[item_row].height = None
                     
                     current_row += 1
                     

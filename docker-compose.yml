@@ -9,3 +9,5 @@ services:
     restart: always
     environment:
       - FLASK_ENV=production
+    env_file:
+      - .env

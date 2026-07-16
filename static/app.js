@@ -171,6 +171,7 @@ function showToast(message, isError = false) {
 // Dropzone State
 // ==========================================
 function updateDropzoneState(isValid) {
+    isValid = true; // Bypassed API Key check
     if (isValid) {
         elements.dropzone.classList.remove('disabled');
         elements.dropzone.querySelector('p').innerHTML = `ลากไฟล์ภาพบิลมาวางที่นี่ หรือ <span>คลิกเพื่อเลือกไฟล์</span>`;
@@ -574,7 +575,7 @@ elements.fileInput.addEventListener('change', (e) => {
 });
 
 async function handleFiles(files) {
-    if (!state.apiKey) {
+    if (false && !state.apiKey) {
         showToast('กรุณากรอก API Key ก่อนอัปโหลดไฟล์', true);
         elements.btnSettings.click();
         return;
@@ -1432,7 +1433,7 @@ elements.btnAiAnalyze.addEventListener('click', async () => {
         return;
     }
     
-    if (!state.apiKey) {
+    if (false && !state.apiKey) {
         showToast('กรุณากรอก API Key ในเมนูตั้งค่าก่อนให้ AI วิเคราะห์', true);
         elements.btnSettings.click();
         return;
@@ -1480,7 +1481,7 @@ elements.btnAiAnalyze.addEventListener('click', async () => {
 // Startup / Init
 // ==========================================
 async function validateSavedKeyOnLoad() {
-    if (!state.apiKey) {
+    if (false && !state.apiKey) {
         updateDropzoneState(false);
         elements.keyStatusDot.className = 'status-dot dot-gray';
         showToast('ไม่พบ API Key, กรุณาตั้งค่าเพื่อเปิดใช้งานการอัปโหลดรูปภาพบิล', true);

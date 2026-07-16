@@ -1,1 +1,10 @@
 # Cleared by user request to add all files
+
+.env
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+.idea/
+.vscode/
