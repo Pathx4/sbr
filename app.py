@@ -867,7 +867,7 @@ def call_groq_with_retries(api_key, img_bytes, prompt, mime_type="image/jpeg"):
     )
     
     payload = {
-        "model": "llama-3.2-90b-vision-preview",
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
         "response_format": { "type": "json_object" },
         "messages": [
             {
