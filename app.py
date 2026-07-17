@@ -580,10 +580,14 @@ def validate_key():
     data = request.json or {}
     provider = data.get('provider', 'gemini')
     api_key = data.get('api_key') or request.headers.get('Authorization')
-    if not api_key:
-        api_key = HARDCODED_API_KEY
     if api_key and api_key.startswith('Bearer '):
         api_key = api_key[len('Bearer '):]
+    if not api_key:
+        api_key = HARDCODED_API_KEY
+        if api_key and api_key.startswith('gsk_'):
+            provider = 'groq'
+        elif api_key and api_key.startswith('sk-'):
+            provider = 'openai'
     
     if not api_key:
         return jsonify({"valid": False, "error": "กรุณากรอก API Key"}), 400
@@ -926,7 +930,11 @@ def extract_bill():
         
     if not api_key:
         api_key = HARDCODED_API_KEY
-        
+        if api_key and api_key.startswith('gsk_'):
+            provider = 'groq'
+        elif api_key and api_key.startswith('sk-'):
+            provider = 'openai'
+            
     if not api_key:
         return jsonify({"error": "API Key is required"}), 400
         
@@ -1012,10 +1020,14 @@ def analyze_purchase():
     data = request.json or {}
     provider = data.get('provider', 'gemini')
     api_key = data.get('api_key') or request.headers.get('Authorization')
-    if not api_key:
-        api_key = HARDCODED_API_KEY
     if api_key and api_key.startswith('Bearer '):
         api_key = api_key[len('Bearer '):]
+    if not api_key:
+        api_key = HARDCODED_API_KEY
+        if api_key and api_key.startswith('gsk_'):
+            provider = 'groq'
+        elif api_key and api_key.startswith('sk-'):
+            provider = 'openai'
     
     if not api_key:
         return jsonify({"error": "API Key is required"}), 400
