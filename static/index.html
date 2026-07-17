@@ -334,60 +334,62 @@
         </div>
     </div>
 
-    <!-- User Guide Modal -->
+        <!-- User Guide Modal -->
     <div id="modal-guide" class="modal">
         <div class="modal-content glass" style="max-width: 600px;">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-circle-question"></i> คู่มือการใช้งานระบบ</h2>
+                <h2><i class="fa-solid fa-book-open"></i> คู่มือการใช้งานระบบ</h2>
                 <button class="modal-close" id="btn-guide-close">&times;</button>
             </div>
             <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                
                 <div class="guide-section">
-                    <h3 style="color: var(--primary); margin-top: 0; margin-bottom: 8px;"><i
-                            class="fa-solid fa-play"></i> ขั้นตอนการใช้งานจัดทำบันทึกข้อความ</h3>
-                    <ol style="padding-left: 20px; line-height: 1.6; color: var(--text-main);">
-                        <li style="margin-bottom: 6px;"><strong>ตั้งค่า API Key</strong>: คลิกปุ่ม "ตั้งค่า API Key"
-                            ป้อนคีย์ (แนะนำคีย์ Groq API ใช้งานฟรี 100%) และกดบันทึก</li>
-                        <li style="margin-bottom: 6px;"><strong>อัปโหลดภาพบิล/ใบเสร็จ</strong>:
-                            ลากไฟล์รูปภาพบิลมาวางที่กล่องอัปโหลดด้านซ้าย (รองรับการอัปโหลดหลายใบเสร็จพร้อมกัน)</li>
-                        <li style="margin-bottom: 6px;"><strong>เลือกผู้จัดทำ</strong>: พิมพ์ชื่อบุคลากรในช่อง "ผู้จัดทำ
-                            / โทรศัพท์" → ระบบจะค้นหาและกรอกเบอร์โทร ชื่อ ตำแหน่ง ให้อัตโนมัติ</li>
-                        <li style="margin-bottom: 6px;"><strong>แต่งข้อความด้วย AI</strong>: คลิกปุ่ม <strong>"ให้ AI
-                                วิเคราะห์จากรายการบิล"</strong> สีม่วง-น้ำเงิน AI
-                            จะวิเคราะห์สินค้าทั้งหมดแล้วกรอกข้ออ้างอิงกฎระเบียบพัสดุภาครัฐให้อัตโนมัติ</li>
-                        <li style="margin-bottom: 6px;"><strong>ตรวจสอบและแก้ไข</strong>: ปรับแต่งรายการสินค้า เลขที่บิล
-                            ราคา วันที่ หรือแต่งเนื้อหาข้อความเกริ่นนำเองได้อิสระทางตารางฝั่งขวา</li>
-                        <li style="margin-bottom: 6px;"><strong>สร้างไฟล์ Word</strong>: คลิกปุ่ม <strong>"สร้างไฟล์
-                                Word"</strong> เพื่อดาวน์โหลดไฟล์บันทึกข้อความจัดซื้อจัดจ้าง (.docx) สำเร็จรูป</li>
-                    </ol>
-                </div>
-                <hr style="border: 0; border-top: 1px solid var(--divider); margin: 16px 0;">
-                <div class="guide-section">
-                    <h3 style="color: var(--primary); margin-bottom: 8px;"><i class="fa-solid fa-share-nodes"></i>
-                        วิธีแชร์ให้เพื่อนร่วมงานใช้งานร่วมกัน</h3>
-                    <p style="color: var(--text-main); line-height: 1.5; margin-top: 0;">
-                        ระบบนี้เปิดให้เข้าใช้งานร่วมกันผ่านเครือข่ายภายในหน่วยงาน (Local Wi-Fi / LAN เดียวกัน) ได้ง่ายๆ:
-                    </p>
-                    <ol style="padding-left: 20px; line-height: 1.6; color: var(--text-main);">
-                        <li style="margin-bottom: 6px;"><strong>ค้นหา IP เครื่องเซิร์ฟเวอร์
-                                (คอมพิวเตอร์ที่เปิดเซิร์ฟเวอร์)</strong>:
-                            <ul style="padding-left: 20px; margin-top: 4px; color: var(--text-muted);">
-                                <li>เปิดโปรแกรม <strong>CMD (Command Prompt)</strong> ใน Windows</li>
-                                <li>พิมพ์คำสั่ง <code>ipconfig</code> แล้วกด Enter</li>
-                                <li>มองหาบรรทัด <strong>IPv4 Address</strong> (เช่น <code>192.168.1.100</code>)</li>
-                            </ul>
-                        </li>
-                        <li style="margin-bottom: 6px;"><strong>ให้ผู้อื่นเข้าใช้งาน</strong>: เปิดเบราว์เซอร์แล้วพิมพ์
-                            URL: <strong><code>http://[IP_เครื่องของคุณ]:5000</code></strong> (เช่น
-                            <code>http://192.168.1.100:5000</code>)</li>
-                    </ol>
-                    <div
-                        style="margin-top: 12px; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; font-size: 13px; color: var(--danger); line-height: 1.4;">
-                        <i class="fa-solid fa-triangle-exclamation"></i> <strong>ข้อสำคัญ:</strong>
-                        คอมพิวเตอร์เซิร์ฟเวอร์ต้องเชื่อมต่อเครือข่ายเดียวกับเพื่อนร่วมงาน
-                        และเปิดโปรแกรมเซิร์ฟเวอร์รันอยู่ตลอด (มีหน้าต่างรันคำสั่ง <code>py app.py</code> เปิดอยู่)
+                    <h3 style="color: var(--primary); margin-top: 0; margin-bottom: 12px;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 4 ขั้นตอนง่ายๆ ในการจัดทำบันทึกข้อความ
+                    </h3>
+                    
+                    <div style="background: rgba(var(--primary-rgb), 0.05); padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--primary);">
+                        <strong style="color: var(--primary);">ขั้นตอนที่ 1: อัปโหลดรูปภาพบิล/ใบเสร็จ 📸</strong>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-main);">
+                            ลากไฟล์รูปภาพบิลมาวางในพื้นที่ฝั่งซ้ายมือ (สามารถอัปโหลดพร้อมกันหลายๆ ใบได้เลย) ระบบ AI จะทำการถอดรายการสินค้า ราคา และชื่อร้านให้อัตโนมัติ
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(var(--primary-rgb), 0.05); padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--primary);">
+                        <strong style="color: var(--primary);">ขั้นตอนที่ 2: แต่งประโยคด้วย AI 🤖</strong>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-main);">
+                            คลิกปุ่มสีม่วง <b>"ให้ AI วิเคราะห์จากรายการบิล"</b> (อยู่ทางขวามือ)<br>
+                            AI จะอ่านรายการสินค้าทั้งหมด แล้วช่วยเขียน "คำเกริ่นนำ" พร้อมคัดเลือก "ข้อกฎหมายพัสดุภาครัฐ" ที่ถูกต้องและสอดคล้องกับพัสดุในบิลให้อัตโนมัติ
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(var(--primary-rgb), 0.05); padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--primary);">
+                        <strong style="color: var(--primary);">ขั้นตอนที่ 3: ตรวจสอบและแก้ไข 📝</strong>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-main);">
+                            ตรวจสอบความถูกต้องของชื่อสินค้า จำนวนเงิน และกรอกชื่อผู้จัดทำ/ผู้อนุมัติให้เรียบร้อย หากต้องการแก้ข้อความตรงไหน สามารถพิมพ์แก้ในตารางได้เลย ระบบจะคำนวณยอดเงินรวมให้ใหม่ทันที
+                        </p>
+                    </div>
+
+                    <div style="background: rgba(var(--primary-rgb), 0.05); padding: 12px; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid var(--primary);">
+                        <strong style="color: var(--primary);">ขั้นตอนที่ 4: สร้างไฟล์ Word 📄</strong>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-main);">
+                            เมื่อข้อมูลถูกต้องครบถ้วนแล้ว ให้กดปุ่ม <b>"สร้างไฟล์ Word"</b> ด้านล่างขวา ระบบจะดาวน์โหลดไฟล์ <code>.docx</code> สำเร็จรูปให้คุณนำไปปริ้นท์และเสนอเซ็นได้ทันที!
+                        </p>
                     </div>
                 </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--divider); margin: 16px 0;">
+                
+                <div class="guide-section">
+                    <h3 style="color: var(--warning); margin-bottom: 8px;">
+                        <i class="fa-solid fa-lightbulb"></i> ข้อควรรู้เพิ่มเติม
+                    </h3>
+                    <ul style="padding-left: 20px; line-height: 1.6; color: var(--text-main); font-size: 14px;">
+                        <li><strong>เรื่อง API Key:</strong> ระบบนี้ได้รับการตั้งค่าคีย์ AI จากเซิร์ฟเวอร์ไว้เรียบร้อยแล้ว <b>คุณไม่ต้องเข้าไปตั้งค่า API Key ใดๆ ในหน้าเว็บอีก</b> ใช้งานได้เลยครับ!</li>
+                        <li><strong>การพิมพ์ชื่อบุคลากร:</strong> เมื่อคุณเริ่มพิมพ์ชื่อในช่อง "ผู้จัดทำ" หรือ "ผู้อนุมัติ" ระบบจะแสดงรายชื่อจากฐานข้อมูลขึ้นมาให้เลือก เพื่อความรวดเร็วและไม่ต้องพิมพ์ซ้ำ</li>
+                    </ul>
+                </div>
+
             </div>
         </div>
     </div>
