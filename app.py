@@ -7,6 +7,7 @@ import time
 import base64
 import requests
 from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
 from PIL import Image
 from google import genai
 from google.genai import types
@@ -26,6 +27,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='')
+CORS(app)
 
 # API Key Placeholder
 HARDCODED_API_KEY = os.environ.get("API_KEY", "")

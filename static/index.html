@@ -5,16 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auto Word Memo Generator</title>
-    <!-- Google Fonts: Fraunces & Nunito & Sarabun -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Nunito:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="favicon.png">
+    <script>
+        if (window.location.search.includes('embed=1')) {
+            document.documentElement.classList.add('is-embedded');
+        }
+    </script>
+    <style>
+        html.is-embedded body {
+            background: transparent !important;
+        }
+        html.is-embedded body::after {
+            display: none !important;
+        }
+        html.is-embedded .background-decor {
+            display: none !important;
+        }
+        html.is-embedded .app-header {
+            display: none !important;
+        }
+        html.is-embedded .app-container {
+            padding-top: 1rem !important;
+        }
+    </style>
 </head>
 
 <body>
