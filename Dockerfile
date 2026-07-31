@@ -13,5 +13,5 @@ COPY . .
 # Expose port (Hugging Face Spaces requires port 7860)
 EXPOSE 7860
 
-# Run with Gunicorn (production WSGI server) on port 7860
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:7860", "app:app"]
+# Run with Gunicorn (production WSGI server) on the dynamic port (defaults to 7860)
+CMD ["sh", "-c", "gunicorn -w 4 -b 0.0.0.0:${PORT:-7860} app:app"]

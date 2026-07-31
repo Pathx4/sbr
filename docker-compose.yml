@@ -5,7 +5,7 @@ services:
     build: .
     container_name: autoword_app
     ports:
-      - "5000:5000"
+      - "5000:7860"
     restart: always
     environment:
       - FLASK_ENV=production
