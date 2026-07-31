@@ -1,10 +1,22 @@
-# Cleared by user request to add all files
+# Node modules
+node_modules/
+frontend/node_modules/
 
-.env
+# Production build artifacts
+dist/
+frontend/dist/
+
+# Python cache & virtualenv
 __pycache__/
 *.pyc
-*.pyo
+.env
 venv/
-env/
-.idea/
+.venv/
+
+# IDE files
 .vscode/
+.idea/
+.DS_Store
+
+# Temporary logs
+*.log
