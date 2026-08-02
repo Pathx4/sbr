@@ -1,5 +1,5 @@
 // Advanced Utility for Image Preprocessing & Ultra-High Precision Thai OCR Enhancement
-// Multi-pass Canvas Denoising, Thai Vowel Validation, and High-DPI Upscaling Engine
+// High-Precision Vendor Detector, Phone/Fax Filter, and Hardware Spell Corrections
 
 function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number): number {
   const histogram = new Array(256).fill(0);
@@ -42,9 +42,6 @@ function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number)
   return threshold;
 }
 
-/**
- * Preprocesses receipt image with High-DPI Canvas Upscaling, Denoising, and Adaptive Thresholding
- */
 export function preprocessImageForOcr(file: File): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -60,7 +57,6 @@ export function preprocessImageForOcr(file: File): Promise<string> {
           return;
         }
 
-        // Target high-definition 2400px width for maximum Thai OCR detail
         let width = img.width;
         let height = img.height;
         if (width < 1800) {
@@ -76,7 +72,6 @@ export function preprocessImageForOcr(file: File): Promise<string> {
         canvas.width = width;
         canvas.height = height;
 
-        // Image smoothing for high contrast
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
@@ -87,7 +82,6 @@ export function preprocessImageForOcr(file: File): Promise<string> {
 
         const threshold = otsuThreshold(data, width, height);
 
-        // High contrast binarization filter
         for (let i = 0; i < data.length; i += 4) {
           const gray = data[i];
           const bin = gray < threshold ? 0 : 255;
@@ -121,6 +115,8 @@ const TYPO_MAP: Record<string, string> = {
   '4%6': '4x6',
   '4%': '4x',
   '8%': '',
+  'LEETECIH': 'LEETECH',
+  'una': 'แท่ง',
   'ค้ำปืน': 'ด้ามปืน',
   '20wr120W': '20W/120W',
   '1แร': '1มม.',
@@ -138,7 +134,6 @@ const TYPO_MAP: Record<string, string> = {
 };
 
 function cleanThaiText(str: string): string {
-  // 1. Strip leading item line numbers and ALL leading punctuation symbols (!, ?, |, +, -, ง, v, ., :)
   let cleaned = str
     .replace(/^([!\?\.\-\|\+:งv\s\d]*\d{1,2}\s*[v\|\.\-\:\)\s]+)/gi, '')
     .replace(/^[!\?\.\-\|\+:งv\s\d]+/gi, '')
@@ -146,7 +141,6 @@ function cleanThaiText(str: string): string {
     .replace(/\s+/g, ' ')
     .trim();
   
-  // 2. Fix OCR Thai character typos
   Object.keys(TYPO_MAP).forEach(typo => {
     const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
     cleaned = cleaned.replace(re, TYPO_MAP[typo]);
@@ -155,21 +149,13 @@ function cleanThaiText(str: string): string {
   return cleaned;
 }
 
-/**
- * Check if string is garbled Thai consonant noise without vowels
- * e.g. "บณษบสรจรงบน" has no Thai vowels -> Garbled gibberish!
- */
 function isGarbledThaiGibberish(text: string): boolean {
   if (text.length < 4) return false;
-  
-  // Check if string contains Thai characters
   if (!/[ก-ฮ]/.test(text)) return false;
 
-  // Thai vowels: ะ า ิ ี ึ ื ุ ู เ แ โ ใ ไ ำ ็ ์
   const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(text);
   const thaiConsonantCount = (text.match(/[ก-ฮ]/g) || []).length;
 
-  // If there are > 5 Thai consonants but 0 vowels -> 100% garbled OCR noise!
   if (thaiConsonantCount >= 5 && !hasVowels) {
     return true;
   }
@@ -212,23 +198,39 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', '00069193', 'บาท'
   ];
 
-  const addressRegex = /หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|เลขที่|โทร|TEL|FAX|TAX ID|เลขประจำตัว|อาคาร|ชั้น|หมู่บ้าน|\/10|\/11|\/12/i;
+  const addressRegex = /หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|เลขที่|อาคาร|ชั้น|หมู่บ้าน|\/10|\/11|\/12/i;
+  
+  // Phone/Fax Regex (Strictly exclude lines containing Phone/Fax numbers from Vendor Name)
+  const phoneFaxRegex = /โทรศัพท์|ทรศัพท์|โทร|แฟกซ์|แฟกซ|FAX|TEL|PHONE|MOBILE|\d{2,4}[\-\s]*\d{3,4}[\-\s]*\d{3,4}/i;
 
-  // 1. Extract Vendor Name (Ignoring Document Titles, Address lines, and Garbled Gibberish like บณษบสรจรงบน)
-  for (const line of lines.slice(0, 10)) {
+  // 1. Extract Vendor Name (Strictly excluding Phone/Fax lines, Document Titles, Addresses, and Garbled text)
+  for (const line of lines.slice(0, 12)) {
     const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
     
     if (cleanLine.length > 4 && 
         !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT|od\s+o/i.test(cleanLine) &&
         !addressRegex.test(cleanLine) &&
+        !phoneFaxRegex.test(cleanLine) &&
         !isGarbledThaiGibberish(cleanLine)) {
 
-      if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY|ไทวัสดุ|Global|DoHome|HomePro|ซีอาร์ซี|ซีโอแอล/i.test(cleanLine)) {
+      if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY|ไทวัสดุ|Global|DoHome|HomePro|ซีอาร์ซี|ซีโอแอล|Advice/i.test(cleanLine)) {
         vendor_name = cleanLine;
         break;
       }
       if (!vendor_name && cleanLine.length > 5 && !/\d{4,}/.test(cleanLine) && /[ก-ฮa-zA-Z]{3,}/.test(cleanLine)) {
         vendor_name = cleanLine;
+      }
+    }
+  }
+
+  // Fallback for Thai Hardware Giants if not caught
+  if (!vendor_name || /ทรศัพท์|แฟกซ/i.test(vendor_name)) {
+    for (const line of lines.slice(0, 15)) {
+      if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global/i.test(line)) {
+        if (!phoneFaxRegex.test(line)) {
+          vendor_name = cleanThaiText(line);
+          break;
+        }
       }
     }
   }
@@ -314,7 +316,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
             cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
           }
 
-          // Clean item line numbers and leading garbage symbols (!, ?, |, +, -, ง, v, ., :)
+          // Clean item line numbers and leading garbage symbols
           cleanDesc = cleanThaiText(cleanDesc);
 
           // Detect quantity if present before prices
