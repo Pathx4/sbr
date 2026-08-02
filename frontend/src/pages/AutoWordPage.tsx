@@ -896,9 +896,33 @@ export default function AutoWordPage() {
                     type="text"
                     value={activeInvoice.vendor_name}
                     onChange={e => handleUpdateInvoice(activeInvoice.id, 'vendor_name', e.target.value)}
-                    placeholder="เช่น บริษัท ไอที ซิตี้ จำกัด (มหาชน)"
-                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs"
+                    placeholder="เช่น บริษัท ซีอาร์ซี ไทวัสดุ จำกัด"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500"
                   />
+                  {/* Quick Store Name Selector Chips */}
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {[
+                      { label: '+ ไทวัสดุ', full: 'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด' },
+                      { label: '+ OfficeMate', full: 'บริษัท ซีโอแอล จำกัด (มหาชน)' },
+                      { label: '+ HomePro', full: 'บริษัท โฮม โปรดักส์ เซ็นเตอร์ จำกัด (มหาชน)' },
+                      { label: '+ DoHome', full: 'บริษัท ดูโฮม จำกัด (มหาชน)' },
+                      { label: '+ Global House', full: 'บริษัท สยามโกลบอลเฮ้าส์ จำกัด (มหาชน)' },
+                      { label: '+ IT City', full: 'บริษัท ไอที ซิตี้ จำกัด (มหาชน)' },
+                      { label: '+ Advice', full: 'บริษัท แอดไวซ์ ไอที อินฟิเนท จำกัด (มหาชน)' },
+                      { label: '+ B2S', full: 'บริษัท บีทูเอส จำกัด' },
+                      { label: '+ Big C', full: 'บริษัท บิ๊กซี ซูเปอร์เซ็นเตอร์ จำกัด (มหาชน)' },
+                      { label: '+ Lotus', full: 'บริษัท เอก-ชัย ดีสทริบิวชั่น ซิสเทม จำกัด' }
+                    ].map((store, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleUpdateInvoice(activeInvoice.id, 'vendor_name', store.full)}
+                        className="px-2 py-0.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 rounded-lg text-[10px] font-medium transition border border-slate-200/60"
+                      >
+                        {store.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-500 mb-1">เลขที่ใบเสร็จ</label>
