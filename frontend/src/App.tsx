@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
 import BudgetPage from './pages/BudgetPage';
 import AutoWordPage from './pages/AutoWordPage';
 import { Calculator, FileText, Menu, X } from 'lucide-react';
@@ -8,7 +8,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="min-h-screen bg-[#fbfcfd] flex text-slate-700">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
@@ -91,6 +91,6 @@ export default function App() {
           </main>
         </div>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
