@@ -1,5 +1,5 @@
-// Advanced Utility for Image Preprocessing & Ultra-High Precision Thai OCR Enhancement
-// High-Precision Vendor Detector, Phone/Fax Filter, and Hardware Spell Corrections
+// Advanced Utility for Image Preprocessing & Multi-Pass Ultra-Precision Thai OCR
+// Multi-pass Canvas Denoising, Thai Vowel Validation, and High-DPI Upscaling Engine
 
 function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number): number {
   const histogram = new Array(256).fill(0);
@@ -59,13 +59,13 @@ export function preprocessImageForOcr(file: File): Promise<string> {
 
         let width = img.width;
         let height = img.height;
-        if (width < 1800) {
-          const ratio = 2400 / width;
-          width = 2400;
-          height = Math.round(height * ratio);
-        } else if (width > 3200) {
+        if (width < 2000) {
           const ratio = 2600 / width;
           width = 2600;
+          height = Math.round(height * ratio);
+        } else if (width > 3400) {
+          const ratio = 2800 / width;
+          width = 2800;
           height = Math.round(height * ratio);
         }
 
@@ -199,43 +199,41 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
   ];
 
   const addressRegex = /หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|เลขที่|อาคาร|ชั้น|หมู่บ้าน|\/10|\/11|\/12/i;
-  
-  // Phone/Fax Regex (Strictly exclude lines containing Phone/Fax numbers from Vendor Name)
   const phoneFaxRegex = /โทรศัพท์|ทรศัพท์|โทร|แฟกซ์|แฟกซ|FAX|TEL|PHONE|MOBILE|\d{2,4}[\-\s]*\d{3,4}[\-\s]*\d{3,4}/i;
 
-  // 1. Extract Vendor Name (Strictly excluding Phone/Fax lines, Document Titles, Addresses, and Garbled text)
-  for (const line of lines.slice(0, 12)) {
-    const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
-    
-    if (cleanLine.length > 4 && 
-        !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT|od\s+o/i.test(cleanLine) &&
-        !addressRegex.test(cleanLine) &&
-        !phoneFaxRegex.test(cleanLine) &&
-        !isGarbledThaiGibberish(cleanLine)) {
-
-      if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY|ไทวัสดุ|Global|DoHome|HomePro|ซีอาร์ซี|ซีโอแอล|Advice/i.test(cleanLine)) {
-        vendor_name = cleanLine;
+  // 1. First Pass: Search for Known Retail Giants anywhere in top lines
+  for (const line of lines.slice(0, 15)) {
+    if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global|IT CITY|Advice|MR\.?DIY|Big C|Lotus|7-Eleven/i.test(line)) {
+      if (!phoneFaxRegex.test(line) && !/ใบกำกับภาษี|ใบเสร็จ|หน้าที่/i.test(line)) {
+        vendor_name = cleanThaiText(line);
         break;
-      }
-      if (!vendor_name && cleanLine.length > 5 && !/\d{4,}/.test(cleanLine) && /[ก-ฮa-zA-Z]{3,}/.test(cleanLine)) {
-        vendor_name = cleanLine;
       }
     }
   }
 
-  // Fallback for Thai Hardware Giants if not caught
-  if (!vendor_name || /ทรศัพท์|แฟกซ/i.test(vendor_name)) {
-    for (const line of lines.slice(0, 15)) {
-      if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global/i.test(line)) {
-        if (!phoneFaxRegex.test(line)) {
-          vendor_name = cleanThaiText(line);
+  // 2. Second Pass: Search for general Company / Store Header
+  if (!vendor_name) {
+    for (const line of lines.slice(0, 12)) {
+      const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
+      
+      if (cleanLine.length > 3 && 
+          !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT|od\s+o/i.test(cleanLine) &&
+          !addressRegex.test(cleanLine) &&
+          !phoneFaxRegex.test(cleanLine) &&
+          !isGarbledThaiGibberish(cleanLine)) {
+
+        if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน/i.test(cleanLine)) {
+          vendor_name = cleanLine;
           break;
+        }
+        if (!vendor_name && cleanLine.length >= 4 && !/\d{4,}/.test(cleanLine) && /[ก-ฮa-zA-Z]{3,}/.test(cleanLine)) {
+          vendor_name = cleanLine;
         }
       }
     }
   }
 
-  // 2. Extract Invoice Number
+  // 3. Extract Invoice Number
   for (const line of lines) {
     const match = line.match(/(?:เลขที่|ใบเสร็จ|ใบกำกับ|INV|TAX|DOC|No\.?)[^\w\d]*([A-Z0-9\/\-]{4,25})/i);
     if (match && match[1] && !/^\d{13}$/.test(match[1])) {
@@ -244,7 +242,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     }
   }
 
-  // 3. Extract Invoice Date
+  // 4. Extract Invoice Date
   const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
   
   for (const line of lines) {
@@ -278,7 +276,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     }
   }
 
-  // 4. Extract Total Amount
+  // 5. Extract Total Amount
   for (const line of lines.slice().reverse()) {
     if (/(?:ราคารวม|รวมเงิน|สุทธิ|TOTAL|GRAND TOTAL|AMOUNT)[^\d]*([\d,]+\.?\d*)/i.test(line)) {
       const match = line.match(/([\d,]+\.\d{2})/);
@@ -289,7 +287,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     }
   }
 
-  // 5. Extract Item Lines, SKUs, and Trailing Prices
+  // 6. Extract Item Lines, SKUs, and Trailing Prices
   lines.forEach((line) => {
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw))) {
       return;
