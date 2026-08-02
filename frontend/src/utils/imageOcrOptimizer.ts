@@ -1,5 +1,5 @@
-// Advanced Utility for Image Preprocessing & Multi-Pass Ultra-Precision Thai OCR
-// 3-Pass Quality Engine: Header Crop Scan + Full Table Scan + Smart Merging
+// Advanced Utility for Image Preprocessing & Ultra-High Precision Thai/English OCR
+// High-Precision Vendor Detector (Thai & English) with Smart Branch/Tag Stripping
 
 function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number): number {
   const histogram = new Array(256).fill(0);
@@ -42,9 +42,6 @@ function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number)
   return threshold;
 }
 
-/**
- * Preprocesses receipt image with 3200px High-DPI Canvas Upscaling for maximum detail
- */
 export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -60,14 +57,12 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
           return;
         }
 
-        // If header only, crop top 30% height for maximum logo/vendor precision
         const sourceY = 0;
-        const sourceHeight = isHeaderOnly ? Math.round(img.height * 0.35) : img.height;
+        const sourceHeight = isHeaderOnly ? Math.round(img.height * 0.40) : img.height;
 
         let width = img.width;
         let height = sourceHeight;
         
-        // Target ultra high-definition 3200px width
         if (width < 2400) {
           const ratio = 3200 / width;
           width = 3200;
@@ -87,7 +82,6 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
 
         const threshold = otsuThreshold(data, width, height);
 
-        // High contrast binarization filter
         for (let i = 0; i < data.length; i += 4) {
           const gray = data[i];
           const bin = gray < threshold ? 0 : 255;
@@ -115,7 +109,7 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
 }
 
 /**
- * Thai Technical & Hardware Fuzzy Correction Dictionary
+ * Thai & English Technical & Hardware Fuzzy Correction Dictionary
  */
 const TYPO_MAP: Record<string, string> = {
   '4%6': '4x6',
@@ -157,12 +151,13 @@ function cleanThaiText(str: string): string {
 
 function isGarbledThaiGibberish(text: string): boolean {
   if (text.length < 4) return false;
-  if (!/[ก-ฮ]/.test(text)) return false;
+  if (!/[ก-ฮa-zA-Z]/.test(text)) return false;
 
-  const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(text);
   const thaiConsonantCount = (text.match(/[ก-ฮ]/g) || []).length;
+  const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(text);
 
-  if (thaiConsonantCount >= 5 && !hasVowels) {
+  // If there are > 5 Thai consonants but 0 vowels and no english -> Garbled OCR noise!
+  if (thaiConsonantCount >= 5 && !hasVowels && !/[a-zA-Z]{3,}/.test(text)) {
     return true;
   }
 
@@ -185,45 +180,48 @@ export interface ParsedReceipt {
 }
 
 /**
- * Extracts Vendor Name from OCR text with Priority Scoring
+ * Clean trailing branch / tax ID details off company name string
+ */
+function cleanCompanyName(name: string): string {
+  return name
+    .replace(/\s*\(?(?:สาขา|สาขาที่|Branch|Tax ID|TAX|เลขประจำตัว|โทร|TEL|FAX).*/i, '')
+    .replace(/[\(\)\{\}\[\]]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Extracts Vendor Name from OCR text in Thai & English
  */
 export function extractVendorNameFromText(text: string): string {
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-  const phoneFaxRegex = /โทรศัพท์|ทรศัพท์|โทร|แฟกซ์|แฟกซ|FAX|TEL|PHONE|MOBILE|\d{2,4}[\-\s]*\d{3,4}[\-\s]*\d{3,4}/i;
-  const addressRegex = /หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|เลขที่|อาคาร|ชั้น|หมู่บ้าน|\/10|\/11|\/12/i;
-
-  // 1. Priority Match: Retail Giants in Thailand
+  // 1. Priority 1: Direct Match for Company prefix in Thai or English
   for (const line of lines.slice(0, 15)) {
-    if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global|IT CITY|Advice|MR\.?DIY|Big C|Lotus|7-Eleven/i.test(line)) {
-      if (!phoneFaxRegex.test(line) && !/ใบกำกับภาษี|ใบเสร็จ|หน้าที่/i.test(line)) {
-        return cleanThaiText(line);
+    if (/(?:บริษัท|หจก\.|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.)/i.test(line)) {
+      if (!/ใบกำกับภาษี|ใบเสร็จรับเงิน|Tax Invoice|Receipt/i.test(line)) {
+        const cleaned = cleanCompanyName(cleanThaiText(line));
+        if (cleaned.length >= 4) return cleaned;
       }
     }
   }
 
-  // 2. Secondary Match: Legal Company / Store Names (บริษัท / หจก / ร้าน)
-  for (const line of lines.slice(0, 12)) {
-    const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
-    if (cleanLine.length > 3 &&
-        !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT|od\s+o/i.test(cleanLine) &&
-        !addressRegex.test(cleanLine) &&
-        !phoneFaxRegex.test(cleanLine) &&
-        !isGarbledThaiGibberish(cleanLine)) {
-
-      if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน/i.test(cleanLine)) {
-        return cleanLine;
+  // 2. Priority 2: Thai & English Retail & Hardware Giants
+  for (const line of lines.slice(0, 15)) {
+    if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global|IT CITY|Advice|MR\.?DIY|Big C|Lotus|7-Eleven|CRC|COL/i.test(line)) {
+      if (!/ใบกำกับภาษี|ใบเสร็จ/i.test(line)) {
+        const cleaned = cleanCompanyName(cleanThaiText(line));
+        if (cleaned.length >= 3) return cleaned;
       }
     }
   }
 
-  // 3. Fallback: First meaningful header string
-  for (const line of lines.slice(0, 8)) {
-    const cleanLine = cleanThaiText(line);
+  // 3. Priority 3: First meaningful line in top header
+  for (const line of lines.slice(0, 10)) {
+    const cleanLine = cleanCompanyName(cleanThaiText(line));
     if (cleanLine.length >= 4 &&
         !/ใบกำกับภาษี|ใบเสร็จ|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|RECEIPT/i.test(cleanLine) &&
-        !addressRegex.test(cleanLine) &&
-        !phoneFaxRegex.test(cleanLine) &&
+        !/หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|เลขที่|โทร|TEL|FAX/i.test(cleanLine) &&
         !isGarbledThaiGibberish(cleanLine) &&
         /[ก-ฮa-zA-Z]{3,}/.test(cleanLine)) {
       return cleanLine;
