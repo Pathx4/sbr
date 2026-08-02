@@ -1,5 +1,5 @@
 // Advanced Utility for Image Preprocessing & Thai OCR Enhancement
-// Uses Otsu's Adaptive Thresholding Binarization Algorithm and Thai Fuzzy Spell Correction
+// High-precision Thai Receipt Parser with Multi-column Price Stripping & Spell Correction
 
 /**
  * Otsu's Binarization Algorithm
@@ -9,10 +9,9 @@ function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number)
   const histogram = new Array(256).fill(0);
   const totalPixels = width * height;
 
-  // Build histogram from grayscale pixels
   for (let i = 0; i < pixels.length; i += 4) {
     const gray = Math.round(0.299 * pixels[i] + 0.587 * pixels[i + 1] + 0.114 * pixels[i + 2]);
-    pixels[i] = gray; // store gray in R
+    pixels[i] = gray;
     histogram[gray]++;
   }
 
@@ -65,7 +64,6 @@ export function preprocessImageForOcr(file: File): Promise<string> {
           return;
         }
 
-        // Target optimal width for Tesseract OCR (around 2000px)
         let width = img.width;
         let height = img.height;
         if (width < 1400) {
@@ -81,22 +79,19 @@ export function preprocessImageForOcr(file: File): Promise<string> {
         canvas.width = width;
         canvas.height = height;
 
-        // Draw scaled image
         ctx.drawImage(img, 0, 0, width, height);
 
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
 
-        // Apply Otsu Thresholding
         const threshold = otsuThreshold(data, width, height);
 
         for (let i = 0; i < data.length; i += 4) {
-          const gray = data[i]; // Gray stored during otsuThreshold
-          // High contrast binarization based on Otsu threshold
+          const gray = data[i];
           const bin = gray < threshold ? 0 : 255;
-          data[i] = bin;     // R
-          data[i + 1] = bin; // G
-          data[i + 2] = bin; // B
+          data[i] = bin;
+          data[i + 1] = bin;
+          data[i + 2] = bin;
         }
 
         ctx.putImageData(imageData, 0, 0);
@@ -118,7 +113,7 @@ export function preprocessImageForOcr(file: File): Promise<string> {
 }
 
 /**
- * Thai Fuzzy Spell Correction for OCR typos
+ * Thai Fuzzy Spell Correction & Prefix Cleaning
  */
 const TYPO_MAP: Record<string, string> = {
   'ชิน': 'ชิ้น',
@@ -127,6 +122,7 @@ const TYPO_MAP: Record<string, string> = {
   'อน': 'อัน',
   'แพค': 'แพ็ค',
   'มวน': 'ม้วน',
+  'แทง': 'แท่ง',
   'บรษท': 'บริษัท',
   'หจก': 'หจก.',
   'บาn': 'บาท',
@@ -134,9 +130,14 @@ const TYPO_MAP: Record<string, string> = {
 };
 
 function cleanThaiText(str: string): string {
-  let cleaned = str.replace(/[ฒณ|\[\]{}]+/g, ' ').replace(/\s+/g, ' ').trim();
+  // Strip leading garbage symbols like v, ง, !, |, +, ., -
+  let cleaned = str
+    .replace(/^[vง!\|\+\.\-\s]+/gi, '')
+    .replace(/[ฒณ|\[\]{}]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   
-  // Replace known typos
+  // Fix OCR Thai character typos
   Object.keys(TYPO_MAP).forEach(typo => {
     const re = new RegExp(`\\b${typo}\\b`, 'g');
     cleaned = cleaned.replace(re, TYPO_MAP[typo]);
@@ -176,14 +177,15 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     'ชำระเงิน', 'ชำระโดย', 'VISA', 'MASTER', 'CASH', 'เงินสด', 'เงินทอน',
     'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม',
     'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ',
-    'ยินดีต้อนรับ', 'WELCOME', 'สาขา', 'POS', 'MEMBER', 'สมาชิก'
+    'ยินดีต้อนรับ', 'WELCOME', 'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่',
+    'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด'
   ];
 
-  // 1. Extract Vendor Name
+  // 1. Extract Vendor Name (Ignoring Document Title headers like ใบกำกับภาษี)
   for (const line of lines.slice(0, 10)) {
     const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
-    if (cleanLine.length > 3 && !/เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT/i.test(cleanLine)) {
-      if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY/i.test(cleanLine)) {
+    if (cleanLine.length > 3 && !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT/i.test(cleanLine)) {
+      if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY|ไทวัสดุ|Global|DoHome|HomePro/i.test(cleanLine)) {
         vendor_name = cleanLine;
         break;
       }
@@ -195,7 +197,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
 
   // 2. Extract Invoice Number
   for (const line of lines) {
-    const match = line.match(/(?:เลขที่|ใบเสร็จ|ใบกำกับ|INV|TAX|DOC|No\.?)[^\w\d]*([A-Z0-9\/\-]{4,20})/i);
+    const match = line.match(/(?:เลขที่|ใบเสร็จ|ใบกำกับ|INV|TAX|DOC|No\.?)[^\w\d]*([A-Z0-9\/\-]{4,25})/i);
     if (match && match[1] && !/^\d{13}$/.test(match[1])) {
       invoice_number = match[1];
       break;
@@ -247,49 +249,67 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     }
   }
 
-  // 5. Extract Item Lines & SKUs
-  const numberEndRegex = /([\d,]+\.\d{2})\s*$/;
-
+  // 5. Extract Item Lines, SKUs, and Strip Trailing Price Columns
   lines.forEach((line) => {
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw))) {
       return;
     }
 
-    const priceMatch = line.match(numberEndRegex);
-    if (priceMatch) {
-      const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+    // Match lines containing decimal prices
+    const priceMatches = line.match(/([\d,]+\.\d{2})/g);
+    if (priceMatches && priceMatches.length >= 1) {
+      // Non-zero price values
+      const validPrices = priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0);
+      
+      if (validPrices.length > 0) {
+        const itemPrice = validPrices[0];
 
-      if (price > 0 && price !== total_amount) {
-        let cleanDesc = line.replace(numberEndRegex, '').trim();
+        if (itemPrice > 0 && itemPrice !== total_amount) {
+          let cleanDesc = line;
 
-        // Extract SKU / Barcode if available
-        let item_code = '';
-        const skuMatch = cleanDesc.match(/\[([0-9A-Z\-]+)\]|([0-9]{13})|([A-Z0-9\-]{5,15}\b)/);
-        if (skuMatch) {
-          item_code = skuMatch[1] || skuMatch[2] || skuMatch[3] || '';
-          cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
-        }
+          // Strip all trailing numeric/price columns (e.g., "1 98.00 98.00 0.00")
+          cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').trim();
 
-        cleanDesc = cleanThaiText(cleanDesc.replace(/^[0-9\.\s\-\|]+/, ''));
+          // Extract SKU / Barcode if available
+          let item_code = '';
+          const skuMatch = cleanDesc.match(/\[([0-9A-Z\-]+)\]|([0-9]{10,13})|([A-Z0-9\-]{5,15}\b)/);
+          if (skuMatch) {
+            item_code = skuMatch[1] || skuMatch[2] || skuMatch[3] || '';
+            cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
+          }
 
-        // Unit detection
-        let unit = 'ชิ้น';
-        if (/กล่อง/i.test(cleanDesc)) unit = 'กล่อง';
-        else if (/แพ็ค|แพค/i.test(cleanDesc)) unit = 'แพ็ค';
-        else if (/เครื่อง/i.test(cleanDesc)) unit = 'เครื่อง';
-        else if (/ม้วน/i.test(cleanDesc)) unit = 'ม้วน';
-        else if (/ถัง/i.test(cleanDesc)) unit = 'ถัง';
-        else if (/ชุด/i.test(cleanDesc)) unit = 'ชุด';
+          // Clean leading symbols/garbage characters
+          cleanDesc = cleanThaiText(cleanDesc);
 
-        if (cleanDesc.length >= 2) {
-          items.push({
-            item_code,
-            description: cleanDesc,
-            quantity: 1,
-            unit,
-            unit_price: price,
-            total_price: price
-          });
+          // Detect quantity if present before prices
+          let quantity = 1;
+          const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+\.\d{2}/);
+          if (qtyMatch && qtyMatch[1]) {
+            quantity = parseInt(qtyMatch[1], 10) || 1;
+          }
+
+          // Unit detection
+          let unit = 'ชิ้น';
+          if (/กล่อง/i.test(cleanDesc)) unit = 'กล่อง';
+          else if (/แพ็ค|แพค/i.test(cleanDesc)) unit = 'แพ็ค';
+          else if (/เครื่อง/i.test(cleanDesc)) unit = 'เครื่อง';
+          else if (/ม้วน/i.test(cleanDesc)) unit = 'ม้วน';
+          else if (/ถัง/i.test(cleanDesc)) unit = 'ถัง';
+          else if (/ชุด/i.test(cleanDesc)) unit = 'ชุด';
+          else if (/แท่ง/i.test(cleanDesc)) unit = 'แท่ง';
+          else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
+          else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
+
+          if (cleanDesc.length >= 2) {
+            items.push({
+              item_code,
+              description: cleanDesc,
+              quantity,
+              unit,
+              unit_price: itemPrice,
+              total_price: itemPrice * quantity
+            });
+          }
         }
       }
     }
