@@ -35,7 +35,7 @@ export interface ExcelPayload {
 }
 
 /**
- * Clean, Pure ExcelJS Workbook Generator (Zero corruption, 100% valid Excel open)
+ * Clean, Pure ExcelJS Workbook Generator (100% Matching ภาพประกอบ.xlsx & สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx)
  */
 export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
   const workbook = new ExcelJS.Workbook();
@@ -46,44 +46,6 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
 
   const isIllustration = !!data.is_illustration;
 
-  // Flatten items across all invoices
-  const flatItems: {
-    idx: string;
-    description: string;
-    qty: number;
-    unit: string;
-    unitPrice: number;
-    totalPrice: number;
-    vendor: string;
-    invNum: string;
-    invDate: string;
-    photo?: string;
-  }[] = [];
-
-  let counter = 1;
-  data.invoices.forEach((inv, invIdx) => {
-    inv.items.forEach((item, itemIdx) => {
-      const desc = item.item_code ? `${item.item_code} ${item.description}` : item.description;
-      flatItems.push({
-        idx: data.invoices.length > 1 ? `${invIdx + 1}.${itemIdx + 1}` : `${counter++}`,
-        description: desc,
-        qty: item.quantity || 1,
-        unit: item.unit || 'ชิ้น',
-        unitPrice: item.unit_price || 0,
-        totalPrice: item.total_price || 0,
-        vendor: inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย',
-        invNum: inv.invoice_number || '-',
-        invDate: inv.invoice_date || '-',
-        photo: item.photo
-      });
-    });
-  });
-
-  const grandSubtotal = flatItems.reduce((acc, i) => acc + i.totalPrice, 0);
-  const totalDiscount = data.invoices.reduce((acc, inv) => acc + (inv.discount || 0), 0);
-  const grandTotalPaid = grandSubtotal - totalDiscount;
-  const bahtTextStr = getBahtText(grandTotalPaid);
-
   const thinBorder: Partial<ExcelJS.Borders> = {
     top: { style: 'thin', color: { argb: 'D0D0D0' } },
     left: { style: 'thin', color: { argb: 'D0D0D0' } },
@@ -93,7 +55,7 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
 
   if (isIllustration) {
     // ---------------------------------------------
-    // Illustration Sheet (ภาพประกอบ.xlsx)
+    // Illustration Sheet (ภาพประกอบ.xlsx Exact Layout)
     // ---------------------------------------------
     const ws = workbook.addWorksheet('ภาพประกอบ');
 
@@ -106,69 +68,192 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
     ws.getRow(1).height = 35;
 
     // Header Row 2
-    ws.addRow(['ลำดับ', 'รายละเอียดพัสดุ', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ภาพประกอบ']);
+    ws.addRow(['ลำดับ', 'รายละเอียด', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ภาพ']);
     ws.mergeCells('B2:O2');
     ws.getRow(2).height = 30;
 
-    ws.getCell('A2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getCell('A2').border = thinBorder;
-    ws.getCell('A2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
+    const cellA2 = ws.getCell('A2');
+    cellA2.font = { name: 'TH SarabunPSK', size: 16, bold: true };
+    cellA2.alignment = { horizontal: 'center', vertical: 'middle' };
+    cellA2.border = thinBorder;
+    cellA2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
 
-    ws.getCell('B2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('B2').alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getCell('B2').border = thinBorder;
-    ws.getCell('B2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
+    const cellB2 = ws.getCell('B2');
+    cellB2.font = { name: 'TH SarabunPSK', size: 16, bold: true };
+    cellB2.alignment = { horizontal: 'center', vertical: 'middle' };
+    cellB2.border = thinBorder;
+    cellB2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
 
-    ws.getCell('P2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('P2').alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getCell('P2').border = thinBorder;
-    ws.getCell('P2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
+    const cellP2 = ws.getCell('P2');
+    cellP2.font = { name: 'TH SarabunPSK', size: 16, bold: true };
+    cellP2.alignment = { horizontal: 'center', vertical: 'middle' };
+    cellP2.border = thinBorder;
+    cellP2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
 
-    let rowIdx = 3;
-    flatItems.forEach((item) => {
-      ws.addRow([item.idx, item.description]);
-      ws.mergeCells(`B${rowIdx}:O${rowIdx}`);
-      ws.getRow(rowIdx).height = 110;
+    let currentRowIdx = 3;
 
-      const cellA = ws.getCell(`A${rowIdx}`);
-      cellA.font = { name: 'TH SarabunPSK', size: 14 };
-      cellA.alignment = { horizontal: 'center', vertical: 'top' };
-      cellA.border = thinBorder;
+    data.invoices.forEach((inv, invIdx) => {
+      const storeNumber = invIdx + 1;
+      const storeName = inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย';
 
-      const cellB = ws.getCell(`B${rowIdx}`);
-      cellB.font = { name: 'TH SarabunPSK', size: 14 };
-      cellB.alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
-      cellB.border = thinBorder;
+      // 1. Store Header Group Row (e.g. Row 3: "1 | บริษัท ซีอาร์ซี ไทวัสดุ จำกัด")
+      const storeRow = ws.getRow(currentRowIdx);
+      storeRow.getCell(1).value = storeNumber;
+      storeRow.getCell(2).value = storeName;
+      ws.mergeCells(`B${currentRowIdx}:N${currentRowIdx}`);
+      storeRow.height = 26;
 
-      const cellP = ws.getCell(`P${rowIdx}`);
-      cellP.border = thinBorder;
+      const storeCellA = storeRow.getCell(1);
+      storeCellA.font = { name: 'TH SarabunPSK', size: 14, bold: true };
+      storeCellA.alignment = { horizontal: 'center', vertical: 'middle' };
+      storeCellA.border = thinBorder;
 
-      if (item.photo && item.photo.startsWith('data:image')) {
-        try {
-          const imageId = workbook.addImage({
-            base64: item.photo,
-            extension: 'jpeg'
-          });
-          ws.addImage(imageId, {
-            tl: { col: 15, row: rowIdx - 1 },
-            ext: { width: 140, height: 100 }
-          });
-        } catch (e) {
-          console.warn("Failed to embed image:", e);
+      const storeCellB = storeRow.getCell(2);
+      storeCellB.font = { name: 'TH SarabunPSK', size: 14, bold: true };
+      storeCellB.alignment = { horizontal: 'left', vertical: 'middle' };
+      storeCellB.border = thinBorder;
+
+      currentRowIdx++;
+
+      // 2. Items under this store
+      inv.items.forEach((item, itemIdx) => {
+        const itemIndexStr = `${storeNumber}.${itemIdx + 1}`;
+        const descText = item.item_code ? `${item.item_code} ${item.description}` : item.description;
+        const unitPrice = item.unit_price || 0;
+        const qty = item.quantity || 1;
+        const unitStr = item.unit || 'ชิ้น';
+        const totalPrice = item.total_price || (unitPrice * qty);
+
+        const itemRow = ws.getRow(currentRowIdx);
+        itemRow.height = 100;
+
+        itemRow.getCell(1).value = itemIndexStr; // A: ลำดับ 1.1
+        itemRow.getCell(2).value = descText;      // B: รายละเอียด
+        itemRow.getCell(4).value = '(';           // D: (
+        itemRow.getCell(5).value = unitPrice;     // E: ราคา/หน่วย
+        itemRow.getCell(6).value = 'บาท * ';      // F: บาท * 
+        itemRow.getCell(7).value = qty;           // G: จำนวน
+        itemRow.getCell(8).value = unitStr;       // H: หน่วย
+        itemRow.getCell(9).value = ')';           // I: )
+        itemRow.getCell(13).value = '=';          // M: =
+        itemRow.getCell(14).value = totalPrice;   // N: รวมเงิน
+        itemRow.getCell(15).value = 'บาท';        // O: บาท
+
+        ws.mergeCells(`B${currentRowIdx}:C${currentRowIdx}`);
+
+        itemRow.getCell(1).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(1).alignment = { horizontal: 'center', vertical: 'top' };
+        itemRow.getCell(1).border = thinBorder;
+
+        itemRow.getCell(2).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(2).alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
+        itemRow.getCell(2).border = thinBorder;
+
+        itemRow.getCell(4).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(4).alignment = { horizontal: 'center', vertical: 'top' };
+        
+        itemRow.getCell(5).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(5).alignment = { horizontal: 'right', vertical: 'top' };
+        itemRow.getCell(5).numFmt = '#,##0.00';
+
+        itemRow.getCell(6).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(6).alignment = { horizontal: 'center', vertical: 'top' };
+
+        itemRow.getCell(7).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(7).alignment = { horizontal: 'center', vertical: 'top' };
+
+        itemRow.getCell(8).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(8).alignment = { horizontal: 'center', vertical: 'top' };
+
+        itemRow.getCell(9).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(9).alignment = { horizontal: 'center', vertical: 'top' };
+
+        itemRow.getCell(13).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(13).alignment = { horizontal: 'center', vertical: 'top' };
+
+        itemRow.getCell(14).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(14).alignment = { horizontal: 'right', vertical: 'top' };
+        itemRow.getCell(14).numFmt = '#,##0.00';
+
+        itemRow.getCell(15).font = { name: 'TH SarabunPSK', size: 14 };
+        itemRow.getCell(15).alignment = { horizontal: 'center', vertical: 'top' };
+
+        const photoCell = itemRow.getCell(16);
+        photoCell.border = thinBorder;
+
+        // Embed Base64 Photo in Column P
+        if (item.photo && item.photo.startsWith('data:image')) {
+          try {
+            const imageId = workbook.addImage({
+              base64: item.photo,
+              extension: 'jpeg'
+            });
+            ws.addImage(imageId, {
+              tl: { col: 15, row: currentRowIdx - 1 },
+              ext: { width: 140, height: 95 }
+            });
+          } catch (e) {
+            console.warn("Failed to embed image:", e);
+          }
         }
-      }
-      rowIdx++;
+
+        currentRowIdx++;
+      });
     });
 
-    ws.getColumn(1).width = 10;
-    ws.getColumn(2).width = 35;
-    ws.getColumn(16).width = 25;
+    ws.getColumn(1).width = 10;   // A: ลำดับ
+    ws.getColumn(2).width = 25;   // B: รายละเอียด
+    ws.getColumn(3).width = 25;   // C: รายละเอียดต่อ
+    ws.getColumn(4).width = 4;    // D: (
+    ws.getColumn(5).width = 12;   // E: ราคา
+    ws.getColumn(6).width = 10;   // F: บาท * 
+    ws.getColumn(7).width = 8;    // G: จำนวน
+    ws.getColumn(8).width = 8;    // H: หน่วย
+    ws.getColumn(9).width = 4;    // I: )
+    ws.getColumn(13).width = 4;   // M: =
+    ws.getColumn(14).width = 14;  // N: รวมเงิน
+    ws.getColumn(15).width = 8;   // O: บาท
+    ws.getColumn(16).width = 25;  // P: ภาพ
 
   } else {
     // ---------------------------------------------
     // Summary Expense Sheet (สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx)
     // ---------------------------------------------
+    const flatItems: {
+      idx: string;
+      description: string;
+      qty: number;
+      unit: string;
+      unitPrice: number;
+      totalPrice: number;
+      vendor: string;
+      invNum: string;
+      invDate: string;
+    }[] = [];
+
+    let counter = 1;
+    data.invoices.forEach((inv, invIdx) => {
+      inv.items.forEach((item, itemIdx) => {
+        const desc = item.item_code ? `${item.item_code} ${item.description}` : item.description;
+        flatItems.push({
+          idx: data.invoices.length > 1 ? `${invIdx + 1}.${itemIdx + 1}` : `${counter++}`,
+          description: desc,
+          qty: item.quantity || 1,
+          unit: item.unit || 'ชิ้น',
+          unitPrice: item.unit_price || 0,
+          totalPrice: item.total_price || 0,
+          vendor: inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย',
+          invNum: inv.invoice_number || '-',
+          invDate: inv.invoice_date || '-'
+        });
+      });
+    });
+
+    const grandSubtotal = flatItems.reduce((acc, i) => acc + i.totalPrice, 0);
+    const totalDiscount = data.invoices.reduce((acc, inv) => acc + (inv.discount || 0), 0);
+    const grandTotalPaid = grandSubtotal - totalDiscount;
+    const bahtTextStr = getBahtText(grandTotalPaid);
+
     const ws = workbook.addWorksheet('สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ');
 
     // Title Row 1
