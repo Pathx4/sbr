@@ -119,30 +119,39 @@ export default function AutoWordPage() {
 
   const activeInvoice = invoices.find(inv => inv.id === activeInvoiceId) || invoices[0] || null;
 
-  // Handle OCR Extraction for Full Image
+  // Handle OCR Extraction for Full Image (3-Pass Quality Engine)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsScanning(true);
     setScanProgress(0);
-    setScanStatus('กำลังเตรียมเอนจิน Tesseract.js...');
+    setScanStatus('กำลังเตรียมเอนจินประมวลผลคุณภาพสูง Tesseract.js (ภาษาไทย+อังกฤษ)...');
 
     try {
       const worker = await createWorker('tha+eng');
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setScanStatus(`กำลังปรับแต่งและสแกนรูปที่ ${i + 1}/${files.length}: ${file.name}...`);
-        
         const imagePreview = URL.createObjectURL(file);
-        const preprocessedDataUrl = await preprocessImageForOcr(file);
+        
+        // Pass 1: Header Crop Scan (Top 35% height at 3200px High-DPI Resolution for Vendor Name)
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 1/3 (สแกนและขยายคมชัดเฉพาะหัวบิลดึงชื่อร้านค้า)...`);
+        const headerDataUrl = await preprocessImageForOcr(file, true);
+        const headerRet = await worker.recognize(headerDataUrl);
+        const headerText = headerRet.data.text;
+        console.log("Pass 1 Header OCR Result:", headerText);
 
-        const ret = await worker.recognize(preprocessedDataUrl);
-        const text = ret.data.text;
-        console.log("Preprocessed OCR Result:", text);
+        // Pass 2: Full Image Scan (Table Items & Totals)
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 2/3 (สแกนตารางพัสดุ รหัสสินค้า และราคาสินค้า)...`);
+        const fullDataUrl = await preprocessImageForOcr(file, false);
+        const fullRet = await worker.recognize(fullDataUrl);
+        const fullText = fullRet.data.text;
+        console.log("Pass 2 Full OCR Result:", fullText);
 
-        const parsed = parseThaiReceiptOcr(text);
+        // Pass 3: Smart Merge (Header Vendor + Full Items Table)
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 3/3 (ผสานข้อมูลและตรวจสอบคำภาษาไทย)...`);
+        const parsed = parseThaiReceiptOcr(fullText, headerText);
 
         const newInvId = Date.now().toString() + '_' + i;
         const newInvoice: Invoice = {
