@@ -8,6 +8,7 @@ import {
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
+import { preprocessImageForOcr, parseThaiReceiptOcr } from '../utils/imageOcrOptimizer';
 
 interface Item {
   id: string;
@@ -108,7 +109,7 @@ export default function AutoWordPage() {
     }
   }, []);
 
-  // Handle OCR Extraction with Tesseract.js
+  // Handle OCR Extraction with Tesseract.js & Canvas Preprocessing
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -122,26 +123,39 @@ export default function AutoWordPage() {
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setScanStatus(`กำลังสแกนรูปที่ ${i + 1}/${files.length}: ${file.name}...`);
+        setScanStatus(`กำลังปรับแต่งและเพิ่มความคมชัดรูปที่ ${i + 1}/${files.length}: ${file.name}...`);
         
         // Create image preview URL
         const imagePreview = URL.createObjectURL(file);
 
-        // Perform OCR
-        const ret = await worker.recognize(file);
-        const text = ret.data.text;
-        console.log("OCR Result:", text);
+        // Preprocess image with Canvas Grayscale & Contrast Binarization
+        const preprocessedDataUrl = await preprocessImageForOcr(file);
 
-        // Parse extracted text
-        const parsed = parseOcrText(text);
+        setScanStatus(`กำลังสแกนข้อความภาษาไทยด้วย Tesseract OCR...`);
+
+        // Perform OCR on preprocessed image
+        const ret = await worker.recognize(preprocessedDataUrl);
+        const text = ret.data.text;
+        console.log("Preprocessed OCR Result:", text);
+
+        // Parse extracted Thai receipt text
+        const parsed = parseThaiReceiptOcr(text);
 
         const newInvoice: Invoice = {
           id: Date.now().toString() + '_' + i,
           vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
-          invoice_number: parsed.invoice_number || `INV-${Date.now().toString().slice(-4)}`,
+          invoice_number: parsed.invoice_number || '',
           invoice_date: parsed.invoice_date || getTodayThaiDate(),
           discount: 0,
-          items: parsed.items.length > 0 ? parsed.items : [
+          items: parsed.items.length > 0 ? parsed.items.map((item, idx) => ({
+            id: Date.now().toString() + '_item_' + idx,
+            item_code: item.item_code || '',
+            description: item.description,
+            quantity: item.quantity,
+            unit: item.unit || 'ชิ้น',
+            unit_price: item.unit_price,
+            total_price: item.total_price
+          })) : [
             {
               id: Date.now().toString() + '_item_0',
               item_code: '',
@@ -160,7 +174,7 @@ export default function AutoWordPage() {
       }
 
       await worker.terminate();
-      setStatusMsg({ type: 'success', text: 'อ่านรูปภาพด้วย Tesseract OCR เรียบร้อย! คุณสามารถตรวจทานข้อมูลได้เลย' });
+      setStatusMsg({ type: 'success', text: 'ปรับแต่งภาพและสแกนด้วย Tesseract OCR เรียบร้อย! คุณสามารถตรวจทานข้อมูลได้เลย' });
     } catch (err: any) {
       console.error("Tesseract error:", err);
       setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนรูป: ${err.message || err}` });
@@ -170,73 +184,7 @@ export default function AutoWordPage() {
     }
   };
 
-  // Helper: Smart Regex Parser for OCR text
-  const parseOcrText = (text: string) => {
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    let vendor_name = '';
-    let invoice_number = '';
-    let invoice_date = '';
-    let total_amount = 0;
-    const items: Item[] = [];
 
-    // 1. Find Vendor Name
-    for (const line of lines.slice(0, 8)) {
-      if (/บริษัท|หจก\.|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus/i.test(line)) {
-        vendor_name = line.replace(/^[^\wก-ฮ]+/, '').trim();
-        break;
-      }
-    }
-    if (!vendor_name && lines.length > 0) {
-      vendor_name = lines[0];
-    }
-
-    // 2. Find Invoice Number
-    const invMatch = text.match(/(?:เลขที่|INV|No\.|Doc No|Tax Invoice No)[^\d\n]*([A-Z0-9\/\-]+)/i);
-    if (invMatch) {
-      invoice_number = invMatch[1].trim();
-    }
-
-    // 3. Find Date
-    const dateMatch = text.match(/(\d{1,2})\s*[\/\-\.\s]\s*([ก-ฮa-zA-Z0-9]+)\s*[\/\-\.\s]\s*(\d{2,4})/);
-    if (dateMatch) {
-      const day = dateMatch[1];
-      const month = dateMatch[2];
-      let year = dateMatch[3];
-      if (year.length === 2) year = '25' + year;
-      invoice_date = `${day} ${month} ${year}`;
-    }
-
-    // 4. Find Total Amount
-    const totalMatch = text.match(/(?:ราคารวม|รวมเงิน|สุทธิ|TOTAL|Grand Total)[^\d\n]*([\d,]+\.?\d*)/i);
-    if (totalMatch) {
-      total_amount = parseFloat(totalMatch[1].replace(/,/g, '')) || 0;
-    }
-
-    // 5. Find Item lines
-    const numberRegex = /([\d,]+\.\d{2})/g;
-    lines.forEach((line, idx) => {
-      const matches = line.match(numberRegex);
-      if (matches && matches.length >= 1) {
-        const price = parseFloat(matches[matches.length - 1].replace(/,/g, ''));
-        if (price > 0 && price !== total_amount && !/รวม|VAT|Tax|ภาษี|ส่วนลด/i.test(line)) {
-          const desc = line.replace(/[\d,]+\.\d{2}/g, '').trim();
-          if (desc.length > 2) {
-            items.push({
-              id: Date.now().toString() + '_' + idx,
-              item_code: '',
-              description: desc,
-              quantity: 1,
-              unit: 'ชิ้น',
-              unit_price: price,
-              total_price: price
-            });
-          }
-        }
-      }
-    });
-
-    return { vendor_name, invoice_number, invoice_date, total_amount, items };
-  };
 
   const getTodayThaiDate = () => {
     const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
