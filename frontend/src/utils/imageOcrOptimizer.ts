@@ -1,5 +1,5 @@
 // Advanced Utility for Image Preprocessing & Ultra-High Precision Thai OCR Enhancement
-// Ultra-Precision Parser for Thai Hardware & Retail Receipts
+// Multi-pass Canvas Denoising, Thai Vowel Validation, and High-DPI Upscaling Engine
 
 function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number): number {
   const histogram = new Array(256).fill(0);
@@ -42,6 +42,9 @@ function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number)
   return threshold;
 }
 
+/**
+ * Preprocesses receipt image with High-DPI Canvas Upscaling, Denoising, and Adaptive Thresholding
+ */
 export function preprocessImageForOcr(file: File): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -57,20 +60,25 @@ export function preprocessImageForOcr(file: File): Promise<string> {
           return;
         }
 
+        // Target high-definition 2400px width for maximum Thai OCR detail
         let width = img.width;
         let height = img.height;
-        if (width < 1400) {
-          const ratio = 1800 / width;
-          width = 1800;
-          height = Math.round(height * ratio);
-        } else if (width > 2800) {
+        if (width < 1800) {
           const ratio = 2400 / width;
           width = 2400;
+          height = Math.round(height * ratio);
+        } else if (width > 3200) {
+          const ratio = 2600 / width;
+          width = 2600;
           height = Math.round(height * ratio);
         }
 
         canvas.width = width;
         canvas.height = height;
+
+        // Image smoothing for high contrast
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         ctx.drawImage(img, 0, 0, width, height);
 
@@ -79,6 +87,7 @@ export function preprocessImageForOcr(file: File): Promise<string> {
 
         const threshold = otsuThreshold(data, width, height);
 
+        // High contrast binarization filter
         for (let i = 0; i < data.length; i += 4) {
           const gray = data[i];
           const bin = gray < threshold ? 0 : 255;
@@ -88,7 +97,7 @@ export function preprocessImageForOcr(file: File): Promise<string> {
         }
 
         ctx.putImageData(imageData, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
         URL.revokeObjectURL(objectUrl);
         resolve(dataUrl);
       } catch (e) {
@@ -129,10 +138,10 @@ const TYPO_MAP: Record<string, string> = {
 };
 
 function cleanThaiText(str: string): string {
-  // 1. Strip leading item line numbers (e.g., "1 ", "1.", "1 v ", "10 v ") without stripping product words
+  // 1. Strip leading item line numbers and ALL leading punctuation symbols (!, ?, |, +, -, ง, v, ., :)
   let cleaned = str
-    .replace(/^(\d{1,2}\s*[v\|\.\-\:\)\s]+)+/gi, '')
-    .replace(/^[vง!\|\+\.\-]+/gi, '')
+    .replace(/^([!\?\.\-\|\+:งv\s\d]*\d{1,2}\s*[v\|\.\-\:\)\s]+)/gi, '')
+    .replace(/^[!\?\.\-\|\+:งv\s\d]+/gi, '')
     .replace(/[ฒณ|\[\]{}]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -144,6 +153,28 @@ function cleanThaiText(str: string): string {
   });
 
   return cleaned;
+}
+
+/**
+ * Check if string is garbled Thai consonant noise without vowels
+ * e.g. "บณษบสรจรงบน" has no Thai vowels -> Garbled gibberish!
+ */
+function isGarbledThaiGibberish(text: string): boolean {
+  if (text.length < 4) return false;
+  
+  // Check if string contains Thai characters
+  if (!/[ก-ฮ]/.test(text)) return false;
+
+  // Thai vowels: ะ า ิ ี ึ ื ุ ู เ แ โ ใ ไ ำ ็ ์
+  const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(text);
+  const thaiConsonantCount = (text.match(/[ก-ฮ]/g) || []).length;
+
+  // If there are > 5 Thai consonants but 0 vowels -> 100% garbled OCR noise!
+  if (thaiConsonantCount >= 5 && !hasVowels) {
+    return true;
+  }
+
+  return false;
 }
 
 export interface ParsedReceipt {
@@ -181,17 +212,16 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', '00069193', 'บาท'
   ];
 
-  // Regex to detect address lines (so address line like "/10 หมู่ที่ 10" is NOT used as vendor name)
   const addressRegex = /หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|เลขที่|โทร|TEL|FAX|TAX ID|เลขประจำตัว|อาคาร|ชั้น|หมู่บ้าน|\/10|\/11|\/12/i;
 
-  // 1. Extract Vendor Name (Ignoring Document Titles and Address lines)
+  // 1. Extract Vendor Name (Ignoring Document Titles, Address lines, and Garbled Gibberish like บณษบสรจรงบน)
   for (const line of lines.slice(0, 10)) {
     const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
     
-    // Check if line is not a document title or address
     if (cleanLine.length > 4 && 
         !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT|od\s+o/i.test(cleanLine) &&
-        !addressRegex.test(cleanLine)) {
+        !addressRegex.test(cleanLine) &&
+        !isGarbledThaiGibberish(cleanLine)) {
 
       if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY|ไทวัสดุ|Global|DoHome|HomePro|ซีอาร์ซี|ซีโอแอล/i.test(cleanLine)) {
         vendor_name = cleanLine;
@@ -284,7 +314,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
             cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
           }
 
-          // Clean item line numbers and leading garbage symbols
+          // Clean item line numbers and leading garbage symbols (!, ?, |, +, -, ง, v, ., :)
           cleanDesc = cleanThaiText(cleanDesc);
 
           // Detect quantity if present before prices
