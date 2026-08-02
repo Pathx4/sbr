@@ -1,10 +1,6 @@
-// Advanced Utility for Image Preprocessing & Thai OCR Enhancement
-// High-precision Thai Receipt Parser with Multi-column Price Stripping & Spell Correction
+// Advanced Utility for Image Preprocessing & Ultra-High Precision Thai OCR Enhancement
+// Ultra-Precision Parser for Thai Receipts, Multi-column Price Stripping & Spec Protection
 
-/**
- * Otsu's Binarization Algorithm
- * Automatically calculates the optimal threshold to separate text from background shadows.
- */
 function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number): number {
   const histogram = new Array(256).fill(0);
   const totalPixels = width * height;
@@ -46,9 +42,6 @@ function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number)
   return threshold;
 }
 
-/**
- * Preprocesses receipt image with Canvas, Otsu thresholding, and contrast sharpening.
- */
 export function preprocessImageForOcr(file: File): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -130,14 +123,15 @@ const TYPO_MAP: Record<string, string> = {
 };
 
 function cleanThaiText(str: string): string {
-  // Strip leading garbage symbols like v, ง, !, |, +, ., -
+  // 1. Strip leading item numbers & garbage prefixes (e.g., "1 v ", "2 v ", "10 v ", "v ", "ง ! ")
   let cleaned = str
-    .replace(/^[vง!\|\+\.\-\s]+/gi, '')
+    .replace(/^(\d{1,3}[\s\.\-v]+)+/gi, '')
+    .replace(/^[vง!\|\+\.\-\s\d]+/gi, '')
     .replace(/[ฒณ|\[\]{}]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   
-  // Fix OCR Thai character typos
+  // 2. Fix OCR Thai character typos
   Object.keys(TYPO_MAP).forEach(typo => {
     const re = new RegExp(`\\b${typo}\\b`, 'g');
     cleaned = cleaned.replace(re, TYPO_MAP[typo]);
@@ -174,22 +168,22 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
   const items: ParsedReceipt['items'] = [];
 
   const excludeKeywords = [
-    'ชำระเงิน', 'ชำระโดย', 'VISA', 'MASTER', 'CASH', 'เงินสด', 'เงินทอน',
+    'ชำระเงินโดย', 'ชำระเงิน', 'ชำระโดย', 'VISA', 'MASTER', 'CASH', 'เงินสด', 'เงินทอน',
     'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม',
     'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ',
     'ยินดีต้อนรับ', 'WELCOME', 'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่',
-    'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด'
+    'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', '00069193', 'บาท'
   ];
 
-  // 1. Extract Vendor Name (Ignoring Document Title headers like ใบกำกับภาษี)
+  // 1. Extract Vendor Name (Ignoring Document Title headers like ใบกำกับภาษี and garbled lines)
   for (const line of lines.slice(0, 10)) {
     const cleanLine = cleanThaiText(line.replace(/^[^\wก-ฮ]+/, ''));
-    if (cleanLine.length > 3 && !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT/i.test(cleanLine)) {
+    if (cleanLine.length > 4 && !/ใบกำกับภาษี|ใบเสร็จรับเงิน|หน้าที่|ต้นฉบับ|สำเนา|เลขที่|วันที่|INV|TAX|POS|สาขา|RECEIPT|od\s+o/i.test(cleanLine)) {
       if (/บริษัท|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|IT CITY|B2S|OfficeMate|Big C|Lotus|7-Eleven|MR\.?DIY|ไทวัสดุ|Global|DoHome|HomePro/i.test(cleanLine)) {
         vendor_name = cleanLine;
         break;
       }
-      if (!vendor_name && cleanLine.length > 4 && !/\d{5,}/.test(cleanLine)) {
+      if (!vendor_name && cleanLine.length > 5 && !/\d{4,}/.test(cleanLine) && /[ก-ฮa-zA-Z]{3,}/.test(cleanLine)) {
         vendor_name = cleanLine;
       }
     }
@@ -249,28 +243,30 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
     }
   }
 
-  // 5. Extract Item Lines, SKUs, and Strip Trailing Price Columns
+  // 5. Extract Item Lines, SKUs, and Trailing Prices (Right-To-Left Price Matching)
   lines.forEach((line) => {
+    // Skip excluded payment / header / footer lines
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw))) {
       return;
     }
 
-    // Match lines containing decimal prices
+    // Match lines ending with numeric price columns (e.g. "Description 1 98.00 98.00 0.00" or "Description 1 98.00 0.00")
     const priceMatches = line.match(/([\d,]+\.\d{2})/g);
     if (priceMatches && priceMatches.length >= 1) {
-      // Non-zero price values
+      // Pick price from right-most matching columns (actual unit/total price at end of line)
       const validPrices = priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0);
       
       if (validPrices.length > 0) {
-        const itemPrice = validPrices[0];
+        // In item rows, unit price / total price are the last numbers on the line
+        const itemPrice = validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0];
 
         if (itemPrice > 0 && itemPrice !== total_amount) {
           let cleanDesc = line;
 
-          // Strip all trailing numeric/price columns (e.g., "1 98.00 98.00 0.00")
+          // Strip all trailing numeric/price columns (e.g., "1 98.00 98.00 0.00" or "1 98.00")
           cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').trim();
 
-          // Extract SKU / Barcode if available
+          // Extract SKU / Barcode if available (e.g., 88586583008 or [8859298504])
           let item_code = '';
           const skuMatch = cleanDesc.match(/\[([0-9A-Z\-]+)\]|([0-9]{10,13})|([A-Z0-9\-]{5,15}\b)/);
           if (skuMatch) {
@@ -278,7 +274,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
             cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
           }
 
-          // Clean leading symbols/garbage characters
+          // Clean item line numbers and leading garbage symbols (e.g., "1 v ", "2 v ", "v ")
           cleanDesc = cleanThaiText(cleanDesc);
 
           // Detect quantity if present before prices
@@ -300,7 +296,7 @@ export function parseThaiReceiptOcr(text: string): ParsedReceipt {
           else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
           else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
 
-          if (cleanDesc.length >= 2) {
+          if (cleanDesc.length >= 2 && !/ชำระเงิน|ยอดรวม|สุทธิ/i.test(cleanDesc)) {
             items.push({
               item_code,
               description: cleanDesc,
