@@ -34,52 +34,80 @@ export interface ExcelPayload {
   is_illustration?: boolean;
 }
 
+/**
+ * Generates Official Excel Workbook (.xlsx) using the official template layout
+ */
 export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
   const workbook = new ExcelJS.Workbook();
   const isIllustration = !!data.is_illustration;
 
-  if (isIllustration) {
+  // Flatten items across all invoices
+  const flatItems: {
+    idx: string;
+    description: string;
+    qty: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+    vendor: string;
+    invNum: string;
+    invDate: string;
+    photo?: string;
+  }[] = [];
+
+  let counter = 1;
+  data.invoices.forEach((inv, invIdx) => {
+    inv.items.forEach((item, itemIdx) => {
+      const desc = item.item_code ? `${item.item_code} ${item.description}` : item.description;
+      flatItems.push({
+        idx: data.invoices.length > 1 ? `${invIdx + 1}.${itemIdx + 1}` : `${counter++}`,
+        description: desc,
+        qty: item.quantity || 1,
+        unit: item.unit || 'ชิ้น',
+        unitPrice: item.unit_price || 0,
+        totalPrice: item.total_price || 0,
+        vendor: inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย',
+        invNum: inv.invoice_number || '-',
+        invDate: inv.invoice_date || '-',
+        photo: item.photo
+      });
+    });
+  });
+
+  const grandSubtotal = flatItems.reduce((acc, i) => acc + i.totalPrice, 0);
+  const totalDiscount = data.invoices.reduce((acc, inv) => acc + (inv.discount || 0), 0);
+  const grandTotalPaid = grandSubtotal - totalDiscount;
+  const bahtTextStr = getBahtText(grandTotalPaid);
+
+  // Try fetching the official Excel template file from public/templates/
+  let loadedFromTemplate = false;
+  try {
+    const templateRes = await fetch('./templates/สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx');
+    if (templateRes.ok) {
+      const buffer = await templateRes.arrayBuffer();
+      await workbook.xlsx.load(buffer);
+      loadedFromTemplate = true;
+    }
+  } catch (e) {
+    console.warn("Could not load template file, falling back to programmatic ExcelJS generation:", e);
+  }
+
+  if (loadedFromTemplate) {
     // ---------------------------------------------
-    // Illustration Sheet (ภาพประกอบ.xlsx)
+    // Populate Official Excel Template
     // ---------------------------------------------
-    const ws = workbook.addWorksheet('ภาพประกอบ');
+    if (isIllustration) {
+      // Illustration Sheet (Sheet 2)
+      const ws = workbook.worksheets[1] || workbook.worksheets[0];
+      
+      // Update Header Title if needed
+      let rowIdx = 5;
+      flatItems.forEach(item => {
+        const row = ws.getRow(rowIdx);
+        row.getCell(1).value = item.idx;
+        row.getCell(2).value = item.description;
+        row.height = 100;
 
-    // Title Row
-    ws.addRow(['ภาพประกอบ']);
-    ws.mergeCells('A1:P1');
-    const titleCell = ws.getCell('A1');
-    titleCell.font = { name: 'TH SarabunPSK', size: 20, bold: true };
-    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getRow(1).height = 35;
-
-    // Header Row
-    ws.addRow(['ลำดับ', 'รายละเอียด', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ภาพ']);
-    ws.mergeCells('B2:O2');
-    ws.getRow(2).height = 40;
-
-    ws.getCell('A2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getCell('B2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('B2').alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getCell('P2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('P2').alignment = { horizontal: 'center', vertical: 'middle' };
-
-    let rowIdx = 3;
-    data.invoices.forEach((inv, invIdx) => {
-      inv.items.forEach((item, itemIdx) => {
-        const itemNumber = data.invoices.length > 1 ? `${invIdx + 1}.${itemIdx + 1}` : `${itemIdx + 1}`;
-        const desc = item.item_code ? `${item.item_code} ${item.description}` : item.description;
-
-        ws.addRow([itemNumber, desc]);
-        ws.mergeCells(`B${rowIdx}:O${rowIdx}`);
-        ws.getRow(rowIdx).height = 120;
-
-        ws.getCell(`A${rowIdx}`).font = { name: 'TH SarabunPSK', size: 14 };
-        ws.getCell(`A${rowIdx}`).alignment = { horizontal: 'center', vertical: 'top' };
-        ws.getCell(`B${rowIdx}`).font = { name: 'TH SarabunPSK', size: 14 };
-        ws.getCell(`B${rowIdx}`).alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
-
-        // Embed Base64 Photo if provided
         if (item.photo && item.photo.startsWith('data:image')) {
           try {
             const imageId = workbook.addImage({
@@ -88,164 +116,140 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
             });
             ws.addImage(imageId, {
               tl: { col: 15, row: rowIdx - 1 },
-              ext: { width: 150, height: 120 }
+              ext: { width: 140, height: 100 }
             });
-          } catch (e) {
-            console.warn("Failed to embed image:", e);
+          } catch (err) {
+            console.warn("Failed to embed image:", err);
           }
         }
         rowIdx++;
       });
-    });
+    } else {
+      // Summary Expense Sheet (Sheet 1)
+      const ws = workbook.worksheets[0];
 
-    ws.getColumn('A').width = 8;
-    ws.getColumn('B').width = 40;
-    ws.getColumn('P').width = 25;
+      // Update Title & Date Location headers
+      if (data.intro_course) {
+        ws.getCell('A1').value = `ตารางสรุปค่าใช้จ่ายในการจัดซื้อวัสดุสำหรับการจัด ${data.intro_course}`;
+      }
+      if (data.excel_location || data.excel_date_range) {
+        const locStr = data.excel_location ? ` ณ ${data.excel_location}` : '';
+        const dateStr = data.excel_date_range ? ` ระหว่างวันที่ ${data.excel_date_range}` : '';
+        ws.getCell('A2').value = `${locStr}${dateStr}`.trim();
+      }
 
+      // Populate Data Rows starting at Row 5
+      let startRow = 5;
+      flatItems.forEach((item, idx) => {
+        const row = ws.getRow(startRow + idx);
+        row.getCell(1).value = item.idx;
+        row.getCell(2).value = item.description;
+        row.getCell(3).value = item.qty;
+        row.getCell(4).value = item.unit;
+        row.getCell(5).value = item.unitPrice;
+        row.getCell(6).value = item.totalPrice;
+        row.getCell(7).value = item.vendor;
+        row.getCell(8).value = `เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`;
+      });
+
+      // Total Row
+      const totalRowIdx = startRow + flatItems.length;
+      const totalRow = ws.getRow(totalRowIdx);
+      totalRow.getCell(2).value = `รวมเป็นเงินทั้งสิ้น (${bahtTextStr})`;
+      totalRow.getCell(6).value = grandTotalPaid;
+    }
   } else {
     // ---------------------------------------------
-    // Expense Summary Sheet (สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx)
+    // Programmatic Fallback Excel Generation
     // ---------------------------------------------
-    const ws = workbook.addWorksheet('สรุปค่าใช้จ่าย');
+    if (isIllustration) {
+      const ws = workbook.addWorksheet('ภาพประกอบ');
+      ws.addRow(['ภาพประกอบ']);
+      ws.mergeCells('A1:P1');
+      ws.getCell('A1').font = { name: 'TH SarabunPSK', size: 20, bold: true };
+      ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
 
-    // Title Rows
-    ws.addRow(['สรุปค่าใช้จ่ายการเบิกเงินค่าพัสดุ']);
-    ws.mergeCells('A1:U1');
-    ws.getCell('A1').font = { name: 'TH SarabunPSK', size: 18, bold: true };
-    ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+      ws.addRow(['ลำดับ', 'รายละเอียดพัสดุ', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ภาพประกอบ']);
+      ws.mergeCells('B2:O2');
 
-    const courseName = data.intro_course ? `รายการจัดซื้อวัสดุอุปกรณ์สำหรับการดำเนินงาน ${data.intro_course}` : 'รายการจัดซื้อวัสดุอุปกรณ์';
-    ws.addRow([courseName]);
-    ws.mergeCells('A2:U2');
-    ws.getCell('A2').font = { name: 'TH SarabunPSK', size: 16, bold: true };
-    ws.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' };
+      let rowIdx = 3;
+      flatItems.forEach(item => {
+        ws.addRow([item.idx, item.description]);
+        ws.mergeCells(`B${rowIdx}:O${rowIdx}`);
+        ws.getRow(rowIdx).height = 100;
+        ws.getCell(`A${rowIdx}`).font = { name: 'TH SarabunPSK', size: 14 };
+        ws.getCell(`A${rowIdx}`).alignment = { horizontal: 'center', vertical: 'top' };
+        ws.getCell(`B${rowIdx}`).font = { name: 'TH SarabunPSK', size: 14 };
+        ws.getCell(`B${rowIdx}`).alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
 
-    let dateLocText = '';
-    if (data.excel_date_range) dateLocText += `ระหว่างวันที่ ${data.excel_date_range} `;
-    if (data.excel_location) dateLocText += `ณ ${data.excel_location}`;
-    ws.addRow([dateLocText]);
-    ws.mergeCells('A3:U3');
-    ws.getCell('A3').font = { name: 'TH SarabunPSK', size: 14, italic: true };
-    ws.getCell('A3').alignment = { horizontal: 'center', vertical: 'middle' };
-
-    ws.addRow([]); // Blank row 4
-
-    // Table Header Row 5
-    const headerRow = ws.addRow(['ลำดับ', 'รายการ / ร้านค้าผู้ขาย', '', '', '', '', '', '', '', '', '', '', '', '', '=', 'จำนวนเงิน (บาท)', 'บาท', 'ราคารวม', '', '', 'หมายเหตุ']);
-    ws.mergeCells('B5:N5');
-    ws.mergeCells('R5:T5');
-    ws.getRow(5).height = 30;
-
-    headerRow.eachCell((cell) => {
-      cell.font = { name: 'TH SarabunPSK', size: 14, bold: true };
-      cell.alignment = { horizontal: 'center', vertical: 'middle' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE6F0FA' } };
-      cell.border = {
-        top: { style: 'thin' },
-        bottom: { style: 'medium' },
-        left: { style: 'thin' },
-        right: { style: 'thin' }
-      };
-    });
-
-    let current = 6;
-
-    data.invoices.forEach((inv, invIdx) => {
-      const vendorRowIdx = current;
-
-      // Vendor Header Row
-      const vRow = ws.addRow([invIdx + 1, inv.vendor_name, '', '', '', '', '', '', '', '', '', '', '', '', '=', '', 'บาท', '']);
-      ws.mergeCells(`B${vendorRowIdx}:N${vendorRowIdx}`);
-      ws.mergeCells(`R${vendorRowIdx}:T${vendorRowIdx}`);
-      ws.getRow(vendorRowIdx).height = 28;
-
-      const invTotal = inv.items.reduce((s, item) => s + (item.total_price || 0), 0) - (inv.discount || 0);
-      ws.getCell(`P${vendorRowIdx}`).value = invTotal;
-      ws.getCell(`R${vendorRowIdx}`).value = invTotal;
-
-      vRow.eachCell(cell => {
-        cell.font = { name: 'TH SarabunPSK', size: 14, bold: true };
-        cell.alignment = { vertical: 'middle' };
+        if (item.photo && item.photo.startsWith('data:image')) {
+          try {
+            const imageId = workbook.addImage({
+              base64: item.photo,
+              extension: 'jpeg'
+            });
+            ws.addImage(imageId, {
+              tl: { col: 15, row: rowIdx - 1 },
+              ext: { width: 140, height: 100 }
+            });
+          } catch (err) {
+            console.warn("Failed to embed image:", err);
+          }
+        }
+        rowIdx++;
       });
-      ws.getCell(`A${vendorRowIdx}`).alignment = { horizontal: 'center', vertical: 'middle' };
-      ws.getCell(`P${vendorRowIdx}`).alignment = { horizontal: 'right', vertical: 'middle' };
-      ws.getCell(`R${vendorRowIdx}`).alignment = { horizontal: 'right', vertical: 'middle' };
+    } else {
+      const ws = workbook.addWorksheet('สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ');
+      
+      // Header Title
+      const titleText = data.intro_course 
+        ? `ตารางสรุปค่าใช้จ่ายในการจัดซื้อวัสดุสำหรับการจัด ${data.intro_course}`
+        : 'ตารางสรุปค่าใช้จ่ายในการจัดซื้อจัดจ้างพัสดุ';
 
-      current++;
+      ws.addRow([titleText]);
+      ws.mergeCells('A1:H1');
+      ws.getCell('A1').font = { name: 'TH SarabunPSK', size: 18, bold: true };
+      ws.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
 
-      // Items Rows
-      inv.items.forEach((item, itemIdx) => {
-        const itemRowIdx = current;
-        const desc = item.item_code ? `${item.item_code} ${item.description}` : item.description;
+      const subTitleText = `${data.excel_location ? ' ณ ' + data.excel_location : ''}${data.excel_date_range ? ' ระหว่างวันที่ ' + data.excel_date_range : ''}`;
+      ws.addRow([subTitleText]);
+      ws.mergeCells('A2:H2');
+      ws.getCell('A2').font = { name: 'TH SarabunPSK', size: 16 };
+      ws.getCell('A2').alignment = { horizontal: 'center', vertical: 'middle' };
 
-        const iRow = ws.addRow([
-          `${invIdx + 1}.${itemIdx + 1}`,
-          desc,
-          '',
-          '(',
-          item.unit_price,
-          'บาท *',
-          item.quantity,
-          item.unit || 'ชิ้น',
-          ')',
-          '', '', '', '=',
-          item.total_price,
-          'บาท'
+      ws.addRow([]); // Blank spacing
+
+      // Table Header Row
+      const headerRow = ws.addRow(['ลำดับ', 'รายการพัสดุ', 'จำนวน', 'หน่วย', 'ราคา/หน่วย', 'จำนวนเงิน', 'ร้านค้า/ผู้ขาย', 'เลขที่ใบเสร็จ/วันที่']);
+      headerRow.font = { name: 'TH SarabunPSK', size: 16, bold: true };
+      headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+
+      // Data Rows
+      flatItems.forEach(item => {
+        const row = ws.addRow([
+          item.idx,
+          item.description,
+          item.qty,
+          item.unit,
+          item.unitPrice,
+          item.totalPrice,
+          item.vendor,
+          `เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`
         ]);
-
-        ws.mergeCells(`B${itemRowIdx}:C${itemRowIdx}`);
-        ws.getRow(itemRowIdx).height = 22;
-
-        iRow.eachCell(cell => {
-          cell.font = { name: 'TH SarabunPSK', size: 14 };
-          cell.alignment = { vertical: 'middle' };
-        });
-        ws.getCell(`A${itemRowIdx}`).alignment = { horizontal: 'center', vertical: 'middle' };
-        ws.getCell(`E${itemRowIdx}`).alignment = { horizontal: 'right', vertical: 'middle' };
-        ws.getCell(`G${itemRowIdx}`).alignment = { horizontal: 'center', vertical: 'middle' };
-        ws.getCell(`N${itemRowIdx}`).alignment = { horizontal: 'right', vertical: 'middle' };
-
-        current++;
+        row.font = { name: 'TH SarabunPSK', size: 14 };
+        row.getCell(1).alignment = { horizontal: 'center' };
+        row.getCell(3).alignment = { horizontal: 'center' };
+        row.getCell(4).alignment = { horizontal: 'center' };
+        row.getCell(5).numFmt = '#,##0.00';
+        row.getCell(6).numFmt = '#,##0.00';
       });
 
-      // Discount Row if any
-      if (inv.discount > 0) {
-        const discRowIdx = current;
-        ws.addRow(['', 'ส่วนลด', '', '', inv.discount, 'บาท']);
-        ws.mergeCells(`B${discRowIdx}:C${discRowIdx}`);
-        current++;
-      }
-    });
-
-    // Total Grand Row
-    const grandRowIdx = current;
-    const grandTotal = data.invoices.reduce((acc, inv) => {
-      const invSum = inv.items.reduce((s, i) => s + (i.total_price || 0), 0);
-      return acc + Math.max(0, invSum - (inv.discount || 0));
-    }, 0);
-    const bahtTextStr = getBahtText(grandTotal);
-
-    const gRow = ws.addRow(['รวม', `(${bahtTextStr})`, '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', grandTotal]);
-    ws.mergeCells(`B${grandRowIdx}:Q${grandRowIdx}`);
-    ws.mergeCells(`R${grandRowIdx}:T${grandRowIdx}`);
-    ws.getRow(grandRowIdx).height = 30;
-
-    gRow.eachCell(cell => {
-      cell.font = { name: 'TH SarabunPSK', size: 15, bold: true };
-      cell.alignment = { vertical: 'middle' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4F8' } };
-    });
-    ws.getCell(`A${grandRowIdx}`).alignment = { horizontal: 'center', vertical: 'middle' };
-    ws.getCell(`B${grandRowIdx}`).alignment = { horizontal: 'left', vertical: 'middle' };
-    ws.getCell(`R${grandRowIdx}`).alignment = { horizontal: 'right', vertical: 'middle' };
-
-    // Column Widths
-    ws.getColumn('A').width = 8;
-    ws.getColumn('B').width = 30;
-    ws.getColumn('E').width = 12;
-    ws.getColumn('N').width = 15;
-    ws.getColumn('P').width = 16;
-    ws.getColumn('R').width = 16;
+      // Total Row
+      const totalRow = ws.addRow(['', `รวมเป็นเงินทั้งสิ้น (${bahtTextStr})`, '', '', '', grandTotalPaid]);
+      ws.mergeCells(`B${totalRow.number}:E${totalRow.number}`);
+      totalRow.font = { name: 'TH SarabunPSK', size: 16, bold: true };
+      totalRow.getCell(6).numFmt = '#,##0.00';
+    }
   }
 
   const buffer = await workbook.xlsx.writeBuffer();

@@ -1,6 +1,6 @@
 import { 
-  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, 
-  WidthType, AlignmentType
+  Document, Packer, Paragraph, TextRun, 
+  AlignmentType
 } from 'docx';
 import { bahttext } from 'bahttext';
 
@@ -32,98 +32,297 @@ export interface DocxPayload {
   regulatory_text: string;
   requester_name: string;
   requester_position: string;
-  requester_date: string;
+  requester_date?: string;
   approver_name: string;
   approver_position: string;
-  approver_date: string;
+  approver_date?: string;
   invoices: Invoice[];
 }
 
+/**
+ * Formats price number to Thai comma style string (e.g. 1,580.00 or 98)
+ */
+function formatPrice(val: number): string {
+  if (val % 1 === 0) {
+    return val.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  } else {
+    return val.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+}
+
+/**
+ * Generates Official Thai Government Memo Document (.docx) matching the exact template layout
+ */
 export async function generateWordDocument(data: DocxPayload): Promise<Blob> {
   const FONT_NAME = 'TH SarabunPSK';
   const FONT_SIZE = 32; // 16pt in half-points
 
   // Flatten all items across invoices
-  const allItems: { idx: string; description: string; qty: number; unit: string; unitPrice: number; totalPrice: number }[] = [];
-  let counter = 1;
+  const flatItems: {
+    idx: number;
+    code: string;
+    description: string;
+    qty: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+    vendor: string;
+    invNum: string;
+    invDate: string;
+    invoiceIdx: number;
+  }[] = [];
+
+  const invoiceRanges: {
+    invoiceIdx: number;
+    start: number;
+    end: number;
+    subtotal: number;
+    discount: number;
+    grandTotal: number;
+  }[] = [];
+
+  let globalCounter = 1;
 
   data.invoices.forEach((inv, invIdx) => {
-    inv.items.forEach((item, itemIdx) => {
-      const desc = item.item_code ? `${item.item_code} ${item.description}` : item.description;
-      allItems.push({
-        idx: data.invoices.length > 1 ? `${invIdx + 1}.${itemIdx + 1}` : `${counter++}`,
+    const startIdx = globalCounter;
+    let invSubtotal = 0;
+
+    inv.items.forEach(item => {
+      const desc = item.description;
+      const code = item.item_code || '';
+      invSubtotal += item.total_price || 0;
+
+      flatItems.push({
+        idx: globalCounter++,
+        code,
         description: desc,
-        qty: item.quantity,
+        qty: item.quantity || 1,
         unit: item.unit || 'ชิ้น',
-        unitPrice: item.unit_price,
-        totalPrice: item.total_price
+        unitPrice: item.unit_price || 0,
+        totalPrice: item.total_price || 0,
+        vendor: inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย',
+        invNum: inv.invoice_number || '-',
+        invDate: inv.invoice_date || '-',
+        invoiceIdx: invIdx
       });
+    });
+
+    const endIdx = globalCounter - 1;
+    const discount = Number(inv.discount || 0);
+    const grandTotal = Math.max(0, invSubtotal - discount);
+
+    invoiceRanges.push({
+      invoiceIdx: invIdx,
+      start: startIdx,
+      end: endIdx,
+      subtotal: invSubtotal,
+      discount,
+      grandTotal
     });
   });
 
-  const grandTotal = data.invoices.reduce((acc, inv) => acc + (inv.grand_total || 0), 0);
-  const bahtTextStr = getBahtText(grandTotal);
+  const totalItemsCount = flatItems.length;
+  const grandSubtotal = flatItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const totalDiscount = invoiceRanges.reduce((sum, r) => sum + r.discount, 0);
+  const grandTotalPaid = grandSubtotal - totalDiscount;
+  const thaiTextAmount = getBahtText(grandTotalPaid);
 
-  // Build Table Rows
-  const tableRows: TableRow[] = [
-    // Header Row
-    new TableRow({
+  const deptText = data.department || 'สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.)';
+  const introCourseText = data.intro_course || 'จัดซื้อวัสดุสำหรับการจัดกิจกรรมและดำเนินงานโครงการ';
+  const regText = data.regulatory_text || 'หนังสือคณะกรรมการวินิจฉัยปัญหาการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ กรมบัญชีกลาง ด่วนที่สุด ที่ กค (กวจ) 0405.2/ว 119 ลงวันที่ 7 มีนาคม 2561 ตาราง 1 ลำดับที่ 3';
+
+  const paragraphs: Paragraph[] = [
+    // 1. Header Title: บันทึกข้อความ (Bold 29pt / 58 half-pts)
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
       children: [
-        new TableCell({
-          width: { size: 10, type: WidthType.PERCENTAGE },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "ลำดับ", font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
-        }),
-        new TableCell({
-          width: { size: 45, type: WidthType.PERCENTAGE },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "รายการพัสดุ", font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
-        }),
-        new TableCell({
-          width: { size: 15, type: WidthType.PERCENTAGE },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "จำนวน", font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
-        }),
-        new TableCell({
-          width: { size: 15, type: WidthType.PERCENTAGE },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "ราคา/หน่วย (บาท)", font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
-        }),
-        new TableCell({
-          width: { size: 15, type: WidthType.PERCENTAGE },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "จำนวนเงิน (บาท)", font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
+        new TextRun({
+          text: "บันทึกข้อความ",
+          font: FONT_NAME,
+          size: 58,
+          bold: true
         })
       ]
     }),
-    // Data Rows
-    ...allItems.map(item => new TableRow({
+
+    // 2. ส่วนราชการ
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
       children: [
-        new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: item.idx, font: FONT_NAME, size: FONT_SIZE })] })]
-        }),
-        new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.LEFT, children: [new TextRun({ text: item.description, font: FONT_NAME, size: FONT_SIZE })] })]
-        }),
-        new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${item.qty} ${item.unit}`, font: FONT_NAME, size: FONT_SIZE })] })]
-        }),
-        new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: item.unitPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 }), font: FONT_NAME, size: FONT_SIZE })] })]
-        }),
-        new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: item.totalPrice.toLocaleString('th-TH', { minimumFractionDigits: 2 }), font: FONT_NAME, size: FONT_SIZE })] })]
-        })
+        new TextRun({ text: "ส่วนราชการ  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
+        new TextRun({ text: `${deptText}  โทร. 033 005 833`, font: FONT_NAME, size: FONT_SIZE })
       ]
-    })),
-    // Total Row
-    new TableRow({
+    }),
+
+    // 3. ที่ และ วันที่
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
       children: [
-        new TableCell({
-          columnSpan: 4,
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `รวมทั้งสิ้น (${bahtTextStr})`, font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
-        }),
-        new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 }), font: FONT_NAME, size: FONT_SIZE, bold: true })] })]
-        })
+        new TextRun({ text: "ที่  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
+        new TextRun({ text: "สคร.             /2568", font: FONT_NAME, size: FONT_SIZE }),
+        new TextRun({ text: "\t\t\t\tวันที่  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
+        new TextRun({ text: ` ${data.requester_date || '   /            / 2568'} `, font: FONT_NAME, size: FONT_SIZE })
+      ]
+    }),
+
+    // 4. เรื่อง
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
+      children: [
+        new TextRun({ text: "เรื่อง  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
+        new TextRun({ text: `รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน ${totalItemsCount}  รายการ`, font: FONT_NAME, size: FONT_SIZE, bold: true })
+      ]
+    }),
+
+    // 5. เรียน
+    new Paragraph({
+      alignment: AlignmentType.LEFT,
+      children: [
+        new TextRun({ text: "เรียน  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
+        new TextRun({ text: `${data.approver_position || 'ผอ.สคร.'}  ผ่าน รก.หน.ฝถท.`, font: FONT_NAME, size: FONT_SIZE })
+      ]
+    }),
+
+    // Blank spacing line
+    new Paragraph({ children: [new TextRun({ text: "", font: FONT_NAME, size: FONT_SIZE })] }),
+
+    // 6. Intro Paragraph (Official Thai Government Intro Style)
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      children: [
+        new TextRun({ text: "\t\tด้วย ", font: FONT_NAME, size: FONT_SIZE }),
+        new TextRun({ text: deptText, font: FONT_NAME, size: FONT_SIZE }),
+        new TextRun({ text: `  ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด  ${introCourseText}  จำนวน  ${totalItemsCount}  รายการ  โดยใช้งบประมาณโครงการจัดกิจกรรมพัฒนาเครือข่ายและสร้างความตระหนัก  ซึ่งมีรายละเอียดดังต่อไปนี้`, font: FONT_NAME, size: FONT_SIZE })
       ]
     })
   ];
+
+  // 7. Add Item Paragraphs (Official Item Format matching Template)
+  flatItems.forEach((item) => {
+    const descText = item.code ? `${item.code} ${item.description}` : item.description;
+    const priceStr = formatPrice(item.totalPrice);
+
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.JUSTIFIED,
+        children: [
+          new TextRun({ text: `\t${item.idx}. ค่า `, font: FONT_NAME, size: FONT_SIZE }),
+          new TextRun({ text: descText, font: FONT_NAME, size: FONT_SIZE, bold: true }),
+          new TextRun({ text: `  จำนวน  ${item.qty}  ${item.unit}  เป็นเงิน  ${priceStr}  บาท  จากบริษัท  ${item.vendor}  ตามใบเสร็จรับเงิน/ใบกำกับภาษี เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`, font: FONT_NAME, size: FONT_SIZE })
+        ]
+      })
+    );
+
+    // If item is end of an invoice with discount, add discount note paragraph
+    const matchingRange = invoiceRanges.find(r => r.end === item.idx && r.discount > 0);
+    if (matchingRange) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          children: [
+            new TextRun({ 
+              text: `\t   หมายเหตุ : รายการที่ ${matchingRange.start}-${matchingRange.end} มีส่วนลดสุทธิ ${formatPrice(matchingRange.discount)} บาท รวมเป็นเงินทั้งสิ้น ${formatPrice(matchingRange.grandTotal)} บาท`, 
+              font: FONT_NAME, 
+              size: FONT_SIZE, 
+              italics: true 
+            })
+          ]
+        })
+      );
+    }
+  });
+
+  // 8. Total Summary Paragraph
+  paragraphs.push(
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      children: [
+        new TextRun({ 
+          text: `\tรวม ${totalItemsCount} รายการ เป็นเงินทั้งสิ้น ${formatPrice(grandTotalPaid)} บาท (${thaiTextAmount})`, 
+          font: FONT_NAME, 
+          size: FONT_SIZE, 
+          bold: true 
+        })
+      ]
+    })
+  );
+
+  // 9. Regulatory Reference Paragraph
+  paragraphs.push(
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      children: [
+        new TextRun({ 
+          text: `\tการจัดซื้อจัดจ้างดังกล่าว เป็นการดำเนินการตาม ${regText}`, 
+          font: FONT_NAME, 
+          size: FONT_SIZE 
+        })
+      ]
+    })
+  );
+
+  // Blank spacing lines
+  paragraphs.push(new Paragraph({ children: [new TextRun({ text: "", font: FONT_NAME, size: FONT_SIZE })] }));
+
+  // 10. Conclusion & Signature Blocks (Right Aligned Official Format)
+  paragraphs.push(
+    new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      children: [
+        new TextRun({ text: "\tจึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ", font: FONT_NAME, size: FONT_SIZE })
+      ]
+    })
+  );
+
+  paragraphs.push(new Paragraph({ children: [new TextRun({ text: "", font: FONT_NAME, size: FONT_SIZE })] }));
+  paragraphs.push(new Paragraph({ children: [new TextRun({ text: "", font: FONT_NAME, size: FONT_SIZE })] }));
+
+  // Requester Signature Block
+  paragraphs.push(
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      children: [
+        new TextRun({ text: `( ${data.requester_name || 'นางสาวศิริพักตร์  เสมียนคิด'} )     `, font: FONT_NAME, size: FONT_SIZE, bold: true })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      children: [
+        new TextRun({ text: `${data.requester_position || 'เจ้าหน้าที่ผู้รับผิดชอบ'}     `, font: FONT_NAME, size: FONT_SIZE })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      children: [
+        new TextRun({ text: `${data.requester_date || '   /            / 2568'}     `, font: FONT_NAME, size: FONT_SIZE })
+      ]
+    })
+  );
+
+  paragraphs.push(new Paragraph({ children: [new TextRun({ text: "", font: FONT_NAME, size: FONT_SIZE })] }));
+  paragraphs.push(new Paragraph({ children: [new TextRun({ text: "", font: FONT_NAME, size: FONT_SIZE })] }));
+
+  // Approver Signature Block
+  paragraphs.push(
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      children: [
+        new TextRun({ text: `( ${data.approver_name || 'นางสาวปราณปริยา   วงค์ษา'} )     `, font: FONT_NAME, size: FONT_SIZE, bold: true })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      children: [
+        new TextRun({ text: `${data.approver_position || 'ผอ.สคร.'}     `, font: FONT_NAME, size: FONT_SIZE })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.RIGHT,
+      children: [
+        new TextRun({ text: `${data.approver_date || '   /            / 2568'}     `, font: FONT_NAME, size: FONT_SIZE })
+      ]
+    })
+  );
 
   const doc = new Document({
     sections: [
@@ -138,112 +337,7 @@ export async function generateWordDocument(data: DocxPayload): Promise<Blob> {
             }
           }
         },
-        children: [
-          // Header: บันทึกข้อความ
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [
-              new TextRun({
-                text: "บันทึกข้อความ",
-                font: FONT_NAME,
-                size: 58,
-                bold: true
-              })
-            ]
-          }),
-
-          // Header details
-          new Paragraph({
-            children: [
-              new TextRun({ text: "ส่วนราชการ  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
-              new TextRun({ text: data.department || "สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.)", font: FONT_NAME, size: FONT_SIZE })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "ที่  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
-              new TextRun({ text: ".........................................................................  ", font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: "วันที่  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
-              new TextRun({ text: "...........................................................", font: FONT_NAME, size: FONT_SIZE })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "เรื่อง  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
-              new TextRun({ text: `รายงานขอความเห็นชอบจัดซื้อจัดจ้างพัสดุ ${data.intro_course}`, font: FONT_NAME, size: FONT_SIZE })
-            ]
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({ text: "เรียน  ", font: FONT_NAME, size: FONT_SIZE, bold: true }),
-              new TextRun({ text: `ผู้อำนวยการ${data.department || 'สบร.'}`, font: FONT_NAME, size: FONT_SIZE })
-            ]
-          }),
-
-          new Paragraph({ text: "" }),
-
-          // Paragraph 1: Intro
-          new Paragraph({
-            indent: { firstLine: 720 },
-            children: [
-              new TextRun({
-                text: `ด้วย ${data.department || 'สบร.'} ได้ดำเนินการ${data.intro_course} และมีความจำเป็นต้องจัดซื้อพัสดุอุปกรณ์เพื่อใช้ในการดำเนินงานดังกล่าว รวมเป็นเงินทั้งสิ้น ${grandTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท (${bahtTextStr}) โดยมีรายละเอียดดังต่อไปนี้`,
-                font: FONT_NAME,
-                size: FONT_SIZE
-              })
-            ]
-          }),
-
-          new Paragraph({ text: "" }),
-
-          // Items Table
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            rows: tableRows
-          }),
-
-          new Paragraph({ text: "" }),
-
-          // Paragraph 2: Regulations
-          new Paragraph({
-            indent: { firstLine: 720 },
-            children: [
-              new TextRun({
-                text: `ในการนี้ เพื่อให้การดำเนินการดังกล่าวเป็นไปด้วยความเรียบร้อยและถูกต้องตาม ${data.regulatory_text} จึงใคร่ขอความเห็นชอบจัดซื้อพัสดุดังกล่าวข้างต้น`,
-                font: FONT_NAME,
-                size: FONT_SIZE
-              })
-            ]
-          }),
-
-          new Paragraph({ text: "" }),
-          new Paragraph({ text: "" }),
-
-          // Sign Block: Requester
-          new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            children: [
-              new TextRun({ text: "ลงชื่อ.........................................................................ผู้ขออนุมัติ\n", font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: `( ${data.requester_name || '...................................................'} )\n`, font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: `ตำแหน่ง ${data.requester_position || 'เจ้าหน้าที่ผู้รับผิดชอบ'}\n`, font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: `วันที่ ${data.requester_date || '   /            / 2568'}\n`, font: FONT_NAME, size: FONT_SIZE })
-            ]
-          }),
-
-          new Paragraph({ text: "" }),
-          new Paragraph({ text: "" }),
-
-          // Sign Block: Approver
-          new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            children: [
-              new TextRun({ text: "ลงชื่อ.........................................................................ผู้ลงนามอนุมัติ\n", font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: `( ${data.approver_name || '...................................................'} )\n`, font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: `ตำแหน่ง ${data.approver_position || 'ผอ.สคร.'}\n`, font: FONT_NAME, size: FONT_SIZE }),
-              new TextRun({ text: `วันที่ ${data.approver_date || '   /            / 2568'}\n`, font: FONT_NAME, size: FONT_SIZE })
-            ]
-          })
-        ]
+        children: paragraphs
       }
     ]
   });
