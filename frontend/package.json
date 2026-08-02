@@ -12,7 +12,9 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.3.0",
     "axios": "^1.18.1",
+    "bahttext": "^2.4.0",
     "clsx": "^2.1.1",
+    "docx": "^9.7.1",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.42.2",
@@ -20,7 +22,8 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.7",
