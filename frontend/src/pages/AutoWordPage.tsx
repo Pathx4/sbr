@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createWorker } from 'tesseract.js';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
-  AlertCircle, Sparkles, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Calendar, MapPin
+  AlertCircle, Building2, UserCheck, Search, Image as ImageIcon,
+  Loader2, Crop, Eye
 } from 'lucide-react';
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
@@ -29,6 +29,7 @@ interface Invoice {
   discount: number;
   items: Item[];
   imagePreview?: string;
+  fileObject?: File;
 }
 
 interface Contact {
@@ -78,6 +79,13 @@ export default function AutoWordPage() {
 
   // Invoices list
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
+
+  // Interactive Crop Canvas State
+  const [cropSelection, setCropSelection] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  const [isDraggingCrop, setIsDraggingCrop] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   // OCR state
   const [isScanning, setIsScanning] = useState(false);
@@ -109,40 +117,36 @@ export default function AutoWordPage() {
     }
   }, []);
 
-  // Handle OCR Extraction with Tesseract.js & Canvas Preprocessing
+  const activeInvoice = invoices.find(inv => inv.id === activeInvoiceId) || invoices[0] || null;
+
+  // Handle OCR Extraction for Full Image
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsScanning(true);
     setScanProgress(0);
-    setScanStatus('กำลังเตรียมเอนจิน Tesseract.js (ภาษาไทย+อังกฤษ)...');
+    setScanStatus('กำลังเตรียมเอนจิน Tesseract.js...');
 
     try {
       const worker = await createWorker('tha+eng');
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setScanStatus(`กำลังปรับแต่งและเพิ่มความคมชัดรูปที่ ${i + 1}/${files.length}: ${file.name}...`);
+        setScanStatus(`กำลังปรับแต่งและสแกนรูปที่ ${i + 1}/${files.length}: ${file.name}...`);
         
-        // Create image preview URL
         const imagePreview = URL.createObjectURL(file);
-
-        // Preprocess image with Canvas Grayscale & Contrast Binarization
         const preprocessedDataUrl = await preprocessImageForOcr(file);
 
-        setScanStatus(`กำลังสแกนข้อความภาษาไทยด้วย Tesseract OCR...`);
-
-        // Perform OCR on preprocessed image
         const ret = await worker.recognize(preprocessedDataUrl);
         const text = ret.data.text;
         console.log("Preprocessed OCR Result:", text);
 
-        // Parse extracted Thai receipt text
         const parsed = parseThaiReceiptOcr(text);
 
+        const newInvId = Date.now().toString() + '_' + i;
         const newInvoice: Invoice = {
-          id: Date.now().toString() + '_' + i,
+          id: newInvId,
           vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
           invoice_number: parsed.invoice_number || '',
           invoice_date: parsed.invoice_date || getTodayThaiDate(),
@@ -166,15 +170,17 @@ export default function AutoWordPage() {
               total_price: parsed.total_amount || 0
             }
           ],
-          imagePreview
+          imagePreview,
+          fileObject: file
         };
 
         setInvoices(prev => [...prev, newInvoice]);
+        setActiveInvoiceId(newInvId);
         setScanProgress(Math.round(((i + 1) / files.length) * 100));
       }
 
       await worker.terminate();
-      setStatusMsg({ type: 'success', text: 'ปรับแต่งภาพและสแกนด้วย Tesseract OCR เรียบร้อย! คุณสามารถตรวจทานข้อมูลได้เลย' });
+      setStatusMsg({ type: 'success', text: 'สแกนอ่านบิลเรียบร้อย! คุณสามารถใช้ระบบลากคลุมกรอบเพื่อสแกนเฉพาะจุดเพิ่มเติมได้' });
     } catch (err: any) {
       console.error("Tesseract error:", err);
       setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนรูป: ${err.message || err}` });
@@ -184,7 +190,121 @@ export default function AutoWordPage() {
     }
   };
 
+  // Perform Zone OCR Scan on Cropped Selection
+  const handleCropScan = async (targetType: 'items' | 'vendor' | 'auto' = 'auto') => {
+    if (!activeInvoice || !activeInvoice.imagePreview) {
+      setStatusMsg({ type: 'error', text: 'กรุณาอัปโหลดหรือเลือกรูปบิลก่อนสแกน' });
+      return;
+    }
 
+    if (!cropSelection || cropSelection.width < 10 || cropSelection.height < 10) {
+      setStatusMsg({ type: 'error', text: 'กรุณาลากกรอบสี่เหลี่ยมบนรูปภาพบิลเพื่อเลือกพื้นที่สแกน' });
+      return;
+    }
+
+    const img = imageRef.current;
+    if (!img) return;
+
+    setIsScanning(true);
+    setScanStatus('กำลังสแกนพื้นที่ที่เลือก (Zone Crop OCR)...');
+
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Canvas context failed");
+
+      // Calculate scale between displayed image and natural image dimensions
+      const scaleX = img.naturalWidth / img.width;
+      const scaleY = img.naturalHeight / img.height;
+
+      const cropX = cropSelection.x * scaleX;
+      const cropY = cropSelection.y * scaleY;
+      const cropW = cropSelection.width * scaleX;
+      const cropH = cropSelection.height * scaleY;
+
+      canvas.width = cropW;
+      canvas.height = cropH;
+
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+      const worker = await createWorker('tha+eng');
+      const ret = await worker.recognize(croppedDataUrl);
+      await worker.terminate();
+
+      const text = ret.data.text;
+      console.log("Zone Crop OCR Result:", text);
+
+      const parsed = parseThaiReceiptOcr(text);
+
+      if (targetType === 'vendor' || (parsed.vendor_name && parsed.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย')) {
+        const cleanVendor = text.split('\n')[0].replace(/[^\wก-ฮ\s]+/g, '').trim();
+        handleUpdateInvoice(activeInvoice.id, 'vendor_name', cleanVendor || parsed.vendor_name);
+        setStatusMsg({ type: 'success', text: `ดึงชื่อร้านค้าจากพื้นที่เลือก: "${cleanVendor || parsed.vendor_name}"` });
+      } else if (parsed.items.length > 0) {
+        // Add extracted items to active invoice
+        const newItems: Item[] = parsed.items.map((item, idx) => ({
+          id: Date.now().toString() + '_crop_' + idx,
+          item_code: item.item_code || '',
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit || 'ชิ้น',
+          unit_price: item.unit_price,
+          total_price: item.total_price
+        }));
+
+        setInvoices(prev => prev.map(inv => {
+          if (inv.id === activeInvoice.id) {
+            return { ...inv, items: [...inv.items, ...newItems] };
+          }
+          return inv;
+        }));
+        setStatusMsg({ type: 'success', text: `ดึงรายการพัสดุเพิ่ม ${newItems.length} รายการ จากพื้นที่เลือกสำเร็จ!` });
+      } else {
+        setStatusMsg({ type: 'error', text: 'ไม่พบข้อความรายการพัสดุในพื้นที่ที่เลือก ลองลากกรอบใหม่ขยับให้ครอบคลุมตัวหนังสือและราคา' });
+      }
+    } catch (err: any) {
+      console.error(err);
+      setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนพื้นที่เลือก: ${err.message || err}` });
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  // Mouse Handlers for Dragging Crop Box
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    setDragStart({ x, y });
+    setCropSelection({ x, y, width: 0, height: 0 });
+    setIsDraggingCrop(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingCrop || !dragStart) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const currentX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const currentY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+
+    const width = currentX - dragStart.x;
+    const height = currentY - dragStart.y;
+
+    setCropSelection({
+      x: width < 0 ? currentX : dragStart.x,
+      y: height < 0 ? currentY : dragStart.y,
+      width: Math.abs(width),
+      height: Math.abs(height)
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDraggingCrop(false);
+    setDragStart(null);
+  };
 
   const getTodayThaiDate = () => {
     const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -194,8 +314,9 @@ export default function AutoWordPage() {
 
   // Add Empty Invoice
   const handleAddInvoice = () => {
+    const newInvId = Date.now().toString();
     const newInvoice: Invoice = {
-      id: Date.now().toString(),
+      id: newInvId,
       vendor_name: '',
       invoice_number: `INV-${Date.now().toString().slice(-4)}`,
       invoice_date: getTodayThaiDate(),
@@ -213,19 +334,21 @@ export default function AutoWordPage() {
       ]
     };
     setInvoices(prev => [...prev, newInvoice]);
+    setActiveInvoiceId(newInvId);
   };
 
-  // Delete Invoice
   const handleDeleteInvoice = (invId: string) => {
     setInvoices(prev => prev.filter(inv => inv.id !== invId));
+    if (activeInvoiceId === invId) {
+      const remaining = invoices.filter(inv => inv.id !== invId);
+      setActiveInvoiceId(remaining[0]?.id || null);
+    }
   };
 
-  // Update Invoice Field
   const handleUpdateInvoice = (invId: string, field: keyof Invoice, val: any) => {
     setInvoices(prev => prev.map(inv => inv.id === invId ? { ...inv, [field]: val } : inv));
   };
 
-  // Add Item to Invoice
   const handleAddItem = (invId: string) => {
     setInvoices(prev => prev.map(inv => {
       if (inv.id === invId) {
@@ -244,7 +367,6 @@ export default function AutoWordPage() {
     }));
   };
 
-  // Delete Item from Invoice
   const handleDeleteItem = (invId: string, itemId: string) => {
     setInvoices(prev => prev.map(inv => {
       if (inv.id === invId) {
@@ -254,7 +376,6 @@ export default function AutoWordPage() {
     }));
   };
 
-  // Update Item Field
   const handleUpdateItem = (invId: string, itemId: string, field: keyof Item, val: any) => {
     setInvoices(prev => prev.map(inv => {
       if (inv.id === invId) {
@@ -276,7 +397,6 @@ export default function AutoWordPage() {
     }));
   };
 
-  // Upload Item Photo (For Illustration Excel)
   const handleItemPhotoUpload = (invId: string, itemId: string, file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -286,7 +406,6 @@ export default function AutoWordPage() {
     reader.readAsDataURL(file);
   };
 
-  // Compute Totals
   const calculateGrandTotal = () => {
     return invoices.reduce((acc, inv) => {
       const invTotal = inv.items.reduce((sum, item) => sum + (item.total_price || 0), 0);
@@ -294,7 +413,6 @@ export default function AutoWordPage() {
     }, 0);
   };
 
-  // Payload Builder
   const buildPayload = () => {
     return {
       department,
@@ -327,7 +445,6 @@ export default function AutoWordPage() {
     };
   };
 
-  // Generate Word Document (.docx) Client-Side
   const handleGenerateWord = async () => {
     if (invoices.length === 0) {
       setStatusMsg({ type: 'error', text: 'กรุณาเพิ่มบิล/รายการพัสดุอย่างน้อย 1 รายการก่อนสร้างเอกสาร' });
@@ -355,7 +472,6 @@ export default function AutoWordPage() {
     }
   };
 
-  // Generate Expense Summary Excel (.xlsx) Client-Side
   const handleGenerateExcel = async (isIllustration = false) => {
     if (invoices.length === 0) {
       setStatusMsg({ type: 'error', text: 'กรุณาเพิ่มบิล/รายการพัสดุอย่างน้อย 1 รายการก่อนสร้างตาราง Excel' });
@@ -391,361 +507,408 @@ export default function AutoWordPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-16">
+    <div className="max-w-[1600px] mx-auto space-y-6 pb-16 px-4">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-8 shadow-xl border border-white/10 relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-12 -translate-y-12 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="relative z-10 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span>Tesseract OCR Engine (No AI Cloud Key)</span>
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white rounded-3xl p-6 shadow-xl border border-white/10 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold border border-blue-400/30">
+              <Crop className="w-3.5 h-3.5 text-blue-400" />
+              <span>Interactive Side-by-Side Crop OCR Engine (No Server Needed)</span>
+            </div>
+            <h1 className="text-2xl font-black tracking-tight font-display text-white">
+              ระบบเอกสารอัตโนมัติ (Auto-Word & Excel Generator)
+            </h1>
+            <p className="text-slate-300 text-xs max-w-3xl">
+              แสดงรูปภาพบิลคู่กับตารางข้อมูล คุณสามารถลากกรอบสี่เหลี่ยมบนรูปภาพบิลฝั่งซ้ายเพื่อสแกนเฉพาะจุด เช่น ลากคลุมตารางสินค้าหรือชื่อร้านค้า ข้อความจะวิ่งลงตารางให้อัตโนมัติทันที
+            </p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight font-display text-white">
-            ระบบสร้างเอกสารราชการอัตโนมัติ (Auto-Word)
-          </h1>
-          <p className="text-slate-300 text-sm max-w-2xl">
-            สแกนอ่านรูปบิลด้วย Tesseract OCR ภายในเบราว์เซอร์อัตโนมัติ 100% ไม่ต้องพึ่งพา AI API ภายนอก สร้างบันทึกข้อความขอความเห็นชอบจัดซื้อจัดจ้าง (.docx) และตารางสรุปค่าใช้จ่าย (.xlsx) ได้ทันที
-          </p>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
+            >
+              <Upload className="w-4 h-4" />
+              <span>+ อัปโหลดรูปบิลใหม่</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </div>
         </div>
       </div>
 
+      {/* Scanning Status Loader Banner */}
+      {isScanning && (
+        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex flex-col space-y-2">
+          <div className="flex items-center gap-3 text-xs font-bold">
+            <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+            <span>{scanStatus || 'กำลังประมวลผลสแกนข้อความ...'}</span>
+          </div>
+          {scanProgress > 0 && (
+            <div className="w-full bg-blue-200 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-blue-600 h-full transition-all duration-300" style={{ width: `${scanProgress}%` }} />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Notifications */}
       {statusMsg && (
-        <div className={`p-4 rounded-2xl flex items-center gap-3 text-sm font-medium transition-all ${
+        <div className={`p-4 rounded-2xl flex items-center gap-3 text-xs font-semibold transition-all ${
           statusMsg.type === 'success' 
             ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm' 
             : 'bg-rose-50 text-rose-800 border border-rose-200 shadow-sm'
         }`}>
-          {statusMsg.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" /> : <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />}
+          {statusMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
           <span>{statusMsg.text}</span>
-          <button onClick={() => setStatusMsg(null)} className="ml-auto text-xs opacity-70 hover:opacity-100">ปิด</button>
+          <button onClick={() => setStatusMsg(null)} className="ml-auto text-[11px] opacity-70 hover:opacity-100">ปิด</button>
         </div>
       )}
 
-      {/* OCR File Upload Section */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Upload className="w-5 h-5 text-blue-600" />
-              <span>สแกนรูปบิล/ใบเสร็จอัตโนมัติ (Tesseract.js OCR)</span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              ลากและวางรูปภาพบิล หรือคลิกเพื่ออัปโหลด ระบบจะสแกนและดึงข้อมูลมาลงในตารางให้ทันที
-            </p>
+      {/* Main Side-by-Side Workspace */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Interactive Receipt Viewer & Crop Box (5 cols) */}
+        <div className="lg:col-span-5 bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-4 sticky top-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-blue-600" />
+              <h2 className="font-bold text-slate-800 text-sm">รูปภาพบิล (ลากคลุมกรอบเพื่อสแกน)</h2>
+            </div>
+            {activeInvoice && (
+              <span className="text-[11px] font-semibold text-slate-500">
+                บิลที่ {invoices.findIndex(i => i.id === activeInvoice.id) + 1} / {invoices.length}
+              </span>
+            )}
           </div>
-          <button
-            onClick={handleAddInvoice}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>เพิ่มบิลว่าง (กรอกเอง)</span>
-          </button>
-        </div>
 
-        <div className="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/30 rounded-2xl p-8 text-center transition cursor-pointer relative">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileUpload}
-            disabled={isScanning}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-          />
-          {isScanning ? (
-            <div className="flex flex-col items-center justify-center space-y-3 py-4">
-              <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-slate-800">{scanStatus}</p>
-                <div className="w-64 bg-slate-200 rounded-full h-2 overflow-hidden mx-auto">
-                  <div className="bg-blue-600 h-full transition-all duration-300" style={{ width: `${scanProgress}%` }} />
-                </div>
+          {/* Invoice Tabs Selector */}
+          {invoices.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-100">
+              {invoices.map((inv, idx) => (
+                <button
+                  key={inv.id}
+                  onClick={() => setActiveInvoiceId(inv.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
+                    inv.id === activeInvoiceId
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {inv.vendor_name ? inv.vendor_name.slice(0, 15) : `บิลที่ ${idx + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Interactive Crop Image Box */}
+          {activeInvoice && activeInvoice.imagePreview ? (
+            <div className="space-y-3">
+              <div
+                className="relative bg-slate-900 rounded-2xl overflow-hidden cursor-crosshair select-none border border-slate-300 min-h-[420px] max-h-[600px] flex items-center justify-center"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+              >
+                <img
+                  ref={imageRef}
+                  src={activeInvoice.imagePreview}
+                  alt="Receipt Preview"
+                  className="max-w-full max-h-[580px] object-contain"
+                />
+
+                {/* Selection Bounding Box Overlay */}
+                {cropSelection && cropSelection.width > 0 && cropSelection.height > 0 && (
+                  <div
+                    className="absolute border-2 border-blue-500 bg-blue-500/20 backdrop-blur-[1px] shadow-lg pointer-events-none"
+                    style={{
+                      left: `${cropSelection.x}px`,
+                      top: `${cropSelection.y}px`,
+                      width: `${cropSelection.width}px`,
+                      height: `${cropSelection.height}px`
+                    }}
+                  >
+                    <span className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                      พื้นที่สแกนเฉพาะจุด ({Math.round(cropSelection.width)}x{Math.round(cropSelection.height)})
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons for Crop Scan */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  onClick={() => handleCropScan('auto')}
+                  disabled={isScanning || !cropSelection}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition disabled:opacity-40"
+                >
+                  {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crop className="w-3.5 h-3.5" />}
+                  <span>สแกนเฉพาะกรอบที่ลากคลุม</span>
+                </button>
+                <button
+                  onClick={() => handleCropScan('vendor')}
+                  disabled={isScanning || !cropSelection}
+                  className="flex items-center gap-1 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl border border-indigo-200 transition disabled:opacity-40"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>ดึงชื่อร้าน</span>
+                </button>
+                <button
+                  onClick={() => setCropSelection(null)}
+                  className="px-3 py-2 text-slate-500 hover:bg-slate-100 text-xs font-medium rounded-xl transition"
+                >
+                  ล้างกรอบ
+                </button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner">
-                <Upload className="w-7 h-7" />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50 hover:bg-blue-50/30 rounded-2xl p-12 text-center transition cursor-pointer space-y-3"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto shadow-inner">
+                <Upload className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-800">คลิกที่นี่ หรือลากไฟล์รูปภาพบิลมาวาง</p>
-                <p className="text-xs text-slate-400 mt-1">รองรับไฟล์ภาพ JPG, PNG, WEBP (สแกนภาษาไทย + อังกฤษ)</p>
+                <p className="text-xs font-bold text-slate-800">คลิกที่นี่ เพื่อเลือกรูปภาพบิล</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">รองรับรูปถ่ายบิล JPG, PNG, WEBP</p>
               </div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Section 1: Memo Header Setup */}
-      <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-6">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-          <Building2 className="w-5 h-5 text-indigo-600" />
-          <span>1. ข้อมูลส่วนหัวบันทึกข้อความและข้อระเบียบ</span>
-        </h2>
+        {/* Right Column: Form, Contacts & Items Table (7 cols) */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Section 1: Memo Header Setup */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-5">
+            <h2 className="text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+              <Building2 className="w-4 h-4 text-indigo-600" />
+              <span>1. ข้อมูลส่วนหัวบันทึกข้อความและผู้ลงนามอนุมัติ</span>
+            </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-2">หน่วยงานที่ขอซื้อจ้าง</label>
-            <input
-              type="text"
-              value={department}
-              onChange={e => setDepartment(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-2">บทนำ/วัตถุประสงค์ (คำอธิบายสั้นๆ)</label>
-            <input
-              type="text"
-              value={introCourse}
-              onChange={e => setIntroCourse(e.target.value)}
-              placeholder="เช่น วัสดุสำหรับการจัดประชุมเชิงปฏิบัติการ..."
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-600 mb-2">ข้อระเบียบอ้างอิงในการจัดซื้อจัดจ้าง</label>
-            <select
-              value={regulatoryText}
-              onChange={e => setRegulatoryText(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-            >
-              {REGULATION_OPTIONS.map((opt, i) => (
-                <option key={i} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <span>ช่วงวันที่จัดงาน (สำหรับใส่ในตาราง Excel)</span>
-            </label>
-            <input
-              type="text"
-              value={excelDateRange}
-              onChange={e => setExcelDateRange(e.target.value)}
-              placeholder="เช่น ระหว่างวันที่ 20 - 22 พฤศจิกายน 2567"
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" />
-              <span>สถานที่จัดงาน (สำหรับใส่ในตาราง Excel)</span>
-            </label>
-            <input
-              type="text"
-              value={excelLocation}
-              onChange={e => setExcelLocation(e.target.value)}
-              placeholder="เช่น ณ ห้องประชุม สทอภ. หรือ โรงแรม..."
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* Requester & Approver Contact Selector */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-          {/* Requester */}
-          <div className="relative">
-            <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1.5">
-              <UserCheck className="w-4 h-4 text-blue-600" />
-              <span>ผู้ขออนุมัติ (เจ้าหน้าที่/ผู้รับผิดชอบ)</span>
-            </label>
-            <div className="space-y-2">
-              <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">หน่วยงานที่ขอซื้อจ้าง</label>
                 <input
                   type="text"
-                  value={requesterName}
-                  onChange={e => { setRequesterName(e.target.value); setSearchReq(e.target.value); setShowReqDropdown(true); }}
-                  onFocus={() => setShowReqDropdown(true)}
-                  placeholder="พิมพ์ค้นหารายชื่อบุคลากร สทอภ...."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-10"
+                  value={department}
+                  onChange={e => setDepartment(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
-                <Search className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
               </div>
-              {showReqDropdown && contacts.length > 0 && (
-                <div className="absolute z-20 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-auto">
-                  {contacts
-                    .filter(c => c.name.toLowerCase().includes(searchReq.toLowerCase()))
-                    .slice(0, 10)
-                    .map((c, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => {
-                          setRequesterName(c.name);
-                          setRequesterPosition(c.position || 'เจ้าหน้าที่ผู้รับผิดชอบ');
-                          setShowReqDropdown(false);
-                        }}
-                        className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-xs space-y-0.5 border-b border-slate-50"
-                      >
-                        <div className="font-semibold text-slate-800">{c.name}</div>
-                        <div className="text-slate-500 text-[11px]">{c.position} • {c.section}</div>
-                      </div>
-                    ))}
-                </div>
-              )}
-              <input
-                type="text"
-                value={requesterPosition}
-                onChange={e => setRequesterPosition(e.target.value)}
-                placeholder="ตำแหน่งผู้ขออนุมัติ"
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={requesterDate}
-                onChange={e => setRequesterDate(e.target.value)}
-                placeholder="วันที่ขออนุมัติ (เช่น / พฤศจิกายน / 2568)"
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
 
-          {/* Approver */}
-          <div className="relative">
-            <label className="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1.5">
-              <UserCheck className="w-4 h-4 text-indigo-600" />
-              <span>ผู้ลงนามอนุมัติ (ผู้อำนวยการ/ผู้บังคับบัญชา)</span>
-            </label>
-            <div className="space-y-2">
-              <div className="relative">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">บทนำ/วัตถุประสงค์ (คำอธิบายสั้นๆ)</label>
                 <input
                   type="text"
-                  value={approverName}
-                  onChange={e => { setApproverName(e.target.value); setSearchApp(e.target.value); setShowAppDropdown(true); }}
-                  onFocus={() => setShowAppDropdown(true)}
-                  placeholder="พิมพ์ค้นหารายชื่อผู้บริหาร/ผอ. สทอภ...."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-10"
+                  value={introCourse}
+                  onChange={e => setIntroCourse(e.target.value)}
+                  placeholder="เช่น วัสดุสำหรับการจัดประชุมเชิงปฏิบัติการ..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
-                <Search className="w-4 h-4 text-slate-400 absolute right-3 top-3" />
               </div>
-              {showAppDropdown && contacts.length > 0 && (
-                <div className="absolute z-20 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-auto">
-                  {contacts
-                    .filter(c => c.name.toLowerCase().includes(searchApp.toLowerCase()))
-                    .slice(0, 10)
-                    .map((c, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => {
-                          setApproverName(c.name);
-                          setApproverPosition(c.position || 'ผอ.สคร.');
-                          setShowAppDropdown(false);
-                        }}
-                        className="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer text-xs space-y-0.5 border-b border-slate-50"
-                      >
-                        <div className="font-semibold text-slate-800">{c.name}</div>
-                        <div className="text-slate-500 text-[11px]">{c.position} • {c.section}</div>
-                      </div>
-                    ))}
+
+              <div className="md:col-span-2">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">ข้อระเบียบอ้างอิงในการจัดซื้อจัดจ้าง</label>
+                <select
+                  value={regulatoryText}
+                  onChange={e => setRegulatoryText(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                >
+                  {REGULATION_OPTIONS.map((opt, i) => (
+                    <option key={i} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">ช่วงวันที่จัดงาน (สำหรับตาราง Excel)</label>
+                <input
+                  type="text"
+                  value={excelDateRange}
+                  onChange={e => setExcelDateRange(e.target.value)}
+                  placeholder="เช่น ระหว่างวันที่ 20 - 22 พฤศจิกายน 2567"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">สถานที่จัดงาน (สำหรับตาราง Excel)</label>
+                <input
+                  type="text"
+                  value={excelLocation}
+                  onChange={e => setExcelLocation(e.target.value)}
+                  placeholder="เช่น ณ ห้องประชุม สทอภ."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Requester & Approver Contact Selector */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-100">
+              {/* Requester */}
+              <div className="relative">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
+                  <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                  <span>ผู้ขออนุมัติ (เจ้าหน้าที่/ผู้รับผิดชอบ)</span>
+                </label>
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={requesterName}
+                      onChange={e => { setRequesterName(e.target.value); setSearchReq(e.target.value); setShowReqDropdown(true); }}
+                      onFocus={() => setShowReqDropdown(true)}
+                      placeholder="พิมพ์ค้นหารายชื่อบุคลากร สทอภ...."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none pr-8"
+                    />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5" />
+                  </div>
+                  {showReqDropdown && contacts.length > 0 && (
+                    <div className="absolute z-30 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-auto">
+                      {contacts
+                        .filter(c => c.name.toLowerCase().includes(searchReq.toLowerCase()))
+                        .slice(0, 10)
+                        .map((c, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              setRequesterName(c.name);
+                              setRequesterPosition(c.position || 'เจ้าหน้าที่ผู้รับผิดชอบ');
+                              setShowReqDropdown(false);
+                            }}
+                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-xs space-y-0.5 border-b border-slate-50"
+                          >
+                            <div className="font-semibold text-slate-800">{c.name}</div>
+                            <div className="text-slate-500 text-[10px]">{c.position} • {c.section}</div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={requesterPosition}
+                    onChange={e => setRequesterPosition(e.target.value)}
+                    placeholder="ตำแหน่งผู้ขออนุมัติ"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={requesterDate}
+                    onChange={e => setRequesterDate(e.target.value)}
+                    placeholder="วันที่ขออนุมัติ"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
                 </div>
-              )}
-              <input
-                type="text"
-                value={approverPosition}
-                onChange={e => setApproverPosition(e.target.value)}
-                placeholder="ตำแหน่งผู้ลงนามอนุมัติ"
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-              <input
-                type="text"
-                value={approverDate}
-                onChange={e => setApproverDate(e.target.value)}
-                placeholder="วันที่ลงนามอนุมัติ (เช่น / พฤศจิกายน / 2568)"
-                className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+              </div>
 
-      {/* Section 2: Invoices and Items Management */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
-            <span>2. รายการบิลและตารางพัสดุ ({invoices.length} ใบเสร็จ)</span>
-          </h2>
-          <div className="text-sm font-black text-slate-800 bg-emerald-50 text-emerald-900 px-4 py-2 rounded-2xl border border-emerald-200">
-            ยอดเงินรวมสุทธิ: <span className="text-emerald-700 text-base">{calculateGrandTotal().toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span> บาท
+              {/* Approver */}
+              <div className="relative">
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1.5 flex items-center gap-1">
+                  <UserCheck className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>ผู้ลงนามอนุมัติ (ผู้อำนวยการ/ผู้บังคับบัญชา)</span>
+                </label>
+                <div className="space-y-1.5">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={approverName}
+                      onChange={e => { setApproverName(e.target.value); setSearchApp(e.target.value); setShowAppDropdown(true); }}
+                      onFocus={() => setShowAppDropdown(true)}
+                      placeholder="พิมพ์ค้นหารายชื่อผู้บริหาร/ผอ. สทอภ...."
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none pr-8"
+                    />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5" />
+                  </div>
+                  {showAppDropdown && contacts.length > 0 && (
+                    <div className="absolute z-30 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-auto">
+                      {contacts
+                        .filter(c => c.name.toLowerCase().includes(searchApp.toLowerCase()))
+                        .slice(0, 10)
+                        .map((c, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => {
+                              setApproverName(c.name);
+                              setApproverPosition(c.position || 'ผอ.สคร.');
+                              setShowAppDropdown(false);
+                            }}
+                            className="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-xs space-y-0.5 border-b border-slate-50"
+                          >
+                            <div className="font-semibold text-slate-800">{c.name}</div>
+                            <div className="text-slate-500 text-[10px]">{c.position} • {c.section}</div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={approverPosition}
+                    onChange={e => setApproverPosition(e.target.value)}
+                    placeholder="ตำแหน่งผู้ลงนามอนุมัติ"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    value={approverDate}
+                    onChange={e => setApproverDate(e.target.value)}
+                    placeholder="วันที่ลงนามอนุมัติ"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {invoices.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-sm space-y-4">
-            <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-              <FileSpreadsheet className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-base font-bold text-slate-700">ยังไม่มีรายการบิล/ใบเสร็จ</p>
-              <p className="text-xs text-slate-400 mt-1">อัปโหลดรูปภาพบิลด้านบน หรือกดปุ่ม "เพิ่มบิลใหม่" เพื่อเริ่มกรอกรายการ</p>
-            </div>
-            <button
-              onClick={handleAddInvoice}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-sm transition"
-            >
-              <Plus className="w-4 h-4" />
-              <span>เพิ่มบิลใหม่</span>
-            </button>
-          </div>
-        ) : (
-          invoices.map((inv, invIdx) => (
-            <div key={inv.id} className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-5 relative">
-              {/* Invoice Header Form */}
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-                    {invIdx + 1}
-                  </span>
+          {/* Section 2: Active Invoice Items Table */}
+          {activeInvoice ? (
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
                   <h3 className="font-bold text-slate-800 text-sm">
-                    {inv.vendor_name || `บิลใบเสร็จที่ ${invIdx + 1}`}
+                    ตารางพัสดุ ({activeInvoice.vendor_name || 'บิลใบเสร็จ'})
                   </h3>
                 </div>
-                <button
-                  onClick={() => handleDeleteInvoice(inv.id)}
-                  className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-2 rounded-xl text-xs flex items-center gap-1 font-medium transition"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>ลบบิลนี้</span>
-                </button>
+                <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                  รวมบิลนี้: {activeInvoice.items.reduce((s, i) => s + (i.total_price || 0), 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1">ชื่อร้านค้า/ผู้ขาย</label>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">ชื่อร้านค้า/ผู้ขาย</label>
                   <input
                     type="text"
-                    value={inv.vendor_name}
-                    onChange={e => handleUpdateInvoice(inv.id, 'vendor_name', e.target.value)}
+                    value={activeInvoice.vendor_name}
+                    onChange={e => handleUpdateInvoice(activeInvoice.id, 'vendor_name', e.target.value)}
                     placeholder="เช่น บริษัท ไอที ซิตี้ จำกัด (มหาชน)"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1">เลขที่ใบเสร็จ/ใบกำกับภาษี</label>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">เลขที่ใบเสร็จ</label>
                   <input
                     type="text"
-                    value={inv.invoice_number}
-                    onChange={e => handleUpdateInvoice(inv.id, 'invoice_number', e.target.value)}
+                    value={activeInvoice.invoice_number}
+                    onChange={e => handleUpdateInvoice(activeInvoice.id, 'invoice_number', e.target.value)}
                     placeholder="เช่น INV-2024-001"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 mb-1">วันที่ใบเสร็จ (ภาษาไทย)</label>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">วันที่ใบเสร็จ</label>
                   <input
                     type="text"
-                    value={inv.invoice_date}
-                    onChange={e => handleUpdateInvoice(inv.id, 'invoice_date', e.target.value)}
+                    value={activeInvoice.invoice_date}
+                    onChange={e => handleUpdateInvoice(activeInvoice.id, 'invoice_date', e.target.value)}
                     placeholder="เช่น 28 พฤศจิกายน 2567"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs"
                   />
                 </div>
               </div>
@@ -755,88 +918,88 @@ export default function AutoWordPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
                     <tr>
-                      <th className="p-3 w-12 text-center">ลำดับ</th>
-                      <th className="p-3 w-28">รหัสสินค้า</th>
-                      <th className="p-3 min-w-[200px]">รายละเอียดรายการพัสดุ</th>
-                      <th className="p-3 w-20 text-center">จำนวน</th>
-                      <th className="p-3 w-20 text-center">หน่วยนับ</th>
-                      <th className="p-3 w-28 text-right">ราคา/หน่วย</th>
-                      <th className="p-3 w-28 text-right">ราคารวม (บาท)</th>
-                      <th className="p-3 w-24 text-center">รูปภาพประกอบ</th>
-                      <th className="p-3 w-12 text-center">จัดการ</th>
+                      <th className="p-2.5 w-10 text-center">ลำดับ</th>
+                      <th className="p-2.5 w-24">รหัสสินค้า</th>
+                      <th className="p-2.5 min-w-[160px]">รายละเอียดพัสดุ</th>
+                      <th className="p-2.5 w-16 text-center">จำนวน</th>
+                      <th className="p-2.5 w-16 text-center">หน่วย</th>
+                      <th className="p-2.5 w-24 text-right">ราคา/หน่วย</th>
+                      <th className="p-2.5 w-24 text-right">รวม (บาท)</th>
+                      <th className="p-2.5 w-20 text-center">รูปภาพ</th>
+                      <th className="p-2.5 w-10 text-center">ลบ</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {inv.items.map((item, itemIdx) => (
+                    {activeInvoice.items.map((item, itemIdx) => (
                       <tr key={item.id} className="hover:bg-slate-50/60">
-                        <td className="p-3 text-center text-slate-500 font-medium">{invIdx + 1}.{itemIdx + 1}</td>
-                        <td className="p-3">
+                        <td className="p-2 text-center text-slate-400 font-medium">{itemIdx + 1}</td>
+                        <td className="p-2">
                           <input
                             type="text"
                             value={item.item_code}
-                            onChange={e => handleUpdateItem(inv.id, item.id, 'item_code', e.target.value)}
-                            placeholder="รหัส SKU"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs"
+                            onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'item_code', e.target.value)}
+                            placeholder="SKU"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs"
                           />
                         </td>
-                        <td className="p-3">
+                        <td className="p-2">
                           <input
                             type="text"
                             value={item.description}
-                            onChange={e => handleUpdateItem(inv.id, item.id, 'description', e.target.value)}
-                            placeholder="ระบุรายละเอียดสินค้า/พัสดุ"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs font-medium"
+                            onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'description', e.target.value)}
+                            placeholder="รายละเอียดสินค้า"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs font-medium"
                           />
                         </td>
-                        <td className="p-3">
+                        <td className="p-2">
                           <input
                             type="number"
                             min="1"
                             value={item.quantity}
-                            onChange={e => handleUpdateItem(inv.id, item.id, 'quantity', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs text-center"
+                            onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'quantity', e.target.value)}
+                            className="w-full px-1.5 py-1 rounded-lg border border-slate-200 text-xs text-center"
                           />
                         </td>
-                        <td className="p-3">
+                        <td className="p-2">
                           <input
                             type="text"
                             value={item.unit}
-                            onChange={e => handleUpdateItem(inv.id, item.id, 'unit', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs text-center"
+                            onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'unit', e.target.value)}
+                            className="w-full px-1.5 py-1 rounded-lg border border-slate-200 text-xs text-center"
                           />
                         </td>
-                        <td className="p-3">
+                        <td className="p-2">
                           <input
                             type="number"
                             step="0.01"
                             value={item.unit_price}
-                            onChange={e => handleUpdateItem(inv.id, item.id, 'unit_price', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs text-right font-medium"
+                            onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'unit_price', e.target.value)}
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs text-right font-medium"
                           />
                         </td>
-                        <td className="p-3 text-right font-bold text-slate-800">
+                        <td className="p-2 text-right font-bold text-slate-800">
                           {item.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="p-3 text-center">
-                          <label className="cursor-pointer inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] transition">
-                            <ImageIcon className="w-3.5 h-3.5 text-blue-600" />
-                            <span>{item.photo ? 'เปลี่ยนรูป' : '+ แนบรูป'}</span>
+                        <td className="p-2 text-center">
+                          <label className="cursor-pointer inline-flex items-center gap-0.5 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px]">
+                            <ImageIcon className="w-3 h-3 text-blue-600" />
+                            <span>{item.photo ? 'มีรูป' : '+รูป'}</span>
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
                               onChange={e => {
-                                if (e.target.files?.[0]) handleItemPhotoUpload(inv.id, item.id, e.target.files[0]);
+                                if (e.target.files?.[0]) handleItemPhotoUpload(activeInvoice.id, item.id, e.target.files[0]);
                               }}
                             />
                           </label>
                         </td>
-                        <td className="p-3 text-center">
+                        <td className="p-2 text-center">
                           <button
-                            onClick={() => handleDeleteItem(inv.id, item.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                            onClick={() => handleDeleteItem(activeInvoice.id, item.id)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
                       </tr>
@@ -845,99 +1008,73 @@ export default function AutoWordPage() {
                 </table>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-1">
                 <button
-                  onClick={() => handleAddItem(inv.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition"
+                  onClick={() => handleAddItem(activeInvoice.id)}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>เพิ่มแถวรายการสินค้า</span>
+                  <span>เพิ่มรายการสินค้า</span>
                 </button>
 
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="text-slate-500 font-medium">ส่วนลดท้ายบิล:</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={inv.discount}
-                    onChange={e => handleUpdateInvoice(inv.id, 'discount', e.target.value)}
-                    className="w-28 px-2 py-1 rounded-lg border border-slate-200 text-right font-medium"
-                  />
-                  <span className="text-slate-500">บาท</span>
-                </div>
+                <button
+                  onClick={() => handleDeleteInvoice(activeInvoice.id)}
+                  className="text-rose-500 hover:bg-rose-50 px-3 py-1 rounded-xl text-xs font-semibold transition"
+                >
+                  ลบบิลนี้
+                </button>
               </div>
             </div>
-          ))
-        )}
-
-        <div className="text-center pt-2">
-          <button
-            onClick={handleAddInvoice}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl shadow-md transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>เพิ่มบิลร้านค้าถัดไป</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Section 3: Generate Document Action Buttons */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xl space-y-6">
-        <div className="text-center space-y-1">
-          <h2 className="text-xl font-black text-slate-900">3. สร้างและดาวน์โหลดเอกสาร (One-Click Download)</h2>
-          <p className="text-xs text-slate-500">
-            ระบบจะนำข้อมูลด้านบนไปสร้างไฟล์รายงานขอความเห็นชอบ (.docx) และตารางสรุปค่าใช้จ่าย (.xlsx) ตามรูปแบบราชการ สทอภ. ทันที
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={handleGenerateWord}
-            disabled={isGeneratingDocx || invoices.length === 0}
-            className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-2xl shadow-lg hover:shadow-xl transition disabled:opacity-50 space-y-3 group"
-          >
-            {isGeneratingDocx ? (
-              <Loader2 className="w-8 h-8 animate-spin" />
-            ) : (
-              <FileText className="w-8 h-8 text-blue-200 group-hover:scale-110 transition-transform" />
-            )}
-            <div className="text-center">
-              <div className="font-bold text-sm">ดาวน์โหลดเอกสาร Word (.docx)</div>
-              <div className="text-[11px] text-blue-200 mt-0.5">รายงานขอความเห็นชอบจัดซื้อจัดจ้าง</div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 text-center border border-slate-200/80 shadow-sm space-y-3">
+              <p className="text-sm font-bold text-slate-700">ยังไม่มีรายการบิล</p>
+              <button
+                onClick={handleAddInvoice}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition"
+              >
+                + เพิ่มบิลใหม่
+              </button>
             </div>
-          </button>
+          )}
 
-          <button
-            onClick={() => handleGenerateExcel(false)}
-            disabled={isGeneratingExcel || invoices.length === 0}
-            className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-2xl shadow-lg hover:shadow-xl transition disabled:opacity-50 space-y-3 group"
-          >
-            {isGeneratingExcel ? (
-              <Loader2 className="w-8 h-8 animate-spin" />
-            ) : (
-              <FileSpreadsheet className="w-8 h-8 text-emerald-200 group-hover:scale-110 transition-transform" />
-            )}
-            <div className="text-center">
-              <div className="font-bold text-sm">ดาวน์โหลด Excel สรุปค่าใช้จ่าย (.xlsx)</div>
-              <div className="text-[11px] text-emerald-200 mt-0.5">ตารางสรุปเบิกเงินค่าพัสดุประจำบิล</div>
+          {/* Section 3: Document Generation Download Buttons */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-black text-slate-900">3. สร้างเอกสาร Word & Excel (One-Click Download)</h2>
+              <div className="text-xs font-black text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                รวมสุทธิทุกบิล: {calculateGrandTotal().toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท
+              </div>
             </div>
-          </button>
 
-          <button
-            onClick={() => handleGenerateExcel(true)}
-            disabled={isGeneratingIllus || invoices.length === 0}
-            className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-purple-600 to-indigo-800 hover:from-purple-700 hover:to-indigo-900 text-white rounded-2xl shadow-lg hover:shadow-xl transition disabled:opacity-50 space-y-3 group"
-          >
-            {isGeneratingIllus ? (
-              <Loader2 className="w-8 h-8 animate-spin" />
-            ) : (
-              <ImageIcon className="w-8 h-8 text-purple-200 group-hover:scale-110 transition-transform" />
-            )}
-            <div className="text-center">
-              <div className="font-bold text-sm">ดาวน์โหลด Excel ภาพประกอบ (.xlsx)</div>
-              <div className="text-[11px] text-purple-200 mt-0.5">ใบภาพประกอบพัสดุพร้อมรูปถ่าย</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <button
+                onClick={handleGenerateWord}
+                disabled={isGeneratingDocx || invoices.length === 0}
+                className="flex items-center justify-center gap-2 p-4 bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-2xl shadow-md transition disabled:opacity-40"
+              >
+                {isGeneratingDocx ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 text-blue-200" />}
+                <span className="font-bold text-xs">ดาวน์โหลด Word (.docx)</span>
+              </button>
+
+              <button
+                onClick={() => handleGenerateExcel(false)}
+                disabled={isGeneratingExcel || invoices.length === 0}
+                className="flex items-center justify-center gap-2 p-4 bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-2xl shadow-md transition disabled:opacity-40"
+              >
+                {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSpreadsheet className="w-5 h-5 text-emerald-200" />}
+                <span className="font-bold text-xs">ดาวน์โหลด Excel สรุป (.xlsx)</span>
+              </button>
+
+              <button
+                onClick={() => handleGenerateExcel(true)}
+                disabled={isGeneratingIllus || invoices.length === 0}
+                className="flex items-center justify-center gap-2 p-4 bg-gradient-to-br from-purple-600 to-indigo-800 hover:from-purple-700 hover:to-indigo-900 text-white rounded-2xl shadow-md transition disabled:opacity-40"
+              >
+                {isGeneratingIllus ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5 text-purple-200" />}
+                <span className="font-bold text-xs">ดาวน์โหลด Excel ภาพ (.xlsx)</span>
+              </button>
             </div>
-          </button>
+          </div>
         </div>
       </div>
     </div>
