@@ -35,7 +35,7 @@ export interface ExcelPayload {
 }
 
 /**
- * Clean, Pure ExcelJS Workbook Generator (100% Matching ภาพประกอบ.xlsx & สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx)
+ * Clean, Pure ExcelJS Workbook Generator (Zero text clipping, perfect alignment)
  */
 export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
   const workbook = new ExcelJS.Workbook();
@@ -55,7 +55,7 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
 
   if (isIllustration) {
     // ---------------------------------------------
-    // Illustration Sheet (ภาพประกอบ.xlsx Exact Layout)
+    // Illustration Sheet (ภาพประกอบ.xlsx Layout)
     // ---------------------------------------------
     const ws = workbook.addWorksheet('ภาพประกอบ');
 
@@ -96,7 +96,7 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
       const storeNumber = invIdx + 1;
       const storeName = inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย';
 
-      // 1. Store Header Group Row (e.g. Row 3: "1 | บริษัท ซีอาร์ซี ไทวัสดุ จำกัด")
+      // Store Header Group Row
       const storeRow = ws.getRow(currentRowIdx);
       storeRow.getCell(1).value = storeNumber;
       storeRow.getCell(2).value = storeName;
@@ -115,7 +115,7 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
 
       currentRowIdx++;
 
-      // 2. Items under this store
+      // Items under this store
       inv.items.forEach((item, itemIdx) => {
         const itemIndexStr = `${storeNumber}.${itemIdx + 1}`;
         const descText = item.item_code ? `${item.item_code} ${item.description}` : item.description;
@@ -181,7 +181,6 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
         const photoCell = itemRow.getCell(16);
         photoCell.border = thinBorder;
 
-        // Embed Base64 Photo in Column P
         if (item.photo && item.photo.startsWith('data:image')) {
           try {
             const imageId = workbook.addImage({
@@ -256,11 +255,15 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
 
     const ws = workbook.addWorksheet('สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ');
 
-    // Title Row 1
-    const titleText = data.intro_course 
-      ? `ตารางสรุปค่าใช้จ่ายในการจัดซื้อวัสดุสำหรับการจัด ${data.intro_course}`
-      : 'ตารางสรุปค่าใช้จ่ายในการจัดซื้อจัดจ้างพัสดุ';
+    // Clean Title string to avoid duplicate text
+    let courseText = data.intro_course || 'จัดซื้อวัสดุสำหรับการจัดกิจกรรมและดำเนินงานโครงการ';
+    if (courseText.startsWith('ตารางสรุป')) {
+      courseText = courseText.replace(/^ตารางสรุปค่าใช้จ่ายในการจัดซื้อวัสดุสำหรับการจัด\s*/, '');
+    }
 
+    const titleText = `ตารางสรุปค่าใช้จ่ายในการจัดซื้อวัสดุสำหรับการจัด ${courseText}`;
+
+    // Title Row 1
     ws.addRow([titleText]);
     ws.mergeCells('A1:H1');
     const cellA1 = ws.getCell('A1');
@@ -269,18 +272,15 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
     ws.getRow(1).height = 32;
 
     // Subtitle Row 2
-    const locStr = data.excel_location ? ` ณ ${data.excel_location}` : '';
-    const dateStr = data.excel_date_range ? ` ระหว่างวันที่ ${data.excel_date_range}` : '';
-    const subTitleText = `${locStr}${dateStr}`.trim() || 'สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.)';
-
+    const subTitleText = data.department || 'สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.)';
     ws.addRow([subTitleText]);
     ws.mergeCells('A2:H2');
     const cellA2 = ws.getCell('A2');
-    cellA2.font = { name: 'TH SarabunPSK', size: 16 };
+    cellA2.font = { name: 'TH SarabunPSK', size: 16, bold: true };
     cellA2.alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(2).height = 26;
 
-    ws.addRow([]); // Blank spacing
+    ws.addRow([]); // Blank spacing (Row 3)
 
     // Header Row 4
     const headerRow = ws.addRow([
@@ -293,17 +293,19 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
       'ร้านค้า/ผู้ขาย', 
       'เลขที่ใบเสร็จ/วันที่'
     ]);
-    headerRow.height = 28;
+    headerRow.height = 30;
 
     headerRow.eachCell((cell) => {
       cell.font = { name: 'TH SarabunPSK', size: 16, bold: true };
       cell.alignment = { horizontal: 'center', vertical: 'middle' };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'E9ECEF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F2F4F8' } };
       cell.border = thinBorder;
     });
 
-    // Data Rows
+    // Data Rows (Row 5+)
     flatItems.forEach((item) => {
+      const invNumDateStr = `เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`;
+
       const row = ws.addRow([
         item.idx,
         item.description,
@@ -312,9 +314,12 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
         item.unitPrice,
         item.totalPrice,
         item.vendor,
-        `เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`
+        invNumDateStr
       ]);
-      row.height = 24;
+
+      // Set adequate row height for 2-line descriptions so text is never clipped
+      const textLen = item.description.length;
+      row.height = textLen > 40 ? 42 : 28;
 
       row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
       row.getCell(2).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
@@ -322,8 +327,8 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
       row.getCell(4).alignment = { horizontal: 'center', vertical: 'middle' };
       row.getCell(5).alignment = { horizontal: 'right', vertical: 'middle' };
       row.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' };
-      row.getCell(7).alignment = { horizontal: 'left', vertical: 'middle' };
-      row.getCell(8).alignment = { horizontal: 'left', vertical: 'middle' };
+      row.getCell(7).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+      row.getCell(8).alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
 
       row.getCell(5).numFmt = '#,##0.00';
       row.getCell(6).numFmt = '#,##0.00';
@@ -343,7 +348,7 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
       '', 
       grandTotalPaid
     ]);
-    totalRow.height = 28;
+    totalRow.height = 30;
 
     ws.mergeCells(`B${totalRow.number}:E${totalRow.number}`);
 
@@ -359,15 +364,15 @@ export async function generateExcelDocument(data: ExcelPayload): Promise<Blob> {
     amountCell.alignment = { horizontal: 'right', vertical: 'middle' };
     amountCell.numFmt = '#,##0.00';
 
-    // Set Column Widths
-    ws.getColumn(1).width = 10;  // ลำดับ
-    ws.getColumn(2).width = 45;  // รายการพัสดุ
-    ws.getColumn(3).width = 10;  // จำนวน
-    ws.getColumn(4).width = 12;  // หน่วย
-    ws.getColumn(5).width = 18;  // ราคา/หน่วย
-    ws.getColumn(6).width = 18;  // จำนวนเงิน
-    ws.getColumn(7).width = 30;  // ร้านค้า
-    ws.getColumn(8).width = 35;  // เลขที่ใบเสร็จ
+    // Set Column Widths (Sufficient width to prevent any text overlap)
+    ws.getColumn(1).width = 10;  // A: ลำดับ
+    ws.getColumn(2).width = 50;  // B: รายการพัสดุ
+    ws.getColumn(3).width = 12;  // C: จำนวน
+    ws.getColumn(4).width = 12;  // D: หน่วย
+    ws.getColumn(5).width = 18;  // E: ราคา/หน่วย
+    ws.getColumn(6).width = 18;  // F: จำนวนเงิน
+    ws.getColumn(7).width = 35;  // G: ร้านค้า/ผู้ขาย
+    ws.getColumn(8).width = 45;  // H: เลขที่ใบเสร็จ/วันที่
   }
 
   const buffer = await workbook.xlsx.writeBuffer();
