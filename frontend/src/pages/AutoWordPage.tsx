@@ -176,39 +176,67 @@ export default function AutoWordPage() {
     return Object.keys(counts).filter(d => counts[d] > 1);
   }, [activeInvoice]);
 
-  // Duplicate Invoice Detector Across All Invoices in State
+  // Comprehensive Pairwise Duplicate Invoice Detector
   const duplicateInvoicesInfo = useMemo(() => {
-    const map: Record<string, string[]> = {};
-    invoices.forEach(inv => {
-      // Key 1: invoice_number (if non-empty)
-      if (inv.invoice_number && inv.invoice_number.trim()) {
-        const k1 = `num:${inv.invoice_number.trim().toLowerCase()}`;
-        map[k1] = map[k1] || [];
-        map[k1].push(inv.id);
-      }
-      // Key 2: vendor_name + invoice_date + total_price (if total > 0)
-      const total = inv.items.reduce((s, i) => s + (i.total_price || 0), 0);
-      if (inv.vendor_name && inv.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย' && total > 0) {
-        const k2 = `vdt:${inv.vendor_name.trim().toLowerCase()}_${inv.invoice_date}_${total}`;
-        map[k2] = map[k2] || [];
-        if (!map[k2].includes(inv.id)) map[k2].push(inv.id);
-      }
-    });
-
     const duplicateInvIds = new Set<string>();
     const duplicateDetails: string[] = [];
 
-    Object.entries(map).forEach(([key, ids]) => {
-      if (ids.length > 1) {
-        ids.forEach(id => duplicateInvIds.add(id));
-        if (key.startsWith('num:')) {
-          duplicateDetails.push(`เลขที่ใบบิล "${key.replace('num:', '').toUpperCase()}"`);
-        } else {
-          const parts = key.replace('vdt:', '').split('_');
-          duplicateDetails.push(`ร้าน "${parts[0]}" ยอดรวม ${Number(parts[2]).toLocaleString('th-TH')} บ.`);
+    const getCleanNum = (num?: string) => num ? num.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : '';
+    const getCleanVendor = (v?: string) => v ? v.replace(/[^\wก-ฮa-zA-Z0-9]/g, '').toLowerCase() : '';
+
+    for (let i = 0; i < invoices.length; i++) {
+      for (let j = i + 1; j < invoices.length; j++) {
+        const invA = invoices[i];
+        const invB = invoices[j];
+
+        let isDup = false;
+        let reason = '';
+
+        // 1. Check Same Image File Uploaded (Filename + File Size)
+        if (invA.fileObject && invB.fileObject) {
+          if (invA.fileObject.name === invB.fileObject.name && invA.fileObject.size === invB.fileObject.size) {
+            isDup = true;
+            reason = `รูปภาพไฟล์เดียวกัน (${invA.fileObject.name})`;
+          }
+        }
+
+        // 2. Check Invoice Number Match (clean alphanumeric)
+        const numA = getCleanNum(invA.invoice_number);
+        const numB = getCleanNum(invB.invoice_number);
+        if (!isDup && numA && numB && numA.length >= 4 && numA === numB) {
+          isDup = true;
+          reason = `เลขที่ใบเสร็จตรงกัน ("${invA.invoice_number}")`;
+        }
+
+        // 3. Check Vendor + Total Price Match
+        const totalA = invA.items.reduce((s, item) => s + (item.total_price || 0), 0);
+        const totalB = invB.items.reduce((s, item) => s + (item.total_price || 0), 0);
+        const vendorA = getCleanVendor(invA.vendor_name);
+        const vendorB = getCleanVendor(invB.vendor_name);
+
+        if (!isDup && totalA > 0 && Math.abs(totalA - totalB) < 0.01) {
+          // Same total amount!
+          if (vendorA && vendorB && (vendorA === vendorB || vendorA.includes(vendorB) || vendorB.includes(vendorA))) {
+            isDup = true;
+            reason = `ร้านค้า "${invA.vendor_name || invB.vendor_name}" ยอดเงินตรงกัน (${totalA.toLocaleString('th-TH')} บ.)`;
+          } else if (invA.items.length > 0 && invB.items.length > 0 && invA.items[0].description === invB.items[0].description) {
+            isDup = true;
+            reason = `รายการพัสดุและยอดเงินตรงกัน (${totalA.toLocaleString('th-TH')} บ.)`;
+          } else if (invoices.length === 2) {
+            isDup = true;
+            reason = `ยอดเงินรวมบิลตรงกัน (${totalA.toLocaleString('th-TH')} บ.)`;
+          }
+        }
+
+        if (isDup) {
+          duplicateInvIds.add(invA.id);
+          duplicateInvIds.add(invB.id);
+          if (!duplicateDetails.includes(reason)) {
+            duplicateDetails.push(reason);
+          }
         }
       }
-    });
+    }
 
     return { duplicateInvIds, duplicateDetails };
   }, [invoices]);
@@ -688,6 +716,33 @@ export default function AutoWordPage() {
           {statusMsg.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />}
           <span>{statusMsg.text}</span>
           <button onClick={() => setStatusMsg(null)} className="ml-auto text-[11px] opacity-70 hover:opacity-100">ปิด</button>
+        </div>
+      )}
+
+      {/* Global Top Duplicate Invoice Alert Banner */}
+      {duplicateInvoicesInfo.duplicateDetails.length > 0 && (
+        <div className="p-4 rounded-3xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 text-white shadow-xl space-y-2 border-2 border-rose-300 animate-pulse">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-black text-sm md:text-base">
+              <AlertTriangle className="w-6 h-6 text-amber-300 shrink-0" />
+              <span>⚠️ ตรวจพบบิลซ้ำในระบบ! ({duplicateInvoicesInfo.duplicateInvIds.size} ใบเสร็จมีข้อมูลตรงกัน)</span>
+            </div>
+            {activeInvoice && duplicateInvoicesInfo.duplicateInvIds.has(activeInvoice.id) && (
+              <button
+                type="button"
+                onClick={() => handleDeleteInvoice(activeInvoice.id)}
+                className="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs rounded-xl shadow-md transition shrink-0"
+              >
+                ลบบิลซ้ำใบนี้ออก
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-rose-100 font-semibold">
+            รายละเอียดบิลที่ซ้ำกัน: {duplicateInvoicesInfo.duplicateDetails.join(' | ')}
+          </p>
+          <p className="text-[11px] text-rose-200 font-medium">
+            💡 กรุณาคลิกเลือกปุ่มแท็บบิลสีแดงด้านซ้าย แล้วกด "ลบบิลซ้ำใบนี้ออก" ก่อนสร้างเอกสาร
+          </p>
         </div>
       )}
 
