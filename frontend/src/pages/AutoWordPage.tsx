@@ -126,6 +126,7 @@ export default function AutoWordPage() {
   // Invoices list
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
+  const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
 
   // Interactive Crop Canvas State
   const [cropSelection, setCropSelection] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -1130,6 +1131,12 @@ export default function AutoWordPage() {
               )}
 
               {/* Items Table */}
+              <datalist id="thai-units">
+                {['ชิ้น', 'ชุด', 'กล่อง', 'แพ็ค', 'เครื่อง', 'ตัว', 'ม้วน', 'เล่ม', 'แผ่น', 'อัน', 'คู่', 'ตลับ', 'กิโลกรัม', 'เมตร'].map(u => (
+                  <option key={u} value={u} />
+                ))}
+              </datalist>
+
               <div className="overflow-x-auto border border-slate-200/70 rounded-2xl">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
@@ -1150,14 +1157,20 @@ export default function AutoWordPage() {
                       const isDuplicate = duplicateDescriptions.includes(item.description.trim().toLowerCase());
                       const isHighPrice = item.unit_price > 50000;
                       const isInvalidQty = item.quantity <= 0;
+                      const isFocused = focusedItemId === item.id;
 
                       return (
-                        <tr key={item.id} className={`hover:bg-slate-50/60 ${isDuplicate ? 'bg-amber-50/30' : ''}`}>
+                        <tr 
+                          key={item.id} 
+                          onClick={() => setFocusedItemId(item.id)}
+                          className={`hover:bg-slate-50/60 transition ${isFocused ? 'bg-blue-50/40 ring-1 ring-blue-300' : isDuplicate ? 'bg-amber-50/30' : ''}`}
+                        >
                           <td className="p-2 text-center text-slate-400 font-medium">{itemIdx + 1}</td>
                           <td className="p-2">
                             <input
                               type="text"
                               value={item.item_code}
+                              onFocus={() => setFocusedItemId(item.id)}
                               onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'item_code', e.target.value)}
                               placeholder="SKU"
                               className="w-full px-2 py-1 rounded-lg border border-slate-200 text-xs"
@@ -1167,6 +1180,7 @@ export default function AutoWordPage() {
                             <input
                               type="text"
                               value={item.description}
+                              onFocus={() => setFocusedItemId(item.id)}
                               onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'description', e.target.value)}
                               placeholder="รายละเอียดสินค้า"
                               className={`w-full px-2 py-1 rounded-lg border text-xs font-medium ${
@@ -1179,6 +1193,7 @@ export default function AutoWordPage() {
                               type="number"
                               min="1"
                               value={item.quantity}
+                              onFocus={() => setFocusedItemId(item.id)}
                               onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'quantity', e.target.value)}
                               className={`w-full px-1.5 py-1 rounded-lg border text-xs text-center ${
                                 isInvalidQty ? 'border-rose-400 bg-rose-50 text-rose-700 font-bold' : 'border-slate-200'
@@ -1188,9 +1203,12 @@ export default function AutoWordPage() {
                           <td className="p-2">
                             <input
                               type="text"
+                              list="thai-units"
                               value={item.unit}
+                              onFocus={() => setFocusedItemId(item.id)}
                               onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'unit', e.target.value)}
-                              className="w-full px-1.5 py-1 rounded-lg border border-slate-200 text-xs text-center font-medium"
+                              placeholder="หน่วย"
+                              className="w-full px-1.5 py-1 rounded-lg border border-slate-200 text-xs text-center font-medium focus:ring-2 focus:ring-blue-500"
                             />
                           </td>
                           <td className="p-2">
@@ -1198,6 +1216,7 @@ export default function AutoWordPage() {
                               type="number"
                               step="0.01"
                               value={item.unit_price}
+                              onFocus={() => setFocusedItemId(item.id)}
                               onChange={e => handleUpdateItem(activeInvoice.id, item.id, 'unit_price', e.target.value)}
                               className={`w-full px-2 py-1 rounded-lg border text-xs text-right font-medium ${
                                 isHighPrice ? 'border-amber-400 bg-amber-50 text-amber-900 font-bold' : 'border-slate-200'
@@ -1240,21 +1259,56 @@ export default function AutoWordPage() {
               </div>
 
               {/* Quick Unit Selection Bar */}
-              <div className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-200/70">
-                <span className="text-[10px] text-slate-500 font-medium">หน่วยนับด่วน:</span>
-                {['ชิ้น', 'ชุด', 'กล่อง', 'แพ็ค', 'เครื่อง', 'ตัว', 'ม้วน', 'เล่ม', 'แผ่น', 'อัน', 'คู่', 'ตลับ'].map(u => (
-                  <button
-                    key={u}
-                    type="button"
-                    onClick={() => {
-                      const lastItem = activeInvoice.items[activeInvoice.items.length - 1];
-                      if (lastItem) handleUpdateItem(activeInvoice.id, lastItem.id, 'unit', u);
-                    }}
-                    className="px-2 py-0.5 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md text-[10px] border border-slate-200 transition"
-                  >
-                    + {u}
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-slate-600 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/70">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {focusedItemId && activeInvoice.items.some(i => i.id === focusedItemId)
+                      ? `หน่วยนับสำหรับรายการที่ ${activeInvoice.items.findIndex(i => i.id === focusedItemId) + 1}:` 
+                      : 'เลือกคลิกแถวรายการที่ต้องการ แล้วกดหน่วยนับด่วน:'}
+                  </span>
+                  {['ชิ้น', 'ชุด', 'กล่อง', 'แพ็ค', 'เครื่อง', 'ตัว', 'ม้วน', 'เล่ม', 'แผ่น', 'อัน', 'คู่', 'ตลับ'].map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => {
+                        const targetItem = activeInvoice.items.find(i => i.id === focusedItemId) 
+                          || activeInvoice.items.find(i => !i.unit) 
+                          || activeInvoice.items[activeInvoice.items.length - 1];
+                        if (targetItem) {
+                          handleUpdateItem(activeInvoice.id, targetItem.id, 'unit', u);
+                        }
+                      }}
+                      className="px-2 py-0.5 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md text-[10px] border border-slate-200 transition shadow-xs"
+                    >
+                      + {u}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Apply unit to ALL items in invoice button */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-slate-400">ใช้กับทุกรายการ:</span>
+                  {['ชิ้น', 'ชุด', 'กล่อง'].map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => {
+                        setInvoices(prev => prev.map(inv => {
+                          if (inv.id === activeInvoice.id) {
+                            return {
+                              ...inv,
+                              items: inv.items.map(i => ({ ...i, unit: u }))
+                            };
+                          }
+                          return inv;
+                        }));
+                      }}
+                      className="px-1.5 py-0.5 bg-slate-200/80 hover:bg-blue-100 text-slate-700 hover:text-blue-800 rounded text-[9px] font-bold transition"
+                    >
+                      ทุกรายการ={u}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center justify-between pt-1">
