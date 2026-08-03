@@ -8,7 +8,7 @@ import {
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
-import { preprocessImageForOcr, parseThaiReceiptOcr } from '../utils/imageOcrOptimizer';
+import { preprocessImageForOcr, parseThaiReceiptOcr, extractVendorNameFromText, cleanCompanyName } from '../utils/imageOcrOptimizer';
 
 interface Item {
   id: string;
@@ -261,16 +261,16 @@ export default function AutoWordPage() {
         const file = files[i];
         const imagePreview = URL.createObjectURL(file);
         
-        // Pass 1: Header Crop Scan (Top 35% height at 3200px High-DPI Resolution for Vendor Name)
+        // Pass 1: Header Crop Scan (Top 35% height at 3600px High-DPI Resolution for Vendor Name)
         setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 1/3 (สแกนและขยายคมชัดเฉพาะหัวบิลดึงชื่อร้านค้า)...`);
-        const headerDataUrl = await preprocessImageForOcr(file, true);
+        const headerDataUrl = await preprocessImageForOcr(file, 'header');
         const headerRet = await worker.recognize(headerDataUrl);
         const headerText = headerRet.data.text;
         console.log("Pass 1 Header OCR Result:", headerText);
 
         // Pass 2: Full Image Scan (Table Items & Totals)
         setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 2/3 (สแกนตารางพัสดุ รหัสสินค้า และราคาสินค้า)...`);
-        const fullDataUrl = await preprocessImageForOcr(file, false);
+        const fullDataUrl = await preprocessImageForOcr(file, 'binarized');
         const fullRet = await worker.recognize(fullDataUrl);
         const fullText = fullRet.data.text;
         console.log("Pass 2 Full OCR Result:", fullText);
@@ -386,7 +386,7 @@ export default function AutoWordPage() {
       const parsed = parseThaiReceiptOcr(text);
 
       if (targetType === 'vendor' || (parsed.vendor_name && parsed.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย')) {
-        const cleanVendor = text.split('\n')[0].replace(/[^\wก-ฮ\s]+/g, '').trim();
+        const cleanVendor = extractVendorNameFromText(text) || cleanCompanyName(parsed.vendor_name || text);
         handleUpdateInvoice(activeInvoice.id, 'vendor_name', cleanVendor || parsed.vendor_name);
         setStatusMsg({ type: 'success', text: `ดึงชื่อร้านค้าจากพื้นที่เลือก: "${cleanVendor || parsed.vendor_name}"` });
       } else if (parsed.items.length > 0) {

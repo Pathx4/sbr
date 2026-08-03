@@ -42,7 +42,9 @@ function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: number)
   return threshold;
 }
 
-export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false): Promise<string> {
+export type PreprocessMode = 'header' | 'binarized' | 'grayscale';
+
+export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'binarized'): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
@@ -58,7 +60,7 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
         }
 
         const sourceY = 0;
-        const sourceHeight = isHeaderOnly ? Math.round(img.height * 0.40) : img.height;
+        const sourceHeight = mode === 'header' ? Math.round(img.height * 0.40) : img.height;
 
         let width = img.width;
         let height = sourceHeight;
@@ -81,19 +83,30 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
 
-        // Apply High-Contrast Enhancement + Otsu Binarization Thresholding
-        const threshold = otsuThreshold(data, width, height);
-        const contrastFactor = 1.25;
+        if (mode === 'grayscale') {
+          // Grayscale Contrast Mode for Numbers & English SKUs
+          for (let i = 0; i < data.length; i += 4) {
+            let gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+            gray = Math.max(0, Math.min(255, ((gray - 128) * 1.35) + 128));
+            data[i] = gray;
+            data[i + 1] = gray;
+            data[i + 2] = gray;
+          }
+        } else {
+          // Binarized Otsu Thresholding Mode for Thai Text & Tables
+          const threshold = otsuThreshold(data, width, height);
+          const contrastFactor = 1.25;
 
-        for (let i = 0; i < data.length; i += 4) {
-          let gray = data[i];
-          gray = ((gray - 128) * contrastFactor) + 128;
-          gray = Math.max(0, Math.min(255, gray));
+          for (let i = 0; i < data.length; i += 4) {
+            let gray = data[i];
+            gray = ((gray - 128) * contrastFactor) + 128;
+            gray = Math.max(0, Math.min(255, gray));
 
-          const bin = gray < threshold ? 0 : 255;
-          data[i] = bin;
-          data[i + 1] = bin;
-          data[i + 2] = bin;
+            const bin = gray < threshold ? 0 : 255;
+            data[i] = bin;
+            data[i + 1] = bin;
+            data[i + 2] = bin;
+          }
         }
 
         ctx.putImageData(imageData, 0, 0);
@@ -137,20 +150,16 @@ const TYPO_MAP: Record<string, string> = {
   'หจก': 'หจก.',
   'บาn': 'บาท',
   'บาทท': 'บาท',
-  // Hardware & Electrical Misread Corrections (From User Screenshots)
+  // Hardware & Electrical Misread Corrections
   'พเผลปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'พเอ0ปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'หผอปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'พเผล': 'พาวเวอร์',
   'พเอ0': 'พาวเวอร์',
   'หผอ': 'พาวเวอร์',
-  'เผด ': 'เมตร ',
-  'เผด': 'เมตร',
   'หม0204': 'โมดูล 0204',
-  'หม0': 'โมดูล ',
   'เห1537': 'โมดูล 1537',
   'เห1688': 'โมดูล 1688',
-  'เห1': 'โมดูล 1',
   'ปลัก': 'ปลั๊ก',
   'สวิทช์': 'สวิตช์',
   'สายไฟออน': 'สายไฟอ่อน',
@@ -186,9 +195,9 @@ export function levenshteinDistance(a: string, b: string): number {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
         matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
         );
       }
     }
@@ -278,7 +287,13 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/^\(\s*\(/g, '(')
     .replace(/\)\s*\)/g, ')');
 
-  // 2. Hardware / Electronics Model Numbers & Technical Typos
+  // 2. Protect AWG Specs & Wire SKUs (e.g. A0325, 22AWG)
+  text = text
+    .replace(/(\d{1,2})\s*A[W\s]*G/gi, '$1AWG')
+    .replace(/\bA0(\d{3})\b/gi, 'A0$1')
+    .replace(/\bA(\d{4})\b/gi, 'A$1');
+
+  // 3. Hardware / Electronics Model Numbers & Technical Typos
   text = text
     .replace(/\b0ง7670\b/gi, 'OV7670')
     .replace(/\b0v7670\b/gi, 'OV7670')
@@ -288,10 +303,11 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/\bStep\s*up\s*Conver\b/gi, 'Step up Converter')
     .replace(/\bUltrasonic\s+M\b/gi, 'Ultrasonic Module')
     .replace(/\bDevelopment\b/gi, 'Development Board')
+    .replace(/\bDevelopn\b/gi, 'Development Board')
     .replace(/\bESP-WROOM-32\b/gi, 'ESP-WROOM-32')
     .replace(/\bSIM7600A-H\b/gi, 'SIM7600A-H');
 
-  // 3. Thai Technical & Hardware Word Corrections
+  // 4. Thai Technical & Hardware Word Corrections
   text = text
     .replace(/ป้องดัน/g, 'ป้องกัน')
     .replace(/ลิเรียม/g, 'ลิเธียม')
@@ -304,18 +320,18 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/สวิทช์/g, 'สวิตช์')
     .replace(/ปลัก/g, 'ปลั๊ก')
     .replace(/ใหม่\s*พร้/g, 'พร้อม')
-    .replace(/เพด/g, 'เมตร')
-    .replace(/เพตร/g, 'เมตร')
-    .replace(/เพศ/g, 'เมตร')
+    .replace(/พร้อมอ:/g, 'พร้อม')
+    .replace(/\bเพดสายไฟ/g, 'สายไฟ')
+    .replace(/\bเมตรสายไฟ/g, 'สายไฟ')
+    .replace(/[\/#\-\*]*เพด\s*/g, '')
+    .replace(/[\/#\-\*]*เมตร\s*/g, '')
+    .replace(/10\s*เมต\b/g, '10เมตร')
     .replace(/10\s*เม\b/g, '10เมตร')
-    .replace(/10\s*เม\s/g, '10เมตร ')
-    .replace(/\(แ0(\d+)/g, '(โมดูล $1')
-    .replace(/\(เ0(\d+)/g, '(โมดูล $1')
-    .replace(/\(เ(\d{4})/g, '(โมดูล $1')
-    .replace(/\(แ(\d{4})/g, '(โมดูล $1')
-    .replace(/\((\d{4})\s+/g, '(โมดูล $1 ');
+    .replace(/1\s*เมต\b/g, '1เมตร')
+    .replace(/1\s*เม\b/g, '1เมตร')
+    .replace(/\bหม0(\d+)\b/g, 'โมดูล $1');
 
-  // 4. Run TYPO_MAP dictionary
+  // 5. Run TYPO_MAP dictionary
   Object.keys(TYPO_MAP).forEach(typo => {
     if (typo) {
       const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
@@ -323,7 +339,7 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     }
   });
 
-  // 5. Run Levenshtein Fuzzy Correction on individual word tokens
+  // 6. Run Levenshtein Fuzzy Correction on individual word tokens
   const words = text.split(' ');
   const correctedWords = words.map(w => fuzzyCorrectWord(w));
   text = correctedWords.join(' ');
@@ -363,7 +379,7 @@ export interface ParsedReceipt {
 /**
  * Clean trailing branch / tax ID details and garbled noise off company name string
  */
-function cleanCompanyName(name: string): string {
+export function cleanCompanyName(name: string): string {
   let cleaned = name;
 
   // If line contains company prefix (บริษัท, หจก, ร้าน, ห้าง), strip any leading OCR noise before it
