@@ -577,6 +577,29 @@ def api_contacts_search():
     results = [c for c in contacts if q.lower() in c['name'].lower()]
     return jsonify(results[:20])  # Limit to 20 results
 
+@app.route('/api/extract-bill', methods=['POST'])
+def api_extract_bill():
+    """
+    Endpoint for Hugging Face Spaces (or local backend) to process receipt images via PaddleOCR.
+    Expects multipart/form-data with a 'file' field.
+    Returns: { "words": [ { "text": "...", "bbox": { "x0": ..., "y0": ..., "x1": ..., "y1": ... }, "confidence": ... }, ... ] }
+    """
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+        
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+        
+    try:
+        from ocr_service import perform_ocr_on_image
+        image_bytes = file.read()
+        words = perform_ocr_on_image(image_bytes)
+        return jsonify({"words": words})
+    except Exception as e:
+        print(f"OCR Error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/validate_key', methods=['POST'])
 def validate_key():
     data = request.json or {}
