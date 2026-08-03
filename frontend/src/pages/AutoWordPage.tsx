@@ -53,11 +53,57 @@ const REGULATION_OPTIONS = [
   }
 ];
 
+// Strip nickname in parentheses e.g. "น.ส.ศิริพักตร์ เสลียนคิด (ปูเป้)" -> "น.ส.ศิริพักตร์ เสลียนคิด"
+const stripNickname = (name: string): string => {
+  if (!name) return '';
+  return name.replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+};
+
+// Convert ISO Date (YYYY-MM-DD) to Thai Date String e.g. "15 มกราคม 2568"
+const formatIsoToThaiDate = (isoStr: string): string => {
+  if (!isoStr) return '';
+  const parts = isoStr.split('-');
+  if (parts.length !== 3) return isoStr;
+  const year = parseInt(parts[0], 10);
+  const monthIdx = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+  const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  if (isNaN(year) || isNaN(monthIdx) || isNaN(day) || monthIdx < 0 || monthIdx > 11) return isoStr;
+  return `${day} ${months[monthIdx]} ${year + 543}`;
+};
+
+// Convert ISO Date Range to Thai string e.g. "ระหว่างวันที่ 20 - 22 พฤศจิกายน 2567"
+const formatIsoRangeToThai = (startDateStr: string, endDateStr: string): string => {
+  if (!startDateStr) return '';
+  const [sY, sM, sD] = startDateStr.split('-').map(Number);
+  if (!sY || !sM || !sD) return '';
+  const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+
+  if (!endDateStr || startDateStr === endDateStr) {
+    return `ระหว่างวันที่ ${sD} ${months[sM - 1]} ${sY + 543}`;
+  }
+
+  const [eY, eM, eD] = endDateStr.split('-').map(Number);
+  if (!eY || !eM || !eD) {
+    return `ระหว่างวันที่ ${sD} ${months[sM - 1]} ${sY + 543}`;
+  }
+
+  if (sY === eY && sM === eM) {
+    return `ระหว่างวันที่ ${sD} - ${eD} ${months[sM - 1]} ${sY + 543}`;
+  } else if (sY === eY) {
+    return `ระหว่างวันที่ ${sD} ${months[sM - 1]} - ${eD} ${months[eM - 1]} ${sY + 543}`;
+  } else {
+    return `ระหว่างวันที่ ${sD} ${months[sM - 1]} ${sY + 543} - ${eD} ${months[eM - 1]} ${eY + 543}`;
+  }
+};
+
 export default function AutoWordPage() {
   // State
   const [department, setDepartment] = useState('สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.)');
   const [introCourse, setIntroCourse] = useState('จัดซื้อวัสดุสำหรับการจัดกิจกรรมและดำเนินงานโครงการ');
-  const [regulatoryText, setRegulatoryText] = useState(REGULATION_OPTIONS[0].value);
+  const [regulatoryText] = useState(REGULATION_OPTIONS[0].value);
+  const [excelStartDate, setExcelStartDate] = useState('');
+  const [excelEndDate, setExcelEndDate] = useState('');
   const [excelDateRange, setExcelDateRange] = useState('');
   const [excelLocation, setExcelLocation] = useState('');
 
@@ -429,10 +475,10 @@ export default function AutoWordPage() {
       regulatory_text: regulatoryText,
       excel_date_range: excelDateRange,
       excel_location: excelLocation,
-      requester_name: requesterName,
+      requester_name: stripNickname(requesterName),
       requester_position: requesterPosition,
       requester_date: requesterDate,
-      approver_name: approverName,
+      approver_name: stripNickname(approverName),
       approver_position: approverPosition,
       approver_date: approverDate,
       invoices: invoices.map(inv => ({
@@ -722,28 +768,48 @@ export default function AutoWordPage() {
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">ข้อระเบียบอ้างอิงในการจัดซื้อจัดจ้าง</label>
-                <select
-                  value={regulatoryText}
-                  onChange={e => setRegulatoryText(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-                >
-                  {REGULATION_OPTIONS.map((opt, i) => (
-                    <option key={i} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-600 mb-1">ช่วงวันที่จัดงาน (สำหรับตาราง Excel)</label>
-                <input
-                  type="text"
-                  value={excelDateRange}
-                  onChange={e => setExcelDateRange(e.target.value)}
-                  placeholder="เช่น ระหว่างวันที่ 20 - 22 พฤศจิกายน 2567"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
+              <div className="md:col-span-2 space-y-2 bg-slate-50/70 p-3 rounded-2xl border border-slate-200/80">
+                <label className="block text-[11px] font-semibold text-slate-700">
+                  ช่วงวันที่จัดงาน (สำหรับตาราง Excel)
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-[10px] text-slate-500 font-medium block mb-0.5">วันเริ่มต้น</span>
+                    <input
+                      type="date"
+                      value={excelStartDate}
+                      onChange={e => {
+                        const s = e.target.value;
+                        setExcelStartDate(s);
+                        setExcelDateRange(formatIsoRangeToThai(s, excelEndDate));
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 font-medium block mb-0.5">วันสิ้นสุด</span>
+                    <input
+                      type="date"
+                      value={excelEndDate}
+                      onChange={e => {
+                        const endVal = e.target.value;
+                        setExcelEndDate(endVal);
+                        setExcelDateRange(formatIsoRangeToThai(excelStartDate, endVal));
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 bg-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 font-medium block mb-0.5">ข้อความวันที่ในตาราง Excel (ระบบสรุปให้อัตโนมัติ หรือพิมพ์แก้ไขได้)</span>
+                  <input
+                    type="text"
+                    value={excelDateRange}
+                    onChange={e => setExcelDateRange(e.target.value)}
+                    placeholder="เช่น ระหว่างวันที่ 20 - 22 พฤศจิกายน 2567"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                  />
+                </div>
               </div>
 
               <div>
@@ -806,13 +872,27 @@ export default function AutoWordPage() {
                     placeholder="ตำแหน่งผู้ขออนุมัติ"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <input
-                    type="text"
-                    value={requesterDate}
-                    onChange={e => setRequesterDate(e.target.value)}
-                    placeholder="วันที่ขออนุมัติ"
-                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+                  <div className="flex gap-1.5 items-center">
+                    <input
+                      type="date"
+                      onChange={e => setRequesterDate(formatIsoToThaiDate(e.target.value))}
+                      className="px-2 py-1 rounded-xl border border-slate-200 text-xs bg-white text-slate-700 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={requesterDate}
+                      onChange={e => setRequesterDate(e.target.value)}
+                      placeholder="วันที่ขออนุมัติ"
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setRequesterDate(getTodayThaiDate())}
+                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 shrink-0 transition"
+                    >
+                      วันนี้
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -862,13 +942,27 @@ export default function AutoWordPage() {
                     placeholder="ตำแหน่งผู้ลงนามอนุมัติ"
                     className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <input
-                    type="text"
-                    value={approverDate}
-                    onChange={e => setApproverDate(e.target.value)}
-                    placeholder="วันที่ลงนามอนุมัติ"
-                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+                  <div className="flex gap-1.5 items-center">
+                    <input
+                      type="date"
+                      onChange={e => setApproverDate(formatIsoToThaiDate(e.target.value))}
+                      className="px-2 py-1 rounded-xl border border-slate-200 text-xs bg-white text-slate-700 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={approverDate}
+                      onChange={e => setApproverDate(e.target.value)}
+                      placeholder="วันที่ลงนามอนุมัติ"
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-slate-200 text-[11px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setApproverDate(getTodayThaiDate())}
+                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 shrink-0 transition"
+                    >
+                      วันนี้
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -936,13 +1030,27 @@ export default function AutoWordPage() {
                 </div>
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-500 mb-1">วันที่ใบเสร็จ</label>
-                  <input
-                    type="text"
-                    value={activeInvoice.invoice_date}
-                    onChange={e => handleUpdateInvoice(activeInvoice.id, 'invoice_date', e.target.value)}
-                    placeholder="เช่น 28 พฤศจิกายน 2567"
-                    className="w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs"
-                  />
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="date"
+                      onChange={e => handleUpdateInvoice(activeInvoice.id, 'invoice_date', formatIsoToThaiDate(e.target.value))}
+                      className="px-1.5 py-1 rounded-xl border border-slate-200 text-xs bg-white text-slate-700 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={activeInvoice.invoice_date}
+                      onChange={e => handleUpdateInvoice(activeInvoice.id, 'invoice_date', e.target.value)}
+                      placeholder="เช่น 28 พฤศจิกายน 2567"
+                      className="flex-1 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateInvoice(activeInvoice.id, 'invoice_date', getTodayThaiDate())}
+                      className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 shrink-0 transition"
+                    >
+                      วันนี้
+                    </button>
+                  </div>
                 </div>
               </div>
 
