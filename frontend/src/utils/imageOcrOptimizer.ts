@@ -171,12 +171,64 @@ function cleanThaiText(str: string): string {
     .replace(/\s+/g, ' ')
     .trim();
   
+  return correctTechnicalThaiAndEnglishText(cleaned);
+}
+
+export function correctTechnicalThaiAndEnglishText(str: string): string {
+  let text = str;
+
+  // 1. Clean leading junk characters on item description (#, /, -, ((, etc.)
+  text = text
+    .replace(/^[#\/\-\*\+\:\.\s]+/g, '')
+    .replace(/^\(\s*\(/g, '(')
+    .replace(/\)\s*\)/g, ')');
+
+  // 2. Hardware / Electronics Model Numbers & Technical Typos
+  text = text
+    .replace(/\b0ง7670\b/gi, 'OV7670')
+    .replace(/\b0v7670\b/gi, 'OV7670')
+    .replace(/\bov7670\b/gi, 'OV7670')
+    .replace(/\(0ง7670\)/gi, '(OV7670)')
+    .replace(/[\(งoO]+7670\)?/gi, '(OV7670)')
+    .replace(/\bStep\s*up\s*Conver\b/gi, 'Step up Converter')
+    .replace(/\bUltrasonic\s+M\b/gi, 'Ultrasonic Module')
+    .replace(/\bDevelopment\b/gi, 'Development Board')
+    .replace(/\bESP-WROOM-32\b/gi, 'ESP-WROOM-32')
+    .replace(/\bSIM7600A-H\b/gi, 'SIM7600A-H');
+
+  // 3. Thai Technical & Hardware Word Corrections
+  text = text
+    .replace(/ป้องดัน/g, 'ป้องกัน')
+    .replace(/ลิเรียม/g, 'ลิเธียม')
+    .replace(/ลิเธย/g, 'ลิเธียม')
+    .replace(/ลิเธยม/g, 'ลิเธียม')
+    .replace(/แบตเตอรี/g, 'แบตเตอรี่')
+    .replace(/โซลาร/g, 'โซลาร์')
+    .replace(/เชลล์/g, 'เซลล์')
+    .replace(/ชิสเต็ม/g, 'ซิสเต็ม')
+    .replace(/สวิทช์/g, 'สวิตช์')
+    .replace(/ปลัก/g, 'ปลั๊ก')
+    .replace(/ใหม่\s*พร้/g, 'พร้อม')
+    .replace(/เพด/g, 'เมตร')
+    .replace(/เพตร/g, 'เมตร')
+    .replace(/เพศ/g, 'เมตร')
+    .replace(/10\s*เม\b/g, '10เมตร')
+    .replace(/10\s*เม\s/g, '10เมตร ')
+    .replace(/\(แ0(\d+)/g, '(โมดูล $1')
+    .replace(/\(เ0(\d+)/g, '(โมดูล $1')
+    .replace(/\(เ(\d{4})/g, '(โมดูล $1')
+    .replace(/\(แ(\d{4})/g, '(โมดูล $1')
+    .replace(/\((\d{4})\s+/g, '(โมดูล $1 ');
+
+  // 4. Run TYPO_MAP dictionary
   Object.keys(TYPO_MAP).forEach(typo => {
-    const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
-    cleaned = cleaned.replace(re, TYPO_MAP[typo]);
+    if (typo) {
+      const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
+      text = text.replace(re, TYPO_MAP[typo]);
+    }
   });
 
-  return cleaned;
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 function isGarbledThaiGibberish(text: string): boolean {
@@ -213,13 +265,23 @@ export interface ParsedReceipt {
  * Clean trailing branch / tax ID details and garbled noise off company name string
  */
 function cleanCompanyName(name: string): string {
-  return name
-    .replace(/^[^ก-ฮa-zA-Z0-9]*(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '')
+  let cleaned = name;
+
+  // If line contains company prefix (บริษัท, หจก, ร้าน, ห้าง), strip any leading OCR noise before it
+  if (/(?:บริษัท|หจก\.|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.)/i.test(cleaned)) {
+    cleaned = cleaned.replace(/^.*?(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '');
+  }
+
+  // Truncate trailing OCR noise after company suffix
+  cleaned = cleaned
+    .replace(/(บริษัท\s+[^]+?\s+จำกัด(?:\s+\(มหาชน\))?).*/i, '$1')
+    .replace(/(หจก\.\s+[^]+?)(?:\s+(?:สาขา|Tax|โทร|Tel)).*/i, '$1')
     .replace(/\s*\(?(?:สาขา|สาขาที่|Branch|Tax ID|TAX|เลขประจำตัว|โทร|TEL|FAX).*/i, '')
     .replace(/[\(\)\{\}\[\]<>]+/g, ' ')
-    .replace(/[a-z\s<]{3,}$/i, '')
     .replace(/\s+/g, ' ')
     .trim();
+
+  return cleaned;
 }
 
 /**
