@@ -133,16 +133,13 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'binari
 const TYPO_MAP: Record<string, string> = {
   '4%6': '4x6',
   '4%': '4x',
-  '8%': '',
   'LEETECIH': 'LEETECH',
-  'una': 'แท่ง',
   'ค้ำปืน': 'ด้ามปืน',
   '20wr120W': '20W/120W',
   '1แร': '1มม.',
   'ชิน': 'ชิ้น',
   'กลอง': 'กล่อง',
   'เครอง': 'เครื่อง',
-  'อน': 'อัน',
   'แพค': 'แพ็ค',
   'มวน': 'ม้วน',
   'แทง': 'แท่ง',
@@ -150,16 +147,13 @@ const TYPO_MAP: Record<string, string> = {
   'หจก': 'หจก.',
   'บาn': 'บาท',
   'บาทท': 'บาท',
-  // Hardware & Electrical Misread Corrections
+  // Hardware & Electrical Misread Corrections (SAFE entries only)
   'พเผลปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'พเอ0ปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'หผอปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'พเผล': 'พาวเวอร์',
   'พเอ0': 'พาวเวอร์',
   'หผอ': 'พาวเวอร์',
-  'หม0204': 'โมดูล 0204',
-  'เห1537': 'โมดูล 1537',
-  'เห1688': 'โมดูล 1688',
   'ปลัก': 'ปลั๊ก',
   'สวิทช์': 'สวิตช์',
   'สายไฟออน': 'สายไฟอ่อน',
@@ -167,9 +161,7 @@ const TYPO_MAP: Record<string, string> = {
   'ลิเธย': 'ลิเธียม',
   'โซลาร': 'โซลาร์',
   'เชลล์': 'เซลล์',
-  'ชิสเต็ม': 'ซิสเต็ม',
-  'รส<ม': '',
-  'a โ o a': ''
+  'ชิสเต็ม': 'ซิสเต็ม'
 };
 
 /**
@@ -307,29 +299,20 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/\bESP-WROOM-32\b/gi, 'ESP-WROOM-32')
     .replace(/\bSIM7600A-H\b/gi, 'SIM7600A-H');
 
-  // 4. Thai Technical & Hardware Word Corrections
+  // 4. Thai Technical & Hardware Word Corrections (SAFE only — no destructive blanket replacements)
   text = text
     .replace(/ป้องดัน/g, 'ป้องกัน')
     .replace(/ลิเรียม/g, 'ลิเธียม')
-    .replace(/ลิเธย/g, 'ลิเธียม')
+    .replace(/ลิเธย(?!ม)/g, 'ลิเธียม')
     .replace(/ลิเธยม/g, 'ลิเธียม')
-    .replace(/แบตเตอรี/g, 'แบตเตอรี่')
-    .replace(/โซลาร/g, 'โซลาร์')
+    .replace(/แบตเตอรี(?!่)/g, 'แบตเตอรี่')
+    .replace(/โซลาร(?!์)/g, 'โซลาร์')
     .replace(/เชลล์/g, 'เซลล์')
     .replace(/ชิสเต็ม/g, 'ซิสเต็ม')
     .replace(/สวิทช์/g, 'สวิตช์')
-    .replace(/ปลัก/g, 'ปลั๊ก')
+    .replace(/ปลัก(?!ๆ)/g, 'ปลั๊ก')
     .replace(/ใหม่\s*พร้/g, 'พร้อม')
-    .replace(/พร้อมอ:/g, 'พร้อม')
-    .replace(/\bเพดสายไฟ/g, 'สายไฟ')
-    .replace(/\bเมตรสายไฟ/g, 'สายไฟ')
-    .replace(/[\/#\-\*]*เพด\s*/g, '')
-    .replace(/[\/#\-\*]*เมตร\s*/g, '')
-    .replace(/10\s*เมต\b/g, '10เมตร')
-    .replace(/10\s*เม\b/g, '10เมตร')
-    .replace(/1\s*เมต\b/g, '1เมตร')
-    .replace(/1\s*เม\b/g, '1เมตร')
-    .replace(/\bหม0(\d+)\b/g, 'โมดูล $1');
+    .replace(/พร้อมอ:/g, 'พร้อม');
 
   // 5. Run TYPO_MAP dictionary
   Object.keys(TYPO_MAP).forEach(typo => {
@@ -387,13 +370,18 @@ export function cleanCompanyName(name: string): string {
     cleaned = cleaned.replace(/^.*?(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '');
   }
 
-  // Absolute hard truncation at "จำกัด" or "มหาชน" or "Co., Ltd"
-  if (cleaned.includes('จำกัด')) {
-    const parts = cleaned.split('จำกัด');
-    if (parts[0].includes('มหาชน')) {
-      cleaned = parts[0].split('มหาชน')[0] + 'มหาชน (จำกัด)';
-    } else {
-      cleaned = parts[0] + 'จำกัด';
+  // Fuzzy match for "จำกัด" variants (จำกัด, จำกัค, จำกัดุ, จำกัต, etc.) — hard truncate after it
+  const jamkatMatch = cleaned.match(/(จำกั[ดคตกัดุ])/i);
+  if (jamkatMatch) {
+    const idx = cleaned.indexOf(jamkatMatch[1]);
+    if (idx >= 0) {
+      // Check if มหาชน appears before จำกัด
+      const beforeJamkat = cleaned.substring(0, idx);
+      if (beforeJamkat.includes('มหาชน')) {
+        cleaned = beforeJamkat.split('มหาชน')[0] + 'มหาชน (จำกัด)';
+      } else {
+        cleaned = cleaned.substring(0, idx) + 'จำกัด';
+      }
     }
   } else if (cleaned.includes('มหาชน')) {
     cleaned = cleaned.split('มหาชน')[0] + 'มหาชน';
@@ -404,7 +392,10 @@ export function cleanCompanyName(name: string): string {
       .trim();
   }
 
-  cleaned = cleaned.replace(/[<>]+/g, '').replace(/\s+/g, ' ').trim();
+  // Strip any remaining non-Thai/non-English garbage after the company name
+  cleaned = cleaned.replace(/[ใไเแโใไ]*[<>]+.*/g, '').replace(/\s+/g, ' ').trim();
+  // Remove trailing single junk characters (OCR noise like ใเแoaa etc)
+  cleaned = cleaned.replace(/[\s]*[a-zใไเแโๆํัิีึืุู็่้๊๋์ํ๎]{1,2}[\s]*$/gi, '').trim();
 
   // Run Levenshtein Fuzzy Vendor Correction against Master Vendor Database
   return fuzzyCorrectVendorName(cleaned);
@@ -469,7 +460,14 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
     'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ', 'ยินดีต้อนรับ', 'WELCOME',
     'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่', 'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', 'บาท',
     'สินค้าที่มีภาษี', 'สินค้าที่ยกเว้น', 'สินค้าที่เสีย', 'มูลค่าสินค้า', 'มูลค่าภาษี', 'ภาษี 7%',
-    'จำนวนรวม', 'รวมรายการ', 'ราคาสินค้า', 'ส่วนลด'
+    'จำนวนรวม', 'รวมรายการ', 'ราคาสินค้า', 'ส่วนลด',
+    // Address keywords — these are NEVER product items
+    'ที่อยู่', 'ผู้ซื้อ', 'ผู้ขาย', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด',
+    'ถนน', 'ซอย', 'แขวง', 'เขต', 'รหัสไปรษณีย์', 'เลขประจำตัวผู้เสียภาษี',
+    // Table header keywords — column labels, not product items
+    'รายละเอียด', 'ราคา/หน่วย', 'รวม (บาท)', 'รหัสสินค้า',
+    // Invoice/receipt keywords
+    'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'Tax Invoice', 'Receipt'
   ];
 
   // 1. Extract Vendor Name (First try dedicated headerText scan if available, then full text)
@@ -544,7 +542,10 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
     const hasRowIndex = /^\s*\d{1,2}[\.\)\s]+/.test(line);
 
     // 2. Check if line starts with SKU / Barcode bracket code e.g. "[P0002]", "[M0103]"
-    const hasSkuPrefix = /^\s*\[?[A-Z0-9\-]{3,12}\]?/i.test(line) && /P\d|M\d|A\d|PJ\d|SKU|INV|DOC/i.test(line);
+    // BUT reject literal 'SKU' text (that's a table header, not a product code)
+    const skuTest = /^\s*\[?([A-Z0-9\-]{3,12})\]?/i.exec(line);
+    const hasSkuPrefix = skuTest && /P\d|M\d|A\d|PJ\d|SIM\d|INV|DOC/i.test(line)
+      && !/^\s*SKU\b/i.test(line);
 
     // 3. Check if line has price numbers at the end (e.g. "285.00" or "285")
     const priceMatches = line.match(/([\d,]+\.\d{2})/g) || line.match(/\s+(\d{1,6})\s*$/);
@@ -552,8 +553,15 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
     const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0) : [];
     const itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
 
-    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, or valid price!
-    const isNewItemRow = hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount);
+    // 4. Address line detection — lines with address keywords are NEVER product items
+    const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(line);
+
+    // 5. Table header detection — lines with column labels
+    const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line);
+
+    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, or valid price
+    // BUT NOT if it's an address line or table header
+    const isNewItemRow = !isAddressLine && !isTableHeader && (hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount));
 
     if (isNewItemRow) {
       let cleanDesc = line;
@@ -592,9 +600,14 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
       else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
 
       if (
-        cleanDesc.length >= 2 &&
+        cleanDesc.length >= 3 &&
         !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร)/i.test(cleanDesc) &&
-        !/^\d+\s*รายการ/i.test(cleanDesc)
+        !/^\d+\s*รายการ/i.test(cleanDesc) &&
+        // Reject garbled OCR noise — descriptions that are mostly symbols/punctuation
+        /[ก-ฮa-zA-Z]{2,}/i.test(cleanDesc) &&
+        // Reject lines that are clearly address lines
+        !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด/i.test(cleanDesc) &&
+        !isGarbledThaiGibberish(cleanDesc)
       ) {
         items.push({
           item_code,

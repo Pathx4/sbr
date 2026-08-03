@@ -261,22 +261,33 @@ export default function AutoWordPage() {
         const file = files[i];
         const imagePreview = URL.createObjectURL(file);
         
-        // Pass 1: Header Crop Scan (Top 35% height at 3600px High-DPI Resolution for Vendor Name)
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 1/3 (สแกนและขยายคมชัดเฉพาะหัวบิลดึงชื่อร้านค้า)...`);
+        // Pass 1: Header Crop Scan (Top 40% height at 3600px High-DPI Resolution for Vendor Name)
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 1/4 (สแกนหัวบิลดึงชื่อร้านค้า)...`);
         const headerDataUrl = await preprocessImageForOcr(file, 'header');
         const headerRet = await worker.recognize(headerDataUrl);
         const headerText = headerRet.data.text;
         console.log("Pass 1 Header OCR Result:", headerText);
 
-        // Pass 2: Full Image Scan (Table Items & Totals)
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 2/3 (สแกนตารางพัสดุ รหัสสินค้า และราคาสินค้า)...`);
-        const fullDataUrl = await preprocessImageForOcr(file, 'binarized');
-        const fullRet = await worker.recognize(fullDataUrl);
-        const fullText = fullRet.data.text;
-        console.log("Pass 2 Full OCR Result:", fullText);
+        // Pass 2: Full Image Binarized Scan (Thai Text & Tables)
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 2/4 (สแกนตารางพัสดุ โหมดขาวดำคมชัด)...`);
+        const binDataUrl = await preprocessImageForOcr(file, 'binarized');
+        const binRet = await worker.recognize(binDataUrl);
+        const binText = binRet.data.text;
+        const binConfidence = binRet.data.confidence || 0;
+        console.log("Pass 2 Binarized OCR Result (confidence:", binConfidence, "):", binText);
 
-        // Pass 3: Smart Merge (Header Vendor + Full Items Table)
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 3/3 (ผสานข้อมูลและตรวจสอบคำภาษาไทย)...`);
+        // Pass 3: Full Image Grayscale Scan (English SKUs & Model Numbers)
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 3/4 (สแกนรหัสสินค้าภาษาอังกฤษ โหมดสีเทา)...`);
+        const grayDataUrl = await preprocessImageForOcr(file, 'grayscale');
+        const grayRet = await worker.recognize(grayDataUrl);
+        const grayText = grayRet.data.text;
+        const grayConfidence = grayRet.data.confidence || 0;
+        console.log("Pass 3 Grayscale OCR Result (confidence:", grayConfidence, "):", grayText);
+
+        // Pass 4: Confidence-Based Smart Merge — pick the best full-text result
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 4/4 (เปรียบเทียบผลและเลือกข้อความที่ดีที่สุด)...`);
+        const fullText = grayConfidence > binConfidence ? grayText : binText;
+        console.log(`Pass 4 Merge: Selected ${grayConfidence > binConfidence ? 'Grayscale' : 'Binarized'} (${Math.max(binConfidence, grayConfidence).toFixed(1)}% confidence)`);
         const parsed = parseThaiReceiptOcr(fullText, headerText);
 
         const newInvId = Date.now().toString() + '_' + i;
