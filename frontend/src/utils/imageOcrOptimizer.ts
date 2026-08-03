@@ -285,7 +285,33 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/\bA0(\d{3})\b/gi, 'A0$1')
     .replace(/\bA(\d{4})\b/gi, 'A$1');
 
-  // 3. Hardware / Electronics Model Numbers & Technical Typos
+  // 3. Strip garbled OCR prefix noise BEFORE known Thai words
+  //    e.g. "ฟฟแผ0ปลั๊ก" → "ปลั๊ก", "ผมพ0ปลั๊ก" → "ปลั๊ก", "หมเ0สาย" → "สาย"
+  //    Pattern: 2-6 Thai consonants/digits that don't form a real word, followed by a recognizable word
+  const knownWordStarts = [
+    'ปลั๊ก', 'สาย', 'แผ่น', 'สวิตช์', 'โมดูล', 'เซนเซอร์', 'รีเลย์', 'อะแดปเตอร์',
+    'หม้อแปลง', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'คอนเนคเตอร์', 'เคเบิ้ล',
+    'กาว', 'คัตเตอร์', 'น็อต', 'สกรู', 'พาวเวอร์', 'แบตเตอรี่', 'ชุดอุปกรณ์',
+    'บอร์ด', 'Board', 'Module', 'Sensor', 'Relay', 'LED', 'LCD', 'USB', 'Arduino',
+    'ESP', 'Raspberry', 'Converter', 'Adapter', 'Cable', 'Wire', 'Ultrasonic',
+    'Development', 'Waterproof', 'Solar', 'Battery', 'Power', 'Step',
+    'DIY', 'อิเล็กทรอนิกส์', 'ฉนวน', 'ท่อ', 'ลวด', 'เทป', 'กระดาษ'
+  ];
+  for (const word of knownWordStarts) {
+    const idx = text.indexOf(word);
+    if (idx > 0 && idx <= 8) {
+      const prefix = text.substring(0, idx);
+      // If the prefix is mostly garbled (consonants+digits without proper vowels), strip it
+      const thaiVowelCount = (prefix.match(/[ะาิีึืุูเแโใไำ]/g) || []).length;
+      const prefixLen = prefix.replace(/\s/g, '').length;
+      if (prefixLen > 0 && thaiVowelCount <= 1 && prefixLen <= 6) {
+        text = text.substring(idx);
+        break;
+      }
+    }
+  }
+
+  // 4. Hardware / Electronics Model Numbers & Technical Typos
   text = text
     .replace(/\b0ง7670\b/gi, 'OV7670')
     .replace(/\b0v7670\b/gi, 'OV7670')
@@ -294,12 +320,12 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/[\(งoO]+7670\)?/gi, '(OV7670)')
     .replace(/\bStep\s*up\s*Conver\b/gi, 'Step up Converter')
     .replace(/\bUltrasonic\s+M\b/gi, 'Ultrasonic Module')
-    .replace(/\bDevelopment\b/gi, 'Development Board')
+    .replace(/\bDevelopment\s+Bo\b/gi, 'Development Board')
     .replace(/\bDevelopn\b/gi, 'Development Board')
     .replace(/\bESP-WROOM-32\b/gi, 'ESP-WROOM-32')
     .replace(/\bSIM7600A-H\b/gi, 'SIM7600A-H');
 
-  // 4. Thai Technical & Hardware Word Corrections (SAFE only — no destructive blanket replacements)
+  // 5. Thai Technical & Hardware Word Corrections (SAFE only — no destructive blanket replacements)
   text = text
     .replace(/ป้องดัน/g, 'ป้องกัน')
     .replace(/ลิเรียม/g, 'ลิเธียม')
@@ -311,10 +337,11 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/ชิสเต็ม/g, 'ซิสเต็ม')
     .replace(/สวิทช์/g, 'สวิตช์')
     .replace(/ปลัก(?!ๆ)/g, 'ปลั๊ก')
+    .replace(/บหาชน/g, 'มหาชน')
     .replace(/ใหม่\s*พร้/g, 'พร้อม')
     .replace(/พร้อมอ:/g, 'พร้อม');
 
-  // 5. Run TYPO_MAP dictionary
+  // 6. Run TYPO_MAP dictionary
   Object.keys(TYPO_MAP).forEach(typo => {
     if (typo) {
       const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
@@ -322,10 +349,17 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     }
   });
 
-  // 6. Run Levenshtein Fuzzy Correction on individual word tokens
+  // 7. Run Levenshtein Fuzzy Correction on individual word tokens
   const words = text.split(' ');
   const correctedWords = words.map(w => fuzzyCorrectWord(w));
   text = correctedWords.join(' ');
+
+  // 8. Strip trailing numeric junk that looks like leaked price data
+  //    e.g. "สีขาว 3ม. 1.000 5" → "สีขาว 3ม."
+  text = text
+    .replace(/\s+\d+\.\d{3}\s*\d*\s*$/, '')
+    .replace(/\s+\d{1,2}\.\d{3}\s+\d{1,6}\s*$/, '')
+    .replace(/\s+\d{1,6}\s*[!|]\s*$/, '');
 
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -363,22 +397,29 @@ export interface ParsedReceipt {
  * Clean trailing branch / tax ID details and garbled noise off company name string
  */
 export function cleanCompanyName(name: string): string {
-  let cleaned = name;
+  // Pre-fix common OCR misreads in vendor names
+  let cleaned = name
+    .replace(/บหาชน/g, 'มหาชน')
+    .replace(/จำกัค/g, 'จำกัด')
+    .replace(/จำกัต/g, 'จำกัด');
 
   // If line contains company prefix (บริษัท, หจก, ร้าน, ห้าง), strip any leading OCR noise before it
   if (/(?:บริษัท|หจก\.|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.)/i.test(cleaned)) {
     cleaned = cleaned.replace(/^.*?(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '');
   }
 
-  // Fuzzy match for "จำกัด" variants (จำกัด, จำกัค, จำกัดุ, จำกัต, etc.) — hard truncate after it
+  // Fuzzy match for "จำกัด" variants — hard truncate after it
   const jamkatMatch = cleaned.match(/(จำกั[ดคตกัดุ])/i);
   if (jamkatMatch) {
     const idx = cleaned.indexOf(jamkatMatch[1]);
     if (idx >= 0) {
-      // Check if มหาชน appears before จำกัด
+      const afterJamkat = cleaned.substring(idx + jamkatMatch[1].length).trim();
       const beforeJamkat = cleaned.substring(0, idx);
+      // Check if มหาชน appears before or after จำกัด
       if (beforeJamkat.includes('มหาชน')) {
         cleaned = beforeJamkat.split('มหาชน')[0] + 'มหาชน (จำกัด)';
+      } else if (/^[(\s]*มหาชน/i.test(afterJamkat)) {
+        cleaned = beforeJamkat + 'จำกัด (มหาชน)';
       } else {
         cleaned = cleaned.substring(0, idx) + 'จำกัด';
       }
@@ -566,8 +607,12 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
     if (isNewItemRow) {
       let cleanDesc = line;
 
-      // Strip trailing numeric/price columns (e.g., "1 98.00 98.00 0.00" or "1 285")
-      cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').replace(/\s+\d{1,6}\s*$/g, '').trim();
+      // Strip trailing numeric/price columns (e.g., "1 98.00 98.00 0.00" or "1 285" or "1.000 5")
+      cleanDesc = cleanDesc
+        .replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '')
+        .replace(/\s+\d+\.\d{3}\s*\d*\s*$/g, '')
+        .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '')
+        .trim();
 
       // Extract SKU / Barcode if available
       let item_code = '';
@@ -637,11 +682,37 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
     }
   });
 
+  // 6. Deduplicate items with same SKU and price (keep first/cleanest occurrence)
+  const dedupedItems: ParsedReceipt['items'] = [];
+  for (const item of items) {
+    const isDuplicate = dedupedItems.some(existing => {
+      // Same SKU and same unit price = duplicate
+      if (existing.item_code && item.item_code && existing.item_code === item.item_code && existing.unit_price === item.unit_price) {
+        return true;
+      }
+      // Same unit price and very similar description (Levenshtein distance <= 30% of length)
+      if (existing.unit_price === item.unit_price && existing.unit_price > 0) {
+        const shorter = Math.min(existing.description.length, item.description.length);
+        if (shorter >= 5) {
+          const dist = levenshteinDistance(existing.description, item.description);
+          if (dist <= Math.ceil(shorter * 0.35)) {
+            // Keep the one with shorter (cleaner) description or more real words
+            return true;
+          }
+        }
+      }
+      return false;
+    });
+    if (!isDuplicate) {
+      dedupedItems.push(item);
+    }
+  }
+
   return {
     vendor_name: vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
     invoice_number: invoice_number || '',
     invoice_date: invoice_date || '',
     total_amount,
-    items
+    items: dedupedItems
   };
 }
