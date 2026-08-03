@@ -253,7 +253,8 @@ export default function AutoWordPage() {
     try {
       const worker = await createWorker('tha+eng');
       await worker.setParameters({
-        tessedit_pageseg_mode: '6' as any,
+        // PSM 11 (Sparse text) is better than 6 for extracting independent table cells
+        tessedit_pageseg_mode: '11' as any,
         preserve_interword_spaces: '1'
       });
       
@@ -284,11 +285,11 @@ export default function AutoWordPage() {
         const grayConfidence = grayRet.data.confidence || 0;
         console.log("Pass 3 Grayscale OCR Result (confidence:", grayConfidence, "):", grayText);
 
-        // Pass 4: Confidence-Based Smart Merge — pick the best full-text result
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 4/4 (เปรียบเทียบผลและเลือกข้อความที่ดีที่สุด)...`);
-        const fullText = grayConfidence > binConfidence ? grayText : binText;
+        // Pass 4: Confidence-Based Smart Merge & Spatial Reconstructor
+        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 4/4 (วิเคราะห์โครงสร้างตารางด้วย 2D Bounding Box)...`);
+        const bestData = grayConfidence > binConfidence ? grayRet.data : binRet.data;
         console.log(`Pass 4 Merge: Selected ${grayConfidence > binConfidence ? 'Grayscale' : 'Binarized'} (${Math.max(binConfidence, grayConfidence).toFixed(1)}% confidence)`);
-        const parsed = parseThaiReceiptOcr(fullText, headerText);
+        const parsed = parseThaiReceiptOcr(bestData, headerText);
 
         const newInvId = Date.now().toString() + '_' + i;
         const newInvoice: Invoice = {

@@ -483,7 +483,93 @@ export function extractVendorNameFromText(text: string): string {
   return '';
 }
 
-export function parseThaiReceiptOcr(text: string, headerText: string = ''): ParsedReceipt {
+export interface TesseractBbox {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+
+export interface TesseractWord {
+  text: string;
+  bbox: TesseractBbox;
+  confidence: number;
+}
+
+/**
+ * 2D Spatial Clustering: Rebuilds text perfectly by grouping words into physical rows (Y-axis)
+ * and sorting them into columns (X-axis) with proper spacing.
+ */
+export function reconstructTextFromBboxes(words: TesseractWord[]): string {
+  if (!words || words.length === 0) return '';
+
+  // 1. Sort all words vertically by Y-coordinate
+  const sortedWords = [...words].sort((a, b) => a.bbox.y0 - b.bbox.y0);
+
+  const rows: TesseractWord[][] = [];
+  let currentRow: TesseractWord[] = [sortedWords[0]];
+  const Y_TOLERANCE = 15; // Max vertical pixel difference to be considered same row
+
+  // 2. Cluster into rows based on Y-tolerance
+  for (let i = 1; i < sortedWords.length; i++) {
+    const word = sortedWords[i];
+    
+    // If the word's Y-start is close to the current row's average Y, add it
+    const avgY = currentRow.reduce((sum, w) => sum + w.bbox.y0, 0) / currentRow.length;
+    
+    if (Math.abs(word.bbox.y0 - avgY) <= Y_TOLERANCE) {
+      currentRow.push(word);
+    } else {
+      rows.push(currentRow);
+      currentRow = [word];
+    }
+  }
+  if (currentRow.length > 0) {
+    rows.push(currentRow);
+  }
+
+  // 3. Rebuild text with simulated column spacing
+  const rebuiltLines: string[] = [];
+  for (const row of rows) {
+    // Sort words in this row horizontally (left to right)
+    row.sort((a, b) => a.bbox.x0 - b.bbox.x0);
+
+    let lineText = '';
+    let lastX = row[0].bbox.x0;
+
+    for (let i = 0; i < row.length; i++) {
+      const word = row[i];
+      const gap = word.bbox.x0 - lastX;
+      
+      // If gap is significant, add extra spaces to simulate columns
+      if (i > 0 && gap > 40) {
+        lineText += '    '; // Column separator
+      } else if (i > 0) {
+        lineText += ' ';
+      }
+      
+      lineText += word.text;
+      lastX = word.bbox.x1;
+    }
+    rebuiltLines.push(lineText.trim());
+  }
+
+  return rebuiltLines.join('\n');
+}
+
+export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedReceipt {
+  // Check if ocrData contains Tesseract Bounding Boxes (words array)
+  let text = '';
+  if (typeof ocrData === 'object' && ocrData.words && Array.isArray(ocrData.words)) {
+    console.log("Running 2D Spatial Table Reconstruction...");
+    text = reconstructTextFromBboxes(ocrData.words);
+    console.log("Reconstructed Text:", text);
+  } else {
+    text = typeof ocrData === 'string' ? ocrData : (ocrData?.text || '');
+  }
+
+  const headerText = typeof headerData === 'string' ? headerData : (headerData?.text || '');
+
   const lines = text
     .split('\n')
     .map(l => l.trim())
