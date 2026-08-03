@@ -413,6 +413,7 @@ export default function AutoWordPage() {
 
   // Mouse Handlers for Dragging Crop Box
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Disable native browser image dragging
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -424,6 +425,7 @@ export default function AutoWordPage() {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isDraggingCrop || !dragStart) return;
+    e.preventDefault();
 
     const rect = e.currentTarget.getBoundingClientRect();
     const currentX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
@@ -802,7 +804,9 @@ export default function AutoWordPage() {
                   ref={imageRef}
                   src={activeInvoice.imagePreview}
                   alt="Receipt Preview"
-                  className="max-w-full max-h-[580px] object-contain"
+                  draggable={false}
+                  onDragStart={e => e.preventDefault()}
+                  className="max-w-full max-h-[580px] object-contain select-none pointer-events-none"
                 />
 
                 {/* Selection Bounding Box Overlay */}
