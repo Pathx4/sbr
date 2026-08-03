@@ -163,6 +163,101 @@ const TYPO_MAP: Record<string, string> = {
   'a โ o a': ''
 };
 
+/**
+ * High-Speed Zero-Dependency Levenshtein Distance Algorithm
+ * Calculates character edit distance between OCR output and Master Dictionaries
+ */
+export function levenshteinDistance(a: string, b: string): number {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  const matrix: number[][] = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+const HARDWARE_MASTER_DICTIONARY = [
+  'ป้องกัน', 'ลิเธียม', 'แบตเตอรี่', 'โซลาร์เซลล์', 'พาวเวอร์ปลั๊ก', 'ปลั๊กไฟ', 'สายไฟอ่อน',
+  'สวิตช์', 'โมดูล', 'ความร้อน', 'ฉนวน', 'สแตนเลส', 'อะลูมิเนียม', 'พลาสติก', 'น็อต', 'สกรู',
+  'คอนเนคเตอร์', 'หม้อแปลง', 'อะแดปเตอร์', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'รีเลย์',
+  'เซนเซอร์', 'เคเบิ้ลไทร์', 'เทปพันสายไฟ', 'ตลับเมตร', 'ด้ามปืน', 'กาวร้อน', 'คัตเตอร์',
+  'กระดาษ', 'แฟ้ม', 'ซอง', 'กล่อง', 'เครื่อง', 'พร้อม', 'ใส้เต็ม', 'ไส้เต็ม', 'อิเล็กทรอนิกส์'
+];
+
+const MASTER_VENDOR_DICTIONARY = [
+  'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด',
+  'บริษัท ซีโอแอล จำกัด (มหาชน)',
+  'บริษัท โฮม โปรดักส์ เซ็นเตอร์ จำกัด (มหาชน)',
+  'บริษัท ดูโฮม จำกัด (มหาชน)',
+  'บริษัท สยามโกลบอลเฮ้าส์ จำกัด (มหาชน)',
+  'บริษัท ไอที ซิตี้ จำกัด (มหาชน)',
+  'บริษัท แอดไวซ์ ไอที อินฟิเนท จำกัด (มหาชน)',
+  'บริษัท บีทูเอส จำกัด',
+  'บริษัท บิ๊กซี ซูเปอร์เซ็นเตอร์ จำกัด (มหาชน)',
+  'บริษัท เอก-ชัย ดีสทริบิวชั่น ซิสเทม จำกัด',
+  'บริษัท เอส. สมาร์ทเทค ซิสเต็ม จำกัด',
+  'บริษัท อมร อีเล็คโทรนิคส์ จำกัด',
+  'บริษัท นัฐพงษ์ เซลส์แอนด์เซอร์วิส จำกัด',
+  'บริษัท ศุภการ เอ็นจิเนียริ่ง จำกัด',
+  'บริษัท ไทยพิพัฒน์ ฮาร์ดแวร์ จำกัด'
+];
+
+export function fuzzyCorrectWord(word: string): string {
+  if (word.length < 3) return word;
+
+  let bestMatch = word;
+  let minDistance = 999;
+
+  for (const target of HARDWARE_MASTER_DICTIONARY) {
+    const dist = levenshteinDistance(word, target);
+    if (dist <= 2 && dist < minDistance && Math.abs(word.length - target.length) <= 2) {
+      minDistance = dist;
+      bestMatch = target;
+    }
+  }
+
+  return minDistance <= 2 ? bestMatch : word;
+}
+
+export function fuzzyCorrectVendorName(rawVendor: string): string {
+  if (!rawVendor || rawVendor.length < 4) return rawVendor;
+
+  let bestVendor = rawVendor;
+  let minDistance = 999;
+
+  for (const masterVendor of MASTER_VENDOR_DICTIONARY) {
+    const dist = levenshteinDistance(rawVendor.toLowerCase(), masterVendor.toLowerCase());
+    const threshold = Math.max(3, Math.round(masterVendor.length * 0.35));
+    if (dist < minDistance && dist <= threshold) {
+      minDistance = dist;
+      bestVendor = masterVendor;
+    }
+  }
+
+  return minDistance <= Math.round(bestVendor.length * 0.35) ? bestVendor : rawVendor;
+}
+
 function cleanThaiText(str: string): string {
   let cleaned = str
     .replace(/^([!\?\.\-\|\+:งv\s\d]*\d{1,2}\s*[v\|\.\-\:\)\s]+)/gi, '')
@@ -228,6 +323,11 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     }
   });
 
+  // 5. Run Levenshtein Fuzzy Correction on individual word tokens
+  const words = text.split(' ');
+  const correctedWords = words.map(w => fuzzyCorrectWord(w));
+  text = correctedWords.join(' ');
+
   return text.replace(/\s+/g, ' ').trim();
 }
 
@@ -238,7 +338,6 @@ function isGarbledThaiGibberish(text: string): boolean {
   const thaiConsonantCount = (text.match(/[ก-ฮ]/g) || []).length;
   const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(text);
 
-  // If there are > 5 Thai consonants but 0 vowels and no english -> Garbled OCR noise!
   if (thaiConsonantCount >= 5 && !hasVowels && !/[a-zA-Z]{3,}/.test(text)) {
     return true;
   }
@@ -281,7 +380,8 @@ function cleanCompanyName(name: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 
-  return cleaned;
+  // Run Levenshtein Fuzzy Vendor Correction against Master Vendor Database
+  return fuzzyCorrectVendorName(cleaned);
 }
 
 /**
