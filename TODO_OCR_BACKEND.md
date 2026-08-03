@@ -6,16 +6,16 @@
 - **สิ่งติดขัด (Blocker):** รอ User สมัครใช้งานและตั้งค่า Hugging Face Spaces ให้ดึงโค้ดจาก GitHub ไปรันให้เสร็จสมบูรณ์
 
 ## 🚀 สิ่งที่ต้องทำต่อไป (Next Actions for Agent)
-เมื่อ User กลับมาพร้อมกับ **"URL ของ Hugging Face Spaces"** สิ่งที่ Agent ต้องทำทันทีคือ:
+**(อัปเดตล่าสุด: โค้ดฝั่ง Frontend และระบบ Fallback เตรียมพร้อมเสร็จสมบูรณ์แล้วใน `AutoWordPage.tsx` ไม่ต้องแก้โค้ดเพิ่มแล้ว! 🎉)**
 
-1. **แก้ไข `AutoWordPage.tsx`:**
-   - ค้นหาฟังก์ชัน `handleFileUpload`
-   - ลบโค้ดการทำงานของ `Tesseract.js` (`createWorker`) ออก
-   - เปลี่ยนเป็นการยิง API (`fetch` หรือ `axios`) นำไฟล์ภาพอัปโหลดไปที่ `[URL_ของ_HUGGING_FACE]/api/extract-bill` ด้วยรูปแบบ `multipart/form-data`
-2. **ปรับแต่งการรับค่าใน Frontend:**
-   - รับค่า JSON ที่คืนกลับมาจากเซิร์ฟเวอร์ (รูปแบบ `{ "words": [ { "text", "bbox", "confidence" } ] }`)
-   - นำค่า `words` ที่ได้ ส่งเข้าไปประมวลผลต่อใน `parseThaiReceiptOcr` (ระบบ 2D Spatial Clustering ของเดิมรองรับการทำงานกับ Bounding Box อยู่แล้ว สามารถต่อกันได้เลย)
-3. **ตรวจสอบความปลอดภัย:**
-   - ดักจับ Error ในกรณีที่ Hugging Face นอนหลับ (Cold Start หรือ Time out) ให้แจ้งเตือน User ว่าเซิร์ฟเวอร์กำลังตื่น ให้รอสักครู่
+สิ่งที่ Agent ในอนาคตต้องทำเมื่อ User ไปที่คอมพิวเตอร์ที่ทำงานคือ **ไกด์ให้ User รันเซิร์ฟเวอร์** ดังนี้:
 
-*(บันทึกนี้มีไว้เพื่อเตือนความจำ Agent ใน Session ถัดไป ห้ามลบจนกว่าจะเชื่อมต่อ Backend สำเร็จ)*
+1. ให้นำทาง User ไปที่โฟลเดอร์ `backend`
+2. ไกด์ให้ User ติดตั้งไลบรารีและรันเซิร์ฟเวอร์ (ถ้ายังไม่เคยรัน):
+   - `pip install -r requirements.txt` (อาจต้องใช้เวลาและต้องมี C++ Build tools ถ้ายังไม่เคยลง PaddleOCR)
+   - `flask run --port=5000`
+3. ไกด์ให้เปิด Command Prompt อีกจอแล้วรัน Cloudflare Tunnel:
+   - `cloudflared tunnel --url http://localhost:5000`
+4. เมื่อได้ URL `https://xxxx.trycloudflare.com` มาแล้ว ให้บอก User ว่า **ให้นำ URL นี้ไปกรอกในช่องตั้งค่า (ไอคอนฟันเฟือง ⚙️) บนหน้าเว็บได้เลย** 
+
+*(บันทึกนี้มีไว้เพื่อเตือนความจำ Agent ใน Session ถัดไป ห้ามลบจนกว่าจะแน่ใจว่าระบบทำงานได้สมบูรณ์แล้ว)*

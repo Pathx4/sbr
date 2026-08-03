@@ -3,7 +3,7 @@ import { createWorker } from 'tesseract.js';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye
+  Loader2, Crop, Eye, Settings
 } from 'lucide-react';
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
@@ -146,6 +146,14 @@ export default function AutoWordPage() {
   const [isGeneratingIllus, setIsGeneratingIllus] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // API state
+  const [ocrApiUrl, setOcrApiUrl] = useState(() => localStorage.getItem('ocrApiUrl') || 'http://localhost:5000');
+  const [showApiSettings, setShowApiSettings] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('ocrApiUrl', ocrApiUrl);
+  }, [ocrApiUrl]);
+
   // Load Contacts directly from local contacts.json on mount
   useEffect(() => {
     const data = contactsData as Contact[];
@@ -241,108 +249,140 @@ export default function AutoWordPage() {
     return { duplicateInvIds, duplicateDetails };
   }, [invoices]);
 
-  // Handle OCR Extraction for Full Image (3-Pass Quality Engine)
+  // Handle OCR Extraction for Full Image (API First, Fallback to Offline)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsScanning(true);
     setScanProgress(0);
-    setScanStatus('กำลังเตรียมเอนจินประมวลผลคุณภาพสูง Tesseract.js (ภาษาไทย+อังกฤษ)...');
 
-    try {
-      const worker = await createWorker('tha+eng');
-      await worker.setParameters({
-        // PSM 11 (Sparse text) is better than 6 for extracting independent table cells
-        tessedit_pageseg_mode: '11' as any,
-        preserve_interword_spaces: '1'
-      });
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imagePreview = URL.createObjectURL(file);
       
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const imagePreview = URL.createObjectURL(file);
-        
-        // Pass 1: Header Crop Scan (Top 40% height at 3600px High-DPI Resolution for Vendor Name)
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 1/4 (สแกนหัวบิลดึงชื่อร้านค้า)...`);
-        const headerDataUrl = await preprocessImageForOcr(file, 'header');
-        const headerRet = await worker.recognize(headerDataUrl);
-        const headerText = headerRet.data.text;
-        console.log("Pass 1 Header OCR Result:", headerText);
+      let parsed: any = null;
+      let usedOffline = false;
 
-        // Pass 2: Full Image Binarized Scan (Thai Text & Tables)
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 2/4 (สแกนตารางพัสดุ โหมดขาวดำคมชัด)...`);
-        const binDataUrl = await preprocessImageForOcr(file, 'binarized');
-        const binRet = await worker.recognize(binDataUrl);
-        const binText = binRet.data.text;
-        const binConfidence = binRet.data.confidence || 0;
-        console.log("Pass 2 Binarized OCR Result (confidence:", binConfidence, "):", binText);
-
-        // Pass 3: Full Image Grayscale Scan (English SKUs & Model Numbers)
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 3/4 (สแกนรหัสสินค้าภาษาอังกฤษ โหมดสีเทา)...`);
-        const grayDataUrl = await preprocessImageForOcr(file, 'grayscale');
-        const grayRet = await worker.recognize(grayDataUrl);
-        const grayText = grayRet.data.text;
-        const grayConfidence = grayRet.data.confidence || 0;
-        console.log("Pass 3 Grayscale OCR Result (confidence:", grayConfidence, "):", grayText);
-
-        // Pass 4: Confidence-Based Smart Merge & Spatial Reconstructor
-        setScanStatus(`กำลังสแกนคุณภาพสูง ขั้นที่ 4/4 (วิเคราะห์โครงสร้างตารางด้วย 2D Bounding Box)...`);
-        const bestData = grayConfidence > binConfidence ? grayRet.data : binRet.data;
-        console.log(`Pass 4 Merge: Selected ${grayConfidence > binConfidence ? 'Grayscale' : 'Binarized'} (${Math.max(binConfidence, grayConfidence).toFixed(1)}% confidence)`);
-        const parsed = parseThaiReceiptOcr(bestData, headerText);
-
-        const newInvId = Date.now().toString() + '_' + i;
-        const newInvoice: Invoice = {
-          id: newInvId,
-          vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
-          invoice_number: parsed.invoice_number || '',
-          invoice_date: parsed.invoice_date || getTodayThaiDate(),
-          discount: 0,
-          items: parsed.items.length > 0 ? parsed.items.map((item, idx) => ({
-            id: Date.now().toString() + '_item_' + idx,
-            item_code: item.item_code || '',
-            description: item.description,
-            quantity: item.quantity,
-            unit: item.unit || 'ชิ้น',
-            unit_price: item.unit_price,
-            total_price: item.total_price
-          })) : [
-            {
-              id: Date.now().toString() + '_item_0',
-              item_code: '',
-              description: 'รายการพัสดุ/สินค้า',
-              quantity: 1,
-              unit: 'ชิ้น',
-              unit_price: parsed.total_amount || 0,
-              total_price: parsed.total_amount || 0
-            }
-          ],
-          imagePreview,
-          fileObject: file
-        };
-
-        // Check if invoice number is duplicate
-        if (parsed.invoice_number && invoices.some(inv => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase())) {
-          setStatusMsg({
-            type: 'error',
-            text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" (${parsed.vendor_name}) มีอยู่ในระบบแล้ว! โปรดตรวจสอบรายการบิล`
+      // 1. Try API First
+      if (ocrApiUrl) {
+        setScanStatus('กำลังส่งรูปภาพไปวิเคราะห์ที่เซิร์ฟเวอร์หลัก (PaddleOCR)...');
+        try {
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+          
+          const response = await fetch(`${ocrApiUrl.replace(/\/$/, '')}/api/extract-bill`, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
           });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.words) {
+              setScanStatus('วิเคราะห์ AI สำเร็จ กำลังจัดเรียงข้อมูล...');
+              const headerText = data.words.slice(0, 15).map((w: any) => w.text).join(' ');
+              parsed = parseThaiReceiptOcr(data, headerText);
+            }
+          } else {
+            throw new Error(`API Error: ${response.status}`);
+          }
+        } catch (err) {
+          console.warn('API fetch failed, falling back to offline OCR:', err);
         }
-
-        setInvoices(prev => [...prev, newInvoice]);
-        setActiveInvoiceId(newInvId);
-        setScanProgress(Math.round(((i + 1) / files.length) * 100));
       }
 
-      await worker.terminate();
-      setStatusMsg({ type: 'success', text: 'สแกนอ่านบิลเรียบร้อย! คุณสามารถใช้ระบบลากคลุมกรอบเพื่อสแกนเฉพาะจุดเพิ่มเติมได้' });
-    } catch (err: any) {
-      console.error("Tesseract error:", err);
-      setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนรูป: ${err.message || err}` });
-    } finally {
-      setIsScanning(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      // 2. Fallback to Tesseract.js (Offline) if API failed or no URL
+      if (!parsed) {
+        usedOffline = true;
+        setScanStatus('⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กำลังใช้โหมดออฟไลน์ (Tesseract.js)...');
+        try {
+          const worker = await createWorker('tha+eng');
+          await worker.setParameters({
+            tessedit_pageseg_mode: '11' as any,
+            preserve_interword_spaces: '1'
+          });
+          
+          const headerDataUrl = await preprocessImageForOcr(file, 'header');
+          const headerRet = await worker.recognize(headerDataUrl);
+          const headerText = headerRet.data.text;
+          
+          const binDataUrl = await preprocessImageForOcr(file, 'binarized');
+          const binRet = await worker.recognize(binDataUrl);
+          
+          const grayDataUrl = await preprocessImageForOcr(file, 'grayscale');
+          const grayRet = await worker.recognize(grayDataUrl);
+          
+          const binConfidence = binRet.data.confidence || 0;
+          const grayConfidence = grayRet.data.confidence || 0;
+          const bestData = grayConfidence > binConfidence ? grayRet.data : binRet.data;
+          
+          parsed = parseThaiReceiptOcr(bestData, headerText);
+          await worker.terminate();
+        } catch (err: any) {
+          console.error("Tesseract error:", err);
+          setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนออฟไลน์: ${err.message || err}` });
+          continue;
+        }
+      }
+
+      if (!parsed) continue;
+
+      const newInvId = Date.now().toString() + '_' + i;
+      const newInvoice: Invoice = {
+        id: newInvId,
+        vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
+        invoice_number: parsed.invoice_number || '',
+        invoice_date: parsed.invoice_date || getTodayThaiDate(),
+        discount: 0,
+        items: parsed.items.length > 0 ? parsed.items.map((item: any, idx: number) => ({
+          id: Date.now().toString() + '_item_' + idx,
+          item_code: item.item_code || '',
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit || 'ชิ้น',
+          unit_price: item.unit_price,
+          total_price: item.total_price
+        })) : [
+          {
+            id: Date.now().toString() + '_item_0',
+            item_code: '',
+            description: 'รายการพัสดุ/สินค้า',
+            quantity: 1,
+            unit: 'ชิ้น',
+            unit_price: parsed.total_amount || 0,
+            total_price: parsed.total_amount || 0
+          }
+        ],
+        imagePreview,
+        fileObject: file
+      };
+
+      if (parsed.invoice_number && invoices.some(inv => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase())) {
+        setStatusMsg({
+          type: 'error',
+          text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" มีอยู่ในระบบแล้ว!`
+        });
+      }
+
+      setInvoices(prev => [...prev, newInvoice]);
+      setActiveInvoiceId(newInvId);
+      setScanProgress(Math.round(((i + 1) / files.length) * 100));
+
+      if (usedOffline) {
+        setStatusMsg({ type: 'error', text: '⚠️ เซิร์ฟเวอร์หลักไม่ตอบสนอง ระบบได้สลับมาใช้โหมดออฟไลน์แล้ว (ความแม่นยำอาจลดลง)' });
+      } else {
+        setStatusMsg({ type: 'success', text: 'สแกนอ่านบิลด้วยเซิร์ฟเวอร์ AI สำเร็จ!' });
+      }
     }
+
+    setIsScanning(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Perform Zone OCR Scan on Cropped Selection
@@ -695,6 +735,13 @@ export default function AutoWordPage() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
+              onClick={() => setShowApiSettings(!showApiSettings)}
+              className="flex items-center justify-center p-2.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 rounded-xl transition"
+              title="ตั้งค่าเซิร์ฟเวอร์ API"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+            <button
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
             >
@@ -712,6 +759,30 @@ export default function AutoWordPage() {
           </div>
         </div>
       </div>
+
+      {/* API Settings Panel */}
+      {showApiSettings && (
+        <div className="p-4 rounded-2xl bg-slate-800 text-white border border-slate-700 flex flex-col md:flex-row items-start md:items-center gap-4 shadow-lg animate-fade-in">
+          <div className="flex-1 w-full">
+            <label className="text-xs font-semibold text-slate-300 block mb-1">OCR Backend URL (Cloudflare Tunnel หรือ Localhost)</label>
+            <input 
+              type="text" 
+              value={ocrApiUrl}
+              onChange={(e) => setOcrApiUrl(e.target.value)}
+              placeholder="เช่น https://xxxx.trycloudflare.com หรือ http://localhost:5000"
+              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
+            />
+          </div>
+          <div className="shrink-0 pt-1 md:pt-5">
+            <button 
+              onClick={() => setShowApiSettings(false)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold shadow-md"
+            >
+              บันทึกและปิด
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Scanning Status Loader Banner */}
       {isScanning && (
