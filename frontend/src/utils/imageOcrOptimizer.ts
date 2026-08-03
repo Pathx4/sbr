@@ -63,9 +63,10 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
         let width = img.width;
         let height = sourceHeight;
         
-        if (width < 2400) {
-          const ratio = 3200 / width;
-          width = 3200;
+        // High-DPI Upscaling to 3600px for crystal-clear character edges
+        if (width < 3600) {
+          const ratio = 3600 / width;
+          width = 3600;
           height = Math.round(height * ratio);
         }
 
@@ -80,10 +81,15 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
         const imageData = ctx.getImageData(0, 0, width, height);
         const data = imageData.data;
 
+        // Apply High-Contrast Enhancement + Otsu Binarization Thresholding
         const threshold = otsuThreshold(data, width, height);
+        const contrastFactor = 1.25;
 
         for (let i = 0; i < data.length; i += 4) {
-          const gray = data[i];
+          let gray = data[i];
+          gray = ((gray - 128) * contrastFactor) + 128;
+          gray = Math.max(0, Math.min(255, gray));
+
           const bin = gray < threshold ? 0 : 255;
           data[i] = bin;
           data[i + 1] = bin;
@@ -109,7 +115,7 @@ export function preprocessImageForOcr(file: File, isHeaderOnly: boolean = false)
 }
 
 /**
- * Thai & English Technical & Hardware Fuzzy Correction Dictionary
+ * High-Precision Thai & English Technical & Hardware Fuzzy Correction Dictionary
  */
 const TYPO_MAP: Record<string, string> = {
   '4%6': '4x6',
@@ -130,7 +136,31 @@ const TYPO_MAP: Record<string, string> = {
   'บรษท': 'บริษัท',
   'หจก': 'หจก.',
   'บาn': 'บาท',
-  'บาทท': 'บาท'
+  'บาทท': 'บาท',
+  // Hardware & Electrical Misread Corrections (From User Screenshots)
+  'พเผลปลั๊ก': 'พาวเวอร์ปลั๊ก',
+  'พเอ0ปลั๊ก': 'พาวเวอร์ปลั๊ก',
+  'หผอปลั๊ก': 'พาวเวอร์ปลั๊ก',
+  'พเผล': 'พาวเวอร์',
+  'พเอ0': 'พาวเวอร์',
+  'หผอ': 'พาวเวอร์',
+  'เผด ': 'เมตร ',
+  'เผด': 'เมตร',
+  'หม0204': 'โมดูล 0204',
+  'หม0': 'โมดูล ',
+  'เห1537': 'โมดูล 1537',
+  'เห1688': 'โมดูล 1688',
+  'เห1': 'โมดูล 1',
+  'ปลัก': 'ปลั๊ก',
+  'สวิทช์': 'สวิตช์',
+  'สายไฟออน': 'สายไฟอ่อน',
+  'แบตเตอรี': 'แบตเตอรี่',
+  'ลิเธย': 'ลิเธียม',
+  'โซลาร': 'โซลาร์',
+  'เชลล์': 'เซลล์',
+  'ชิสเต็ม': 'ซิสเต็ม',
+  'รส<ม': '',
+  'a โ o a': ''
 };
 
 function cleanThaiText(str: string): string {
@@ -180,12 +210,14 @@ export interface ParsedReceipt {
 }
 
 /**
- * Clean trailing branch / tax ID details off company name string
+ * Clean trailing branch / tax ID details and garbled noise off company name string
  */
 function cleanCompanyName(name: string): string {
   return name
+    .replace(/^[^ก-ฮa-zA-Z0-9]*(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '')
     .replace(/\s*\(?(?:สาขา|สาขาที่|Branch|Tax ID|TAX|เลขประจำตัว|โทร|TEL|FAX).*/i, '')
-    .replace(/[\(\)\{\}\[\]]+/g, ' ')
+    .replace(/[\(\)\{\}\[\]<>]+/g, ' ')
+    .replace(/[a-z\s<]{3,}$/i, '')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -245,10 +277,11 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
 
   const excludeKeywords = [
     'ชำระเงินโดย', 'ชำระเงิน', 'ชำระโดย', 'VISA', 'MASTER', 'CASH', 'เงินสด', 'เงินทอน',
-    'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม',
-    'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ',
-    'ยินดีต้อนรับ', 'WELCOME', 'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่',
-    'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', '00069193', 'บาท'
+    'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม', 'รวมทั้งสิ้น', 'รวมทั้งสิ้นบาท',
+    'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ', 'ยินดีต้อนรับ', 'WELCOME',
+    'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่', 'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', 'บาท',
+    'สินค้าที่มีภาษี', 'สินค้าที่ยกเว้น', 'สินค้าที่เสีย', 'มูลค่าสินค้า', 'มูลค่าภาษี', 'ภาษี 7%',
+    'จำนวนรวม', 'รวมรายการ', 'ราคาสินค้า', 'ส่วนลด'
   ];
 
   // 1. Extract Vendor Name (First try dedicated headerText scan if available, then full text)
@@ -315,7 +348,7 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
 
   // 5. Extract Item Lines, SKUs, and Trailing Prices
   lines.forEach((line) => {
-    if (excludeKeywords.some(kw => line.toUpperCase().includes(kw))) {
+    if (excludeKeywords.some(kw => line.toUpperCase().includes(kw.toUpperCase()))) {
       return;
     }
 
@@ -362,7 +395,12 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
           else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
           else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
 
-          if (cleanDesc.length >= 2 && !/ชำระเงิน|ยอดรวม|สุทธิ/i.test(cleanDesc)) {
+          // Ensure line is not a summary or tax line
+          if (
+            cleanDesc.length >= 2 &&
+            !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร)/i.test(cleanDesc) &&
+            !/^\d+\s*รายการ/i.test(cleanDesc)
+          ) {
             items.push({
               item_code,
               description: cleanDesc,

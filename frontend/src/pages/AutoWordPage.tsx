@@ -252,6 +252,10 @@ export default function AutoWordPage() {
 
     try {
       const worker = await createWorker('tha+eng');
+      await worker.setParameters({
+        tessedit_pageseg_mode: '6' as any,
+        preserve_interword_spaces: '1'
+      });
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -369,6 +373,10 @@ export default function AutoWordPage() {
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
       const worker = await createWorker('tha+eng');
+      await worker.setParameters({
+        tessedit_pageseg_mode: '6' as any,
+        preserve_interword_spaces: '1'
+      });
       const ret = await worker.recognize(croppedDataUrl);
       await worker.terminate();
 
