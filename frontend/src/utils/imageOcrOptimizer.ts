@@ -508,70 +508,83 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
     }
   }
 
-  // 5. Extract Item Lines, SKUs, and Trailing Prices
+  // 5. Extract Item Lines, SKUs, and Multi-Line Continuation Descriptions
   lines.forEach((line) => {
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw.toUpperCase()))) {
       return;
     }
 
     const priceMatches = line.match(/([\d,]+\.\d{2})/g);
-    if (priceMatches && priceMatches.length >= 1) {
-      const validPrices = priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0);
-      
-      if (validPrices.length > 0) {
-        const itemPrice = validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0];
+    const hasPriceAtEnd = priceMatches && priceMatches.length >= 1;
+    const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0) : [];
+    const itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
 
-        if (itemPrice > 0 && itemPrice !== total_amount) {
-          let cleanDesc = line;
+    const isNewItemRow = itemPrice > 0 && itemPrice !== total_amount;
 
-          // Strip all trailing numeric/price columns (e.g., "1 98.00 98.00 0.00" or "1 98.00")
-          cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').trim();
+    if (isNewItemRow) {
+      let cleanDesc = line;
 
-          // Extract SKU / Barcode if available
-          let item_code = '';
-          const skuMatch = cleanDesc.match(/\[([0-9A-Z\-]+)\]|([0-9]{10,13})|([A-Z0-9\-]{5,15}\b)/);
-          if (skuMatch) {
-            item_code = skuMatch[1] || skuMatch[2] || skuMatch[3] || '';
-            cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
-          }
+      // Strip trailing numeric/price columns (e.g., "1 98.00 98.00 0.00")
+      cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').trim();
 
-          // Clean item line numbers and leading garbage symbols
-          cleanDesc = cleanThaiText(cleanDesc);
+      // Extract SKU / Barcode if available
+      let item_code = '';
+      const skuMatch = cleanDesc.match(/\[([0-9A-Z\-]+)\]|([0-9]{10,13})|([A-Z0-9\-]{5,15}\b)/);
+      if (skuMatch) {
+        item_code = skuMatch[1] || skuMatch[2] || skuMatch[3] || '';
+        cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
+      }
 
-          // Detect quantity if present before prices
-          let quantity = 1;
-          const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+\.\d{2}/);
-          if (qtyMatch && qtyMatch[1]) {
-            quantity = parseInt(qtyMatch[1], 10) || 1;
-          }
+      // Clean leading row numbers e.g. "1.", "2.", "15."
+      cleanDesc = cleanThaiText(cleanDesc.replace(/^\d{1,3}[\.\)\s]+/, ''));
 
-          // Unit detection
-          let unit = 'ชิ้น';
-          if (/กล่อง/i.test(cleanDesc)) unit = 'กล่อง';
-          else if (/แพ็ค|แพค/i.test(cleanDesc)) unit = 'แพ็ค';
-          else if (/เครื่อง/i.test(cleanDesc)) unit = 'เครื่อง';
-          else if (/ม้วน/i.test(cleanDesc)) unit = 'ม้วน';
-          else if (/ถัง/i.test(cleanDesc)) unit = 'ถัง';
-          else if (/ชุด/i.test(cleanDesc)) unit = 'ชุด';
-          else if (/แท่ง/i.test(cleanDesc)) unit = 'แท่ง';
-          else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
-          else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
+      // Detect quantity if present before prices
+      let quantity = 1;
+      const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+\.\d{2}/);
+      if (qtyMatch && qtyMatch[1]) {
+        quantity = parseInt(qtyMatch[1], 10) || 1;
+      }
 
-          // Ensure line is not a summary or tax line
-          if (
-            cleanDesc.length >= 2 &&
-            !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร)/i.test(cleanDesc) &&
-            !/^\d+\s*รายการ/i.test(cleanDesc)
-          ) {
-            items.push({
-              item_code,
-              description: cleanDesc,
-              quantity,
-              unit,
-              unit_price: itemPrice,
-              total_price: itemPrice * quantity
-            });
-          }
+      // Unit detection
+      let unit = 'ชิ้น';
+      if (/กล่อง/i.test(cleanDesc)) unit = 'กล่อง';
+      else if (/แพ็ค|แพค/i.test(cleanDesc)) unit = 'แพ็ค';
+      else if (/เครื่อง/i.test(cleanDesc)) unit = 'เครื่อง';
+      else if (/ม้วน/i.test(cleanDesc)) unit = 'ม้วน';
+      else if (/ถัง/i.test(cleanDesc)) unit = 'ถัง';
+      else if (/ชุด/i.test(cleanDesc)) unit = 'ชุด';
+      else if (/แท่ง/i.test(cleanDesc)) unit = 'แท่ง';
+      else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
+      else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
+
+      if (
+        cleanDesc.length >= 2 &&
+        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร)/i.test(cleanDesc) &&
+        !/^\d+\s*รายการ/i.test(cleanDesc)
+      ) {
+        items.push({
+          item_code,
+          description: cleanDesc,
+          quantity,
+          unit,
+          unit_price: itemPrice,
+          total_price: itemPrice * quantity
+        });
+      }
+    } else {
+      // Continuation Line: Line does NOT have a price at the end!
+      // If we have an existing previous item in items array, append continuation text
+      if (items.length > 0) {
+        const lastItem = items[items.length - 1];
+        const cleanContinuation = cleanThaiText(line);
+
+        if (
+          cleanContinuation.length >= 2 &&
+          !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล)/i.test(cleanContinuation) &&
+          !/^\d+\s*รายการ/i.test(cleanContinuation) &&
+          !isGarbledThaiGibberish(cleanContinuation)
+        ) {
+          lastItem.description = (lastItem.description + ' ' + cleanContinuation).replace(/\s+/g, ' ').trim();
         }
       }
     }
