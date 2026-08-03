@@ -371,14 +371,24 @@ function cleanCompanyName(name: string): string {
     cleaned = cleaned.replace(/^.*?(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '');
   }
 
-  // Truncate trailing OCR noise after company suffix
-  cleaned = cleaned
-    .replace(/(บริษัท\s+[^]+?\s+จำกัด(?:\s+\(มหาชน\))?).*/i, '$1')
-    .replace(/(หจก\.\s+[^]+?)(?:\s+(?:สาขา|Tax|โทร|Tel)).*/i, '$1')
-    .replace(/\s*\(?(?:สาขา|สาขาที่|Branch|Tax ID|TAX|เลขประจำตัว|โทร|TEL|FAX).*/i, '')
-    .replace(/[\(\)\{\}\[\]<>]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Absolute hard truncation at "จำกัด" or "มหาชน" or "Co., Ltd"
+  if (cleaned.includes('จำกัด')) {
+    const parts = cleaned.split('จำกัด');
+    if (parts[0].includes('มหาชน')) {
+      cleaned = parts[0].split('มหาชน')[0] + 'มหาชน (จำกัด)';
+    } else {
+      cleaned = parts[0] + 'จำกัด';
+    }
+  } else if (cleaned.includes('มหาชน')) {
+    cleaned = cleaned.split('มหาชน')[0] + 'มหาชน';
+  } else {
+    cleaned = cleaned
+      .replace(/\s*\(?(?:สาขา|สาขาที่|Branch|Tax ID|TAX|เลขประจำตัว|โทร|TEL|FAX).*/i, '')
+      .replace(/[\(\)\{\}\[\]<>]+/g, ' ')
+      .trim();
+  }
+
+  cleaned = cleaned.replace(/[<>]+/g, '').replace(/\s+/g, ' ').trim();
 
   // Run Levenshtein Fuzzy Vendor Correction against Master Vendor Database
   return fuzzyCorrectVendorName(cleaned);
@@ -514,18 +524,26 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
       return;
     }
 
-    const priceMatches = line.match(/([\d,]+\.\d{2})/g);
+    // 1. Check if line starts with row index e.g. "1.", "2.", "15." or "1)", "2)"
+    const hasRowIndex = /^\s*\d{1,2}[\.\)\s]+/.test(line);
+
+    // 2. Check if line starts with SKU / Barcode bracket code e.g. "[P0002]", "[M0103]"
+    const hasSkuPrefix = /^\s*\[?[A-Z0-9\-]{3,12}\]?/i.test(line) && /P\d|M\d|A\d|PJ\d|SKU|INV|DOC/i.test(line);
+
+    // 3. Check if line has price numbers at the end (e.g. "285.00" or "285")
+    const priceMatches = line.match(/([\d,]+\.\d{2})/g) || line.match(/\s+(\d{1,6})\s*$/);
     const hasPriceAtEnd = priceMatches && priceMatches.length >= 1;
     const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0) : [];
     const itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
 
-    const isNewItemRow = itemPrice > 0 && itemPrice !== total_amount;
+    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, or valid price!
+    const isNewItemRow = hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount);
 
     if (isNewItemRow) {
       let cleanDesc = line;
 
-      // Strip trailing numeric/price columns (e.g., "1 98.00 98.00 0.00")
-      cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').trim();
+      // Strip trailing numeric/price columns (e.g., "1 98.00 98.00 0.00" or "1 285")
+      cleanDesc = cleanDesc.replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '').replace(/\s+\d{1,6}\s*$/g, '').trim();
 
       // Extract SKU / Barcode if available
       let item_code = '';
@@ -572,8 +590,8 @@ export function parseThaiReceiptOcr(text: string, headerText: string = ''): Pars
         });
       }
     } else {
-      // Continuation Line: Line does NOT have a price at the end!
-      // If we have an existing previous item in items array, append continuation text
+      // Continuation Line: Line does NOT have index/SKU/price!
+      // Append ONLY if we have a previous item AND it's not a header/footer
       if (items.length > 0) {
         const lastItem = items[items.length - 1];
         const cleanContinuation = cleanThaiText(line);
