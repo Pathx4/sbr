@@ -176,6 +176,43 @@ export default function AutoWordPage() {
     return Object.keys(counts).filter(d => counts[d] > 1);
   }, [activeInvoice]);
 
+  // Duplicate Invoice Detector Across All Invoices in State
+  const duplicateInvoicesInfo = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    invoices.forEach(inv => {
+      // Key 1: invoice_number (if non-empty)
+      if (inv.invoice_number && inv.invoice_number.trim()) {
+        const k1 = `num:${inv.invoice_number.trim().toLowerCase()}`;
+        map[k1] = map[k1] || [];
+        map[k1].push(inv.id);
+      }
+      // Key 2: vendor_name + invoice_date + total_price (if total > 0)
+      const total = inv.items.reduce((s, i) => s + (i.total_price || 0), 0);
+      if (inv.vendor_name && inv.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย' && total > 0) {
+        const k2 = `vdt:${inv.vendor_name.trim().toLowerCase()}_${inv.invoice_date}_${total}`;
+        map[k2] = map[k2] || [];
+        if (!map[k2].includes(inv.id)) map[k2].push(inv.id);
+      }
+    });
+
+    const duplicateInvIds = new Set<string>();
+    const duplicateDetails: string[] = [];
+
+    Object.entries(map).forEach(([key, ids]) => {
+      if (ids.length > 1) {
+        ids.forEach(id => duplicateInvIds.add(id));
+        if (key.startsWith('num:')) {
+          duplicateDetails.push(`เลขที่ใบบิล "${key.replace('num:', '').toUpperCase()}"`);
+        } else {
+          const parts = key.replace('vdt:', '').split('_');
+          duplicateDetails.push(`ร้าน "${parts[0]}" ยอดรวม ${Number(parts[2]).toLocaleString('th-TH')} บ.`);
+        }
+      }
+    });
+
+    return { duplicateInvIds, duplicateDetails };
+  }, [invoices]);
+
   // Handle OCR Extraction for Full Image (3-Pass Quality Engine)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -239,6 +276,14 @@ export default function AutoWordPage() {
           imagePreview,
           fileObject: file
         };
+
+        // Check if invoice number is duplicate
+        if (parsed.invoice_number && invoices.some(inv => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase())) {
+          setStatusMsg({
+            type: 'error',
+            text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" (${parsed.vendor_name}) มีอยู่ในระบบแล้ว! โปรดตรวจสอบรายการบิล`
+          });
+        }
 
         setInvoices(prev => [...prev, newInvoice]);
         setActiveInvoiceId(newInvId);
@@ -516,6 +561,11 @@ export default function AutoWordPage() {
       setStatusMsg({ type: 'error', text: 'กรุณาเพิ่มบิล/รายการพัสดุอย่างน้อย 1 รายการก่อนสร้างเอกสาร' });
       return;
     }
+    if (duplicateInvoicesInfo.duplicateInvIds.size > 0) {
+      const confirmProceed = window.confirm(`⚠️ คำเตือนบิลซ้ำ:\nระบบตรวจพบใบเสร็จที่มีข้อมูลซ้ำกัน ${duplicateInvoicesInfo.duplicateInvIds.size} ใบ (${duplicateInvoicesInfo.duplicateDetails.join(', ')})\n\nคุณต้องการส่งออกเอกสารโดยรวมบิลซ้ำอยู่หรือไม่?`);
+      if (!confirmProceed) return;
+    }
+
     setIsGeneratingDocx(true);
     setStatusMsg(null);
 
@@ -542,6 +592,10 @@ export default function AutoWordPage() {
     if (invoices.length === 0) {
       setStatusMsg({ type: 'error', text: 'กรุณาเพิ่มบิล/รายการพัสดุอย่างน้อย 1 รายการก่อนสร้างตาราง Excel' });
       return;
+    }
+    if (duplicateInvoicesInfo.duplicateInvIds.size > 0) {
+      const confirmProceed = window.confirm(`⚠️ คำเตือนบิลซ้ำ:\nระบบตรวจพบใบเสร็จที่มีข้อมูลซ้ำกัน ${duplicateInvoicesInfo.duplicateInvIds.size} ใบ (${duplicateInvoicesInfo.duplicateDetails.join(', ')})\n\nคุณต้องการส่งออกเอกสารโดยรวมบิลซ้ำอยู่หรือไม่?`);
+      if (!confirmProceed) return;
     }
 
     if (isIllustration) setIsGeneratingIllus(true);
@@ -656,19 +710,27 @@ export default function AutoWordPage() {
           {/* Invoice Tabs Selector */}
           {invoices.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-100">
-              {invoices.map((inv, idx) => (
-                <button
-                  key={inv.id}
-                  onClick={() => setActiveInvoiceId(inv.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
-                    inv.id === activeInvoiceId
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {inv.vendor_name ? inv.vendor_name.slice(0, 15) : `บิลที่ ${idx + 1}`}
-                </button>
-              ))}
+              {invoices.map((inv, idx) => {
+                const isDup = duplicateInvoicesInfo.duplicateInvIds.has(inv.id);
+                return (
+                  <button
+                    key={inv.id}
+                    onClick={() => setActiveInvoiceId(inv.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition flex items-center gap-1.5 ${
+                      inv.id === activeInvoiceId
+                        ? isDup ? 'bg-rose-600 text-white shadow-sm' : 'bg-blue-600 text-white shadow-sm'
+                        : isDup ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    <span>{inv.vendor_name ? inv.vendor_name.slice(0, 15) : `บิลที่ ${idx + 1}`}</span>
+                    {isDup && (
+                      <span className="px-1.5 py-0.2 bg-rose-600 text-white text-[9px] font-black rounded-full animate-pulse">
+                        ⚠️ บิลซ้ำ
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -997,9 +1059,42 @@ export default function AutoWordPage() {
             </div>
           </div>
 
+          {/* Global Duplicate Invoice Alert Banner */}
+          {duplicateInvoicesInfo.duplicateDetails.length > 0 && (
+            <div className="p-4 rounded-3xl bg-gradient-to-r from-rose-600 to-red-700 text-white shadow-lg space-y-1.5 border border-rose-400">
+              <div className="flex items-center gap-2 font-black text-sm">
+                <AlertTriangle className="w-5 h-5 text-amber-300 shrink-0 animate-bounce" />
+                <span>⚠️ ตรวจพบบิลซ้ำในระบบ ({duplicateInvoicesInfo.duplicateInvIds.size} ใบเสร็จ)</span>
+              </div>
+              <p className="text-xs text-rose-100 font-medium">
+                พบบิลที่มีข้อมูลซ้ำกัน: {duplicateInvoicesInfo.duplicateDetails.join(' | ')}
+              </p>
+              <p className="text-[11px] text-rose-200 font-normal">
+                💡 คำแนะนำ: โปรดสลับไปยังแท็บบิลที่ขึ้นเตือน "⚠️ บิลซ้ำ" แล้วกดปุ่ม "ลบบิลซ้ำนี้ออก" ก่อนสร้างเอกสาร
+              </p>
+            </div>
+          )}
+
           {/* Section 2: Active Invoice Items Table */}
           {activeInvoice ? (
             <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+              {/* Active Invoice Duplicate Card Warning */}
+              {duplicateInvoicesInfo.duplicateInvIds.has(activeInvoice.id) && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-900 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+                    <span>⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จนี้มีข้อมูลซ้ำกับบิลอื่นในระบบ (เลขที่บิล / ร้านค้า / ยอดเงิน)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteInvoice(activeInvoice.id)}
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shrink-0 transition shadow-sm"
+                  >
+                    ลบบิลซ้ำนี้ออก
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
