@@ -21,6 +21,7 @@ export async function initWorker(lang: string = 'tha+eng') {
       await w.setParameters({
         tessedit_pageseg_mode: PSM.AUTO as any,
         preserve_interword_spaces: '1',
+        user_defined_dpi: '300',
       });
       return w;
     })();

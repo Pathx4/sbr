@@ -384,7 +384,8 @@ export default function AutoWordPage() {
       const worker = await createWorker('tha+eng');
       await worker.setParameters({
         tessedit_pageseg_mode: '6' as any,
-        preserve_interword_spaces: '1'
+        preserve_interword_spaces: '1',
+        user_defined_dpi: '300',
       });
       const ret = await worker.recognize(croppedDataUrl);
       await worker.terminate();
