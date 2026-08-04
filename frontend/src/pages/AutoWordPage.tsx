@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { runTesseract } from '../utils/tesseractWorker';
-import { createWorker } from 'tesseract.js';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
@@ -364,16 +363,7 @@ export default function AutoWordPage() {
 
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
-      const worker = await createWorker('tha+eng');
-      await worker.setParameters({
-        tessedit_pageseg_mode: '6' as any,
-        preserve_interword_spaces: '1',
-        user_defined_dpi: '300',
-      });
-      const ret = await worker.recognize(croppedDataUrl);
-      await worker.terminate();
-
-      const text = ret.data.text;
+      const { rawText: text } = await runTesseract(croppedDataUrl);
       console.log("Zone Crop OCR Result:", text);
 
       const parsed = parseThaiReceiptOcr(text);

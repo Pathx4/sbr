@@ -16,7 +16,12 @@ export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
       const w = await createWorker(lang, OEM.LSTM_ONLY, {
-        logger: (m: any) => console.log('[Tesseract]', m),
+        logger: (m: any) => {
+          // Suppress legacy LSTM WASM parameter warnings
+          const msg = typeof m === 'string' ? m : (m?.message || '');
+          if (msg.includes('Parameter not found')) return;
+          console.log('[Tesseract]', m);
+        },
       });
       await w.setParameters({
         tessedit_pageseg_mode: PSM.AUTO as any,
