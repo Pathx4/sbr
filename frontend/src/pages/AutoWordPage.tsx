@@ -281,9 +281,9 @@ export default function AutoWordPage() {
       if (window.location.origin && window.location.origin.startsWith('http') && !urlsToTry.includes(window.location.origin.replace(/\/$/, ''))) {
         urlsToTry.push(window.location.origin.replace(/\/$/, ''));
       }
-      const activeFallback = 'https://fotos-asn-revenues-confirmed.trycloudflare.com';
-      if (!urlsToTry.includes(activeFallback)) {
-        urlsToTry.push(activeFallback);
+      const localtunnelFallback = 'https://sbr-v1-app.loca.lt';
+      if (!urlsToTry.includes(localtunnelFallback)) {
+        urlsToTry.push(localtunnelFallback);
       }
 
       // 1. Try API Candidates
@@ -298,6 +298,10 @@ export default function AutoWordPage() {
           
           const response = await fetch(`${targetUrl}/api/extract-bill`, {
             method: 'POST',
+            headers: {
+              'Bypass-Tunnel-Remainder': 'true',
+              'bypass-tunnel-reminder': 'true'
+            },
             body: formData,
             signal: controller.signal
           });

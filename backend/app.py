@@ -27,7 +27,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='')
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # API Key Placeholder
 HARDCODED_API_KEY = os.environ.get("API_KEY", "")
