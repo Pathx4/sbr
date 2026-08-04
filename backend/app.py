@@ -48,7 +48,7 @@ def load_contacts_from_excel():
     """
     global _contacts_cache
     xlsx_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                             'รายชื่อติดต่อบุคลากรภายใน สทอภ. ตามโครงสร.xlsx')
+                             'data', 'รายชื่อติดต่อบุคลากรภายใน สทอภ. ตามโครงสร.xlsx')
     if not os.path.exists(xlsx_path):
         print(f"[Contacts] Excel file not found: {xlsx_path}")
         _contacts_cache = []
@@ -1148,7 +1148,7 @@ def generate_docx():
     if not data:
         return jsonify({"error": "Missing payload"}), 400
         
-    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'แบบฟอร์ม รายงานขอความเห็นชอบซื้อจ้าง.docx')
+    template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'แบบฟอร์ม รายงานขอความเห็นชอบซื้อจ้าง.docx')
     if not os.path.exists(template_path):
         return jsonify({"error": "Template document file not found on server"}), 500
         
@@ -1404,7 +1404,7 @@ def generate_excel():
     is_illus = data.get('is_illustration', False)
     try:
         # Load the workbook
-        src_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx')
+        src_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx')
         if not os.path.exists(src_file):
             return jsonify({"error": "Template file 'สรุปค่าใช้จ่าย_เบิกเงินค่าพัสดุ.xlsx' not found."}), 404
             

@@ -1,0 +1,1697 @@
+Paragraph 0: ''
+  Paragraph Alignment (jc): thaiDistribute
+--------------------------------------------------
+Paragraph 1: 'บันทึกข้อความ'
+  Paragraph Alignment (jc): center
+  Paragraph Spacing: line=216, lineRule=auto, before=None, after=None
+  Run 0: text='', font=TH SarabunPSK/TH SarabunPSK, size=56, spacing=None, underline=None, bold=True/True
+  Run 1: text='บันทึกข้อความ', font=TH SarabunPSK/TH SarabunPSK, size=56, spacing=None, underline=None, bold=True/True
+--------------------------------------------------
+Paragraph 2: ''
+--------------------------------------------------
+Paragraph 3: 'หน่วยงาน                 \t\t\t   สคร.\tโทร. 033 005 833  (ณัฐภั'
+  Paragraph Indents: left=None, firstLine=None
+  Run 0: text='หน่วยงาน', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 1: text='                 ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 2: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 3: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 5: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 6: text='สคร.', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 7: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 8: text='โทร.', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 9: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 10: text='033 005 833', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 11: text='  (', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 12: text='ณัฐ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 13: text='ภัท', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 14: text=')', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 15: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 16: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 17: text='             ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 18: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 19: text='     ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+--------------------------------------------------
+Paragraph 4: 'ที่\tสคร.             /2567               วันที่             '
+  Paragraph Indents: left=None, firstLine=None
+  Run 0: text='ที่', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 2: text='สคร.', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 3: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 4: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 5: text='          ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 6: text='/', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 7: text='256', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 8: text='7', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 9: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 10: text='            ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 11: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 12: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 13: text='                       ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 14: text='พฤศจิกายน', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 15: text='  2567', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 16: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 17: text='                         ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 19: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 20: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 5: 'เรื่อง\tรายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน 25  รายกา'
+  Paragraph Spacing: line=440, lineRule=exact, before=None, after=None
+  Paragraph Indents: left=None, firstLine=None
+  Run 0: text='เรื่อง', font=TH SarabunPSK/TH SarabunPSK, size=36, spacing=None, underline=None, bold=True/True
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 2: text='รายงานขอความเห็นชอบการจัดซื้อจ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 3: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 4: text=' จำนวน ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 5: text='25', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 6: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 7: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 8: text='รายการ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 9: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 10: text='                          ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 11: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 12: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 6: 'เรียน  \tผอ.สคร.  ผ่าน รก.หน.ฝถท.'
+  Paragraph Alignment (jc): left
+  Paragraph Indents: left=720, firstLine=None
+  Run 0: text='เรียน  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='ผอ.สคร.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 4: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 5: text='ผ่าน ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 6: text='รก.หน.ฝถท.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 7: '\t\tด้วย สคร. ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด หลักสูตร “ด'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=None
+  Paragraph Indents: left=None, firstLine=0
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='\tด้วย ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='สคร.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 4: text='ได้ดำเนินการจัดซื้อวัสดุสำหรับ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 5: text='Internet of Thing” ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 6: text='จำนวน ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 7: text='25', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 8: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 9: text='รายการ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 10: text='โดยมีวัตถุประสงค์ตา', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 11: text='ม  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 12: text='โครงการพัฒนากำลังคนเพื่อเตรียม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 13: text='ปัญญาประดิษฐ์', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 14: text=' (AI) ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 15: text='มุ่งสร้างฟันเฟืองสำหรับการขับเ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 16: text=' (', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 17: text='กองทุน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 19: text='บพค', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 20: text='.)  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-8, underline=None, bold=False/False
+  Run 21: text='โดยใช้งบประมาณ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 22: text='\n', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 23: text='(รหัสงบประมาณ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 24: text=' 2568/', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 25: text='51200/116/642203/68054/', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 26: text=' ', font=None/None, size=None, spacing=None, underline=None, bold=False/False
+  Run 27: text='685120171_6805-68054 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 28: text='(', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 29: text='หลักสูตร ด้านประยุกต์เทคโนโลยี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 30: text='Internet of Thing ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 31: text='หัวข้อ การประยุกต์ใช้เทคโนโลยี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 32: text='Internet of Thing ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 33: text='เพื่อออกแบบระบบตรวจจับ ติดตาม ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 34: text='_', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 35: text='โครงการพัฒนากำลังคนเพื่อเตรียม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 36: text='AI) ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 37: text='มุ่งสร้างฟันเฟืองสำหรับการขับเ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 38: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 39: text=' ซึ่ง', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 40: text='มีรายละเอียดดังต่อไปนี้', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 8: '\t1. ค่า\tMS4-000939 SANDISK SDSSDE30 Portable SSD 1TB (Read s'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=None, after=None
+  Run 0: text='\t', font=TH SarabunIT๙/TH SarabunIT๙, size=None, spacing=-6, underline=None, bold=False/False
+  Run 1: text='1. ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 2: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 3: text='MS4-000939 SANDISK SDSSDE30 Po', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 4: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 5: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 6: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 7: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 8: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 9: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 10: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 11: text='3,990', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 12: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 13: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 14: text='บาท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 15: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 17: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 18: text='ไอที ซิตี้ (มหาชน)   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 19: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 20: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 21: text='  ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 22: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 23: text='เล่มที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 24: text='-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 25: text='เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 27: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 28: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 29: text='P01-2410280010', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 30: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 31: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=None, bold=False/False
+  Run 32: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 33: text='28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+  Run 34: text=' ตุลาคม 2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-6, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 9: 'หมายเหตุ : รายการที่ 1 – 7 ยอดรวม 5,296 บาท ได้รับส่วนลดทั้ง'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=None, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='115 บาท    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 10: '\t2. ค่า\tME6-000901 SANDISK Micro SD Ultra 32GB, 100MB/s read'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 2: text='. ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 3: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text='ME6-000901 SANDISK Micro SD Ul', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 6: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 10: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text=',050', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='บาท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='ไอที ซิตี้ (มหาชน)   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='P01-2410280010    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' 28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 11: 'หมายเหตุ : รายการที่ 1 – 7 ยอดรวม 5,296 บาท ได้รับส่วนลดทั้ง'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='115 บาท    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 12: '\t3. ค่า\tIP4-001747 LOGITECH M331 SILENT PLUS BLACK (1Y) 1 Ye'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='3', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='IP4-001747 LOGITECH M331 SILEN', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 7: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='1,398', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='ไอที ซิตี้ (มหาชน)    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='P01-2410280010    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 29: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text=' 28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 13: 'หมายเหตุ : รายการที่ 1 – 7 ยอดรวม 5,296 บาท ได้รับส่วนลดทั้ง'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='115 บาท    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 14: '\t4. ค่า\tWIC-000003 WISE USB A-M 3A (SC-100M)   จำนวน  3  ราย'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='4', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='WIC-000003 WISE USB A-M 3A (SC', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 7: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='3', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='387', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='ไอที ซิตี้ (มหาชน)    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='P01-2410280010    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text=' 28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='2567', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 15: 'หมายเหตุ : รายการที่ 1 – 7 ยอดรวม 5,296 บาท ได้รับส่วนลดทั้ง'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='ร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text='ยการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='115 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 16: '\t5. ค่า\tAC2-001265 UGREEN USB C to USB C Cable 100W Power 1M'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='AC2-001265 UGREEN USB C to USB', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 7: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='249', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='ไอที ซิตี้ (มหาชน)    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='P01-2410280010    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='2567', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 17: 'หมายเหตุ : รายการที่ 1 – 7 ยอดรวม 5,296 บาท ได้รับส่วนลดทั้ง'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='ร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text='ยการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='115 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 18: '\t6. ค่า\tAC2-001354 UGREEN USB 2.0 to USB-C 3A Data Cable 1M '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='6', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='AC2-001354 UGREEN USB 2.0 to U', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 7: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='119', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='ไอที ซิตี้ (มหาชน)    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='P01-2410280010    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text=' 28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='2567 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 19: 'หมายเหตุ : รายการที่ 1 – 7 ยอดรวม 5,296 บาท ได้รับส่วนลดทั้ง'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='ร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text='ยการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='115 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 20: '\t7. ค่า\tAC2-001362 UGREEN Micro USB C to USB 2.0 A Cable 2M '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='7', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='AC2-001362 UGREEN Micro USB C ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 7: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='218', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='ไอที ซิตี้ (มหาชน)    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='B0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='108-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='P01-2410280010    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text=' 28', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='2567 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text='\n', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 36: text='ร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 37: text='า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 38: text='ยการที่ 1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 39: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 40: text=' 7 ยอดรวม 5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 41: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 42: text='296 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 43: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 44: text='115 บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 45: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 21: '\t8. ค่า\tV 3026981263446 ปากกาเจล0.7 FASHION    จำนวน  4  ราย'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='8', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V 3026981263446 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='ปากกาเจล0.7 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='FASHION    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='4', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='236', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='9', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 22: '\t9. ค่า\tV 8851673275903 LMปกเจล0.5 หมึกนง. PI    จำนวน  1  ร'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='9', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='8851673275903', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' LM', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='ปกเจล0.5 หมึกนง. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='PI', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  1  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  35  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 23: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 24: '\t10. ค่า\tV 0884851107732 LM. EG.KAWAII7 ลายน้ำ    จำนวน  2  '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='10', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='0884851107732', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' LM', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='EG.KAWAII7 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='ลายน้ำ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  2  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='118', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 25: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 26: '\t11. ค่า\tV 0840010404180 LM.ปก.เจล Sumikko II:    จำนวน  2  '
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='11', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='0840010404180', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' LM.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='ปก', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='เจล', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='Sumikko', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text=' II:', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='134', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 32: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 33: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 36: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 37: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 38: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 39: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 40: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 27: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 28: '\t12. ค่า\tV 6942423180683 CUTE ปก.เจล CATS DIA    จำนวน  1  ร'
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='12', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='6942423180683', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='CUTE ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='ปก.เจล ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='CATS DIA', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 14: text='  1  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='69', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 29: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 30: '\t13. ค่า\tV 0840010404227 LM. ปก.เจล Sumikko II:    จำนวน  2 '
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='13', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='084001040', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='4227', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='LM. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='ปก', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='เจล ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='Sumikko', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text=' II:', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='134', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 33: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 34: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 36: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 37: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 38: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 39: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 40: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 41: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 31: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 32: '\t14. ค่า\tV 8851673275880 LM. ปก.เจล 0.5 หมึกน้ำเงิน    จำนวน'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 2: text='4', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 3: text='. ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V 8851673275880 LM. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='ปก', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='.', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='เจล ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='0.5 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='หมึกน้ำเงิน ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  1  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='\n', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='35  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 33: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 34: '\t15. ค่า\tV 0884851107770 LM. EG. KAWAII7 ลายเบ    จำนวน  2  '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='15', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='0884851107770', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' LM. EG. KAWAII7 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='ลาย', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='เบ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='118', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 29: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 32: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 36: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 35: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 36: '\t16. ค่า\tV 0884851107756 LM. EG. KAWAII7 ลายขน    จำนวน  2  '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='16', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='0884851107756', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' LM. EG. KAWAII', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='7 ลาย', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='ขน ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 12: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='118', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 37: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 38: '\t17. ค่า\tV 8850862031689 CRAYON คลิปบอร์ด PP A4    จำนวน  3 '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='17', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='8850862031689 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='CRAYON ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='คลิปบอร์ด ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='PP A4', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  3  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='\n', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='558', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='2567', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 39: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 40: '\t18. ค่า\tV 0000073244899 คร.เย็บกระดาษHS580-3    จำนวน  1  ร'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='18', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='0000073244899 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='คร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='.เย็บกระดาษ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='HS580-3', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='145', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 27: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 29: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 32: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 36: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 41: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 42: '\t19. ค่า\tV 0000073244912 คร.เย็บกระดาษHS580-3   จำนวน  1  รา'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='9', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 4: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 5: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='V 0000073244912', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='คร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='.เย็บกระดาษ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='HS580-3   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 12: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 16: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='145', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 43: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 44: '\t 20. ค่า\tV 0000073244950 คร.เย็บกระดาษHS405-1   จำนวน  1  ร'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 2: text='20', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 4: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 5: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='0000073244950', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='คร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='.เย็บกระดาษ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='HS', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='405', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='-', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='10', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 24: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 28: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 30: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 31: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 33: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 34: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 36: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 37: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 38: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 39: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 40: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 41: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 45: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 46: '\t21. ค่า\tV 0000073244950 คร.เย็บกระดาษHS405-1   จำนวน  1  รา'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='21', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V 0000073244950', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='คร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='.เย็บกระดาษ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='HS405-1   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='110', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 47: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 48: '\t22. ค่า\tV 0000072336793 Iเครื่องเย็บONE#HS58   จำนวน  1  รา'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='22', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='0000072336793', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='I', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='เครื่องเย็บ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='ONE#HS58', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='04', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 20: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 22: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 23: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 26: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 29: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 36: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 37: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 49: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 50: '\t23. ค่า\tV 0000073244967 คร.เย็บกระดาษHS405-1   จำนวน  1  รา'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='23', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V 0000073244967', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='คร', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='.เย็บกระดาษ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='HS405-1   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 11: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='1', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='110', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 51: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 52: '\t24. ค่า\tV 8851907268374 เอลเฟ่นกรรไกรทูโทน 8   จำนวน  3  รา'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='24', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text='V 88519', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='07268374', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='เอ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='ลเฟ่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='นกรรไกรทูโทน 8', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 13: text='  3  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 15: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='141', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 18: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 19: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 21: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 25: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 32: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 33: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 53: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 54: '\t25. ค่า\tV 8851907301064 เอลเฟ่นคัตเตอร์ SS-0    จำนวน  3  ร'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 1: text='2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='5', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='. ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 4: text='ค่า', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 5: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='V ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text='8851907301064', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text='เอล', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text='เฟ่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 11: text='นค', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 12: text='ัตเต', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 13: text='อร์ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 14: text='SS-0', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 15: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 16: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 17: text='จำนวน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 18: text='  3  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 19: text='รายการ เป็นเงิน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 20: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 21: text='84', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 22: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 23: text='บาท ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 24: text='\n', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 25: text='จากบริษัท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 26: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 27: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 28: text='บีทูเอส จำกัด สาขาอุดรธานี สาข', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 29: text='ตามหลักฐานการจัดซื้อเป็น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 30: text=' ใบเสร็จรับเงิน/ ใบกำกับภาษี', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 31: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 32: text='เล่มที่-เลขที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 33: text='   50028102410000206', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 34: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 35: text='วันที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=None, bold=False/False
+  Run 36: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 37: text=' 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 38: text='9 ตุลาคม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 39: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 40: text='2567  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 55: 'หมายเหตุ : รายการที่ 8 – 25 ยอดรวม 2,504 บาท ได้รับส่วนลดทั้'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=380, lineRule=exact, before=60, after=None
+  Run 0: text='หมายเหตุ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 1: text=': ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 2: text='รายการที่ 8 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 3: text='–', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 4: text=' 25 ยอดรวม 2', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 5: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 6: text='504 บาท ได้รับส่วนลดทั้งหมด เป', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 7: text=',', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 8: text='384 บาท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 9: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+  Run 10: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=-4, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 56: '\tรวม\t25\tรายการ เป็นเงินทั้งสิ้น\t7,680  บาท\t(เจ็ดพันหกร้อยแปด'
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='รวม', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 3: text='25', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 5: text='รายการ เป็นเงินทั้งสิ้น', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 6: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 7: text='7', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 8: text=',680', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 9: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 10: text='บาท', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 11: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 12: text='(', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 13: text='เจ็ด', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 14: text='พัน', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 15: text='หก', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 16: text='ร้อย', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 17: text='แปด', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 18: text='สิบ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 19: text='บาทถ้วน)', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 57: 'ทั้งนี้ การดำเนินการจัดซื้อ/จัดจ้างดังกล่าว เป็นการดำเนินการ'
+  Paragraph Alignment (jc): thaiDistribute
+  Run 0: text='ทั้งนี้ การดำเนินการจัดซื้อ/จั', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='0405.2/', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='ว ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 3: text='119', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 4: text=' ลงวันที่ ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 5: text='7 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 6: text='มีนาคม ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 7: text='2561 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 8: text='เรื่องแนวทางการปฎิบัติในการดำเ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 9: text='1 ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 10: text='ลำดับที่', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 11: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 12: text=' 3', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 13: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 14: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=dotted, bold=False/False
+  Run 15: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 58: '\t\tจึงเรียนมาเพื่อโปรดพิจารณาให้ความเห็นชอบ และให้ถือรายงานนี'
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Indents: left=None, firstLine=0
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+  Run 2: text='จึงเรียนมาเพื่อโปรดพิจารณาให้ค', font=TH SarabunPSK/TH SarabunPSK, size=None, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 59: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Indents: left=None, firstLine=0
+--------------------------------------------------
+Paragraph 60: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Indents: left=None, firstLine=0
+--------------------------------------------------
+Paragraph 61: '\xa0 \xa0 \xa0 \xa0\t\t\t\t\tลงชื่อ \t\t\t\t\tเจ้าหน้าที่/ผู้รับผิดชอบ'
+  Paragraph Alignment (jc): both
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Run 0: text='\xa0 \xa0 \xa0 \xa0', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 2: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 3: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 5: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 6: text='ลงชื่อ ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 7: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 8: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 9: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 10: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 11: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 12: text='เจ้าหน้าที่/ผู้รับผิดชอบ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 62: '                                                            '
+  Paragraph Alignment (jc): both
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Run 0: text='                              ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='      ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 2: text=' (', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 3: text='นางสาวศิริพักตร์  เสมียนคิด', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 4: text=')', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 5: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 6: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 7: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 8: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 9: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 10: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 11: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 12: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 13: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 14: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 15: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 16: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 17: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 18: text='   /', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 19: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 20: text='พฤศจิกายน', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 22: text='/', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 23: text=' 2567 ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 24: text='   ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 25: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 26: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 63: ''
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Paragraph Indents: left=4320, firstLine=720
+--------------------------------------------------
+Paragraph 64: 'เห็นชอบและอนุมัติ'
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Paragraph Indents: left=4320, firstLine=720
+  Run 0: text='เห็นชอบและอนุมัติ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+--------------------------------------------------
+Paragraph 65: ''
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Paragraph Indents: left=4320, firstLine=720
+--------------------------------------------------
+Paragraph 66: 'ลงชื่อ \t\t\t\t\t ผอ.สคร.'
+  Paragraph Alignment (jc): both
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Paragraph Indents: left=3600, firstLine=None
+  Run 0: text='ลงชื่อ ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 2: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 3: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 5: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 6: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 7: text='ผอ.สคร.', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 67: '                                                            '
+  Paragraph Alignment (jc): both
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Run 0: text='                              ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='    ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 2: text='(', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 3: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 4: text='นางสาวปราณปริยา   วงค์ษา ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 5: text=')', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 68: '\t\t\t\t\t            \t   / พฤศจิกายน / 2567    \t  '
+  Paragraph Alignment (jc): both
+  Paragraph Spacing: line=None, lineRule=None, before=120, after=0
+  Run 0: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 2: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 3: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 4: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 5: text='          ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 6: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 7: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 8: text='   / ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 9: text='พฤศจิกายน', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 10: text=' / 2567    ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 11: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+  Run 12: text='  ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=False/False
+--------------------------------------------------
+Paragraph 69: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 70: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 71: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 72: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 73: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 74: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 75: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 76: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+--------------------------------------------------
+Paragraph 77: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+  Paragraph Indents: left=1800, firstLine=None
+--------------------------------------------------
+Paragraph 78: 'คำอธิบายเพิ่มเติม '
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+  Paragraph Indents: left=1800, firstLine=None
+  Run 0: text='คำอธิบายเพิ่มเติม', font=TH SarabunPSK/TH SarabunPSK, size=96, spacing=None, underline=None, bold=True/True
+  Run 1: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=96, spacing=None, underline=None, bold=True/True
+--------------------------------------------------
+Paragraph 79: ''
+  Paragraph Alignment (jc): thaiDistribute
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+  Paragraph Indents: left=1800, firstLine=None
+--------------------------------------------------
+Paragraph 80: 'หากมีรายการจัดซื้อจัดจ้างเพียง 1 รายการ ไม่ต้องใส่ 1. '
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+  Run 0: text='หากมี', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='รายการจัดซื้อจัดจ้าง', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 2: text='เพียง', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 3: text=' 1 รายการ ไม่ต้องใส่ ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 4: text='1.', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 5: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+--------------------------------------------------
+Paragraph 81: 'ย่อหน้าสุดท้าย “ ทั้งนี้ การดำเนินการจัดซื้อ/จัดจ้างดังกล่าว'
+  Paragraph Spacing: line=None, lineRule=None, before=0, after=0
+  Run 0: text='ย่อหน้าสุดท้าย ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 1: text='“ ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 2: text='ทั้งนี้ การดำเนินการจัดซื้อ/จั', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 3: text='0405.2/', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 4: text='ว ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 5: text='119', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 6: text=' ลงวันที่ ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 7: text='7 ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 8: text='มีนาคม ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 9: text='2561 ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 10: text='เรื่องแนวทางการปฎิบัติในการดำเ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 11: text='ตาราง ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 12: text='1 ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 13: text='ลำดับที่', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 14: text='  3', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 15: text='\t', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 16: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 17: text='”', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=dotted, bold=True/True
+  Run 18: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 19: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=False/False
+  Run 20: text='ให้ตรวจสอบรายการที่จัดซื้อจัดจ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+  Run 21: text=' ', font=TH SarabunPSK/TH SarabunPSK, size=32, spacing=None, underline=None, bold=True/True
+--------------------------------------------------

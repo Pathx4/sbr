@@ -13,7 +13,7 @@ def get_ocr_engine():
             print("Initializing PaddleOCR (Thai+English)...")
             # use_angle_cls=True helps with slightly rotated images
             # lang='thai' implicitly handles English as well in PaddleOCR v2.0+
-            _ocr_engine = PaddleOCR(use_angle_cls=True, lang='thai', show_log=False)
+            _ocr_engine = PaddleOCR(use_angle_cls=True, lang='th')
             print("PaddleOCR Initialized successfully.")
         except ImportError:
             print("Error: PaddleOCR not installed.")
@@ -36,9 +36,8 @@ def perform_ocr_on_image(image_bytes: bytes):
     if img is None:
         raise ValueError("Could not decode image.")
 
-    # Run OCR (ocr returns a list of lists: [[[[x,y],[x,y],[x,y],[x,y]], (text, confidence)], ...])
-    # The first index is the batch result (since we pass one image, we take result[0])
-    result = engine.ocr(img, cls=True)
+    # Run OCR
+    result = engine.ocr(img)
 
     if not result or not result[0]:
         return []

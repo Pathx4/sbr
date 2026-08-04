@@ -270,9 +270,8 @@ export default function AutoWordPage() {
         try {
           const formData = new FormData();
           formData.append('file', file);
-          
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+          const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s timeout for Cloudflare / AI OCR
           
           const response = await fetch(`${ocrApiUrl.replace(/\/$/, '')}/api/extract-bill`, {
             method: 'POST',
@@ -304,7 +303,7 @@ export default function AutoWordPage() {
         try {
           const worker = await createWorker('tha+eng');
           await worker.setParameters({
-            tessedit_pageseg_mode: '11' as any,
+            tessedit_pageseg_mode: '6' as any,
             preserve_interword_spaces: '1'
           });
           

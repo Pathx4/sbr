@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+__pycache__
+*.pyc
+.env
+.venv
+venv/
+scripts_archive/
+tree.txt
+TODO_OCR_BACKEND.md
+README.txt
+build_and_deploy.py
+frontend/dist
+backend/static/assets
+backend/cloudflared*
