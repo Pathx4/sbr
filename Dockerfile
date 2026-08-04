@@ -15,7 +15,7 @@ RUN npm run build
 # ==========================================
 # Stage 2: Build the Python Backend
 # ==========================================
-FROM python:3.12-slim
+FROM python:3.10-slim-bullseye
 
 # Set working directory
 WORKDIR /app
@@ -26,6 +26,8 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
+
+ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgomp.so.1
 
 # Copy backend requirements and install them
 COPY backend/requirements.txt ./
@@ -41,4 +43,4 @@ COPY --from=frontend-builder /app/frontend/dist /app/static
 EXPOSE 7860
 
 # Run with Gunicorn (production WSGI server) on the dynamic port (defaults to 7860)
-CMD ["sh", "-c", "gunicorn -w 4 -b 0.0.0.0:${PORT:-7860} app:app"]
+CMD ["sh", "-c", "gunicorn --workers 1 --threads 4 --timeout 120 -b 0.0.0.0:${PORT:-7860} app:app"]

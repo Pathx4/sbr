@@ -9,5 +9,9 @@ services:
       - "7860:7860"
     environment:
       - PORT=7860
-      # - API_KEY=your_api_key_here
+    restart: unless-stopped
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate --url http://app:7860
     restart: unless-stopped

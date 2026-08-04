@@ -147,11 +147,22 @@ export default function AutoWordPage() {
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // API state
-  const [ocrApiUrl, setOcrApiUrl] = useState(() => localStorage.getItem('ocrApiUrl') || 'http://localhost:5000');
+  const [ocrApiUrl, setOcrApiUrl] = useState(() => {
+    const saved = localStorage.getItem('ocrApiUrl');
+    if (window.location.origin.includes('trycloudflare.com')) {
+      return window.location.origin;
+    }
+    if (saved && !saved.includes('trycloudflare.com')) {
+      return saved;
+    }
+    return 'https://fotos-asn-revenues-confirmed.trycloudflare.com';
+  });
   const [showApiSettings, setShowApiSettings] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('ocrApiUrl', ocrApiUrl);
+    if (ocrApiUrl) {
+      localStorage.setItem('ocrApiUrl', ocrApiUrl);
+    }
   }, [ocrApiUrl]);
 
   // Load Contacts directly from local contacts.json on mount
@@ -264,8 +275,20 @@ export default function AutoWordPage() {
       let parsed: any = null;
       let usedOffline = false;
 
-      // 1. Try API First
-      if (ocrApiUrl) {
+      // Candidate API URLs to try (in order of priority)
+      const urlsToTry: string[] = [];
+      if (ocrApiUrl) urlsToTry.push(ocrApiUrl.replace(/\/$/, ''));
+      if (window.location.origin && window.location.origin.startsWith('http') && !urlsToTry.includes(window.location.origin.replace(/\/$/, ''))) {
+        urlsToTry.push(window.location.origin.replace(/\/$/, ''));
+      }
+      const activeFallback = 'https://fotos-asn-revenues-confirmed.trycloudflare.com';
+      if (!urlsToTry.includes(activeFallback)) {
+        urlsToTry.push(activeFallback);
+      }
+
+      // 1. Try API Candidates
+      for (const targetUrl of urlsToTry) {
+        if (parsed) break;
         setScanStatus('กำลังส่งรูปภาพไปวิเคราะห์ที่เซิร์ฟเวอร์หลัก (PaddleOCR)...');
         try {
           const formData = new FormData();
@@ -273,7 +296,7 @@ export default function AutoWordPage() {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s timeout for Cloudflare / AI OCR
           
-          const response = await fetch(`${ocrApiUrl.replace(/\/$/, '')}/api/extract-bill`, {
+          const response = await fetch(`${targetUrl}/api/extract-bill`, {
             method: 'POST',
             body: formData,
             signal: controller.signal
@@ -287,12 +310,11 @@ export default function AutoWordPage() {
               setScanStatus('วิเคราะห์ AI สำเร็จ กำลังจัดเรียงข้อมูล...');
               const headerText = data.words.slice(0, 15).map((w: any) => w.text).join(' ');
               parsed = parseThaiReceiptOcr(data, headerText);
+              setOcrApiUrl(targetUrl);
             }
-          } else {
-            throw new Error(`API Error: ${response.status}`);
           }
         } catch (err) {
-          console.warn('API fetch failed, falling back to offline OCR:', err);
+          console.warn(`API fetch to ${targetUrl} failed:`, err);
         }
       }
 
