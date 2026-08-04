@@ -155,7 +155,7 @@ export default function AutoWordPage() {
     if (saved && !saved.includes('trycloudflare.com')) {
       return saved;
     }
-    return 'https://fotos-asn-revenues-confirmed.trycloudflare.com';
+    return 'https://pushing-ada-ottawa-cigarettes.trycloudflare.com';
   });
   const [showApiSettings, setShowApiSettings] = useState(false);
 
@@ -281,9 +281,9 @@ export default function AutoWordPage() {
       if (window.location.origin && window.location.origin.startsWith('http') && !urlsToTry.includes(window.location.origin.replace(/\/$/, ''))) {
         urlsToTry.push(window.location.origin.replace(/\/$/, ''));
       }
-      const localtunnelFallback = 'https://sbr-v1-app.loca.lt';
-      if (!urlsToTry.includes(localtunnelFallback)) {
-        urlsToTry.push(localtunnelFallback);
+      const activeFallback = 'https://pushing-ada-ottawa-cigarettes.trycloudflare.com';
+      if (!urlsToTry.includes(activeFallback)) {
+        urlsToTry.push(activeFallback);
       }
 
       // 1. Try API Candidates
