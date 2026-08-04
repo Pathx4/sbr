@@ -37,16 +37,37 @@ let workerPromise: Promise<any> | null = null;
  */
 const NOISY_PARAM_WARNING = 'Parameter not found';
 
+function createPatchedWorkerUrl(): string {
+  const cdnWorkerPath = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
+  const patchCode = `
+    const _warn = self.console.warn;
+    const _error = self.console.error;
+    const shouldFilter = (args) => args.some(a => typeof a === 'string' && a.includes('Parameter not found'));
+
+    self.console.warn = function(...args) {
+      if (shouldFilter(args)) return;
+      _warn.apply(self.console, args);
+    };
+    self.console.error = function(...args) {
+      if (shouldFilter(args)) return;
+      _error.apply(self.console, args);
+    };
+
+    importScripts("${cdnWorkerPath}");
+  `;
+  const blob = new Blob([patchCode], { type: 'application/javascript' });
+  return URL.createObjectURL(blob);
+}
+
 export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
+      const patchedWorkerPath = createPatchedWorkerUrl();
       const w = await createWorker(lang, OEM.LSTM_ONLY, {
+        workerPath: patchedWorkerPath,
+        workerBlobURL: false,
         logger: (m: any) => {
           const msg = typeof m === 'string' ? m : m?.message ?? '';
-          // Some tesseract.js builds do route init-time messages through
-          // logger as well as through the worker's console. Filter here so
-          // at least *our* logging stays clean even if it doesn't remove
-          // the raw browser console lines from the worker thread.
           if (msg.includes(NOISY_PARAM_WARNING)) return;
           console.log('[Tesseract]', m);
         },
