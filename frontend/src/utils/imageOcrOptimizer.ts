@@ -365,13 +365,25 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
 }
 
 function isGarbledThaiGibberish(text: string): boolean {
-  if (text.length < 4) return false;
-  if (!/[ก-ฮa-zA-Z]/.test(text)) return false;
+  if (!text || text.trim().length < 2) return true;
+  const trimmed = text.trim();
 
-  const thaiConsonantCount = (text.match(/[ก-ฮ]/g) || []).length;
-  const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(text);
+  // If line contains no Thai or English letters at all (pure numbers/symbols) -> garbage item!
+  if (!/[ก-ฮa-zA-Z]/.test(trimmed)) return true;
 
-  if (thaiConsonantCount >= 5 && !hasVowels && !/[a-zA-Z]{3,}/.test(text)) {
+  // Reject lines that consist solely of symbols / dashes / dots e.g. "---", "***", "===", "..."
+  if (/^[─\-\*\=\_\.\/\|\:\+\#\$\%\^\&\(\)\s\d]+$/.test(trimmed)) return true;
+
+  // Reject non-product header & receipt metadata prefixes
+  if (/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|เงินทอน|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|โทร|พนักงาน|เวลา|ประจำตัว)/i.test(trimmed)) {
+    return true;
+  }
+
+  const thaiConsonantCount = (trimmed.match(/[ก-ฮ]/g) || []).length;
+  const hasVowels = /[ะาิีึืุูเแโใไำ็์]/.test(trimmed);
+
+  // If 5+ consonants without vowels and no 3+ letter English word -> garbled noise
+  if (thaiConsonantCount >= 5 && !hasVowels && !/[a-zA-Z]{3,}/.test(trimmed)) {
     return true;
   }
 
@@ -582,19 +594,20 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   const items: ParsedReceipt['items'] = [];
 
   const excludeKeywords = [
-    'ชำระเงินโดย', 'ชำระเงิน', 'ชำระโดย', 'VISA', 'MASTER', 'CASH', 'เงินสด', 'เงินทอน',
-    'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม', 'รวมทั้งสิ้น', 'รวมทั้งสิ้นบาท',
+    'ชำระเงินโดย', 'ชำระเงิน', 'ชำระโดย', 'VISA', 'MASTER', 'CASH', 'เงินสด', 'เงินทอน', 'PAYMENT', 'CREDIT',
+    'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม', 'รวมทั้งสิ้น', 'รวมทั้งสิ้นบาท', 'รวมเงิน',
     'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ', 'ยินดีต้อนรับ', 'WELCOME',
-    'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่', 'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', 'บาท',
-    'สินค้าที่มีภาษี', 'สินค้าที่ยกเว้น', 'สินค้าที่เสีย', 'มูลค่าสินค้า', 'มูลค่าภาษี', 'ภาษี 7%',
-    'จำนวนรวม', 'รวมรายการ', 'ราคาสินค้า', 'ส่วนลด',
-    // Address keywords — these are NEVER product items
-    'ที่อยู่', 'ผู้ซื้อ', 'ผู้ขาย', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด',
-    'ถนน', 'ซอย', 'แขวง', 'เขต', 'รหัสไปรษณีย์', 'เลขประจำตัวผู้เสียภาษี',
+    'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่', 'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', 'บาท', 'BAHT',
+    'สินค้าที่มีภาษี', 'สินค้าที่ยกเว้น', 'สินค้าที่เสีย', 'มูลค่าสินค้า', 'มูลค่าภาษี', 'ภาษี 7%', 'ภาษี7%',
+    'จำนวนรวม', 'รวมรายการ', 'ราคาสินค้า', 'ส่วนลด', 'DISCOUNT', 'พนักงานขาย', 'CASHIER', 'เวลา', 'TIME',
+    'โทร', 'TEL', 'FAX', 'EMAIL', 'อีเมล', 'เว็บไซต์', 'WWW', 'HTTP', 'NET TOTAL', 'NET AMOUNT',
+    // Address & Company Info keywords — these are NEVER product items
+    'ที่อยู่', 'ผู้ซื้อ', 'ผู้ขาย', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ถนน', 'ซอย', 'แขวง', 'เขต', 'รหัสไปรษณีย์',
+    'เลขประจำตัวผู้เสียภาษี', 'สำนักงานใหญ่', 'เลขที่ใบเสร็จ', 'เลขที่ใบกำกับ', 'วันที่', 'DATE',
     // Table header keywords — column labels, not product items
-    'รายละเอียด', 'ราคา/หน่วย', 'รวม (บาท)', 'รหัสสินค้า',
+    'รายละเอียด', 'ราคา/หน่วย', 'รวม (บาท)', 'รหัสสินค้า', 'จำนวน', 'หน่วยละ', 'จำนวนเงิน', 'DESCRIPTION', 'QTY', 'PRICE', 'AMOUNT', 'ITEM',
     // Invoice/receipt keywords
-    'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'Tax Invoice', 'Receipt'
+    'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'Tax Invoice', 'Receipt', 'INVOICE', 'DOCUMENT'
   ];
 
   // 1. Extract Vendor Name (First try dedicated headerText scan if available, then full text)
