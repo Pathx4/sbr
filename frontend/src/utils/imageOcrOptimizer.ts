@@ -364,18 +364,39 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+const THAI_MONTH_PATTERNS = /(?:มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)/i;
+
 function isGarbledThaiGibberish(text: string): boolean {
   if (!text || text.trim().length < 2) return true;
   const trimmed = text.trim();
 
-  // If line contains no Thai or English letters at all (pure numbers/symbols) -> garbage item!
+  // 1. If line contains no Thai or English letters at all (pure numbers/symbols) -> garbage item!
   if (!/[ก-ฮa-zA-Z]/.test(trimmed)) return true;
 
-  // Reject lines that consist solely of symbols / dashes / dots e.g. "---", "***", "===", "..."
-  if (/^[─\-\*\=\_\.\/\|\:\+\#\$\%\^\&\(\)\s\d]+$/.test(trimmed)) return true;
+  // 2. Reject lines that consist solely of symbols / dashes / dots / Thai digits e.g. "---", "***", "===", "..."
+  if (/^[─\-\*\=\_\.\/\|\:\+\#\$\%\^\&\(\)\s\d๑-๙°'ฯ]+$/.test(trimmed)) return true;
 
-  // Reject non-product header & receipt metadata prefixes
-  if (/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|เงินทอน|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|โทร|พนักงาน|เวลา|ประจำตัว)/i.test(trimmed)) {
+  // 3. Reject date metadata lines (contains Thai month names or Date prefixes like "วันที่", "นที", "ลงวันที่")
+  if (THAI_MONTH_PATTERNS.test(trimmed)) return true;
+
+  // 4. Reject signature / recipient / transport / delivery lines
+  if (/ผู้รับเงิน|ผู้ส่งของ|ผู้รับของ|ผู้จ่ายเงิน|ผู้รับสินค้า|ลงชื่อ|ผู้รับพัสดุ|อนุมัติ|ส่งสินค้า|ค่าขนส่ง|ผู้รับ/i.test(trimmed)) {
+    return true;
+  }
+
+  // 5. Reject non-product header & receipt metadata prefixes
+  if (/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|เงินทอน|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|นที|โทร|พนักงาน|เวลา|ประจำตัว|ใบเสร็จ|ใบกำกับ)/i.test(trimmed)) {
+    return true;
+  }
+
+  // 6. Reject garbled symbol noise (e.g., "od ° ' o - ม ๓ ฯ ๕ a a o ww")
+  const symbolNoiseCount = (trimmed.match(/[°'ฯ๑๒๓๔๕๖๗๘๙]/g) || []).length;
+  if (symbolNoiseCount >= 2) return true;
+
+  // 7. Count single-letter tokens e.g. "o", "a", "w", "ม" separated by spaces
+  const tokens = trimmed.split(/\s+/);
+  const singleCharTokens = tokens.filter(t => t.length === 1 && !/\d/.test(t));
+  if (singleCharTokens.length >= 3 || (tokens.length >= 4 && singleCharTokens.length / tokens.length > 0.35)) {
     return true;
   }
 
@@ -743,14 +764,18 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
       else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
 
+      const isZeroPriceJunk = itemPrice === 0 && !item_code && !HARDWARE_MASTER_DICTIONARY.some(kw => cleanDesc.includes(kw));
+
       if (
         cleanDesc.length >= 3 &&
-        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร)/i.test(cleanDesc) &&
+        !isZeroPriceJunk &&
+        !THAI_MONTH_PATTERNS.test(cleanDesc) &&
+        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่)/i.test(cleanDesc) &&
         !/^\d+\s*รายการ/i.test(cleanDesc) &&
         // Reject garbled OCR noise — descriptions that are mostly symbols/punctuation
         /[ก-ฮa-zA-Z]{2,}/i.test(cleanDesc) &&
-        // Reject lines that are clearly address lines
-        !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด/i.test(cleanDesc) &&
+        // Reject lines that are clearly address lines or date/signature lines
+        !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ผู้รับเงิน|ผู้ส่งของ|ลงชื่อ|อนุมัติ/i.test(cleanDesc) &&
         !isGarbledThaiGibberish(cleanDesc)
       ) {
         items.push({
