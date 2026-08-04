@@ -4,7 +4,7 @@ import { createWorker } from 'tesseract.js';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye, Settings
+  Loader2, Crop, Eye
 } from 'lucide-react';
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
@@ -153,24 +153,7 @@ export default function AutoWordPage() {
   const [isGeneratingIllus, setIsGeneratingIllus] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // API state
-  const [ocrApiUrl, setOcrApiUrl] = useState(() => {
-    const saved = localStorage.getItem('ocrApiUrl');
-    if (window.location.origin.includes('trycloudflare.com')) {
-      return window.location.origin;
-    }
-    if (saved && !saved.includes('trycloudflare.com')) {
-      return saved;
-    }
-    return 'https://pushing-ada-ottawa-cigarettes.trycloudflare.com';
-  });
-  const [showApiSettings, setShowApiSettings] = useState(false);
 
-  useEffect(() => {
-    if (ocrApiUrl) {
-      localStorage.setItem('ocrApiUrl', ocrApiUrl);
-    }
-  }, [ocrApiUrl]);
 
   // Load Contacts directly from local contacts.json on mount
   useEffect(() => {
@@ -693,13 +676,6 @@ export default function AutoWordPage() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
-              onClick={() => setShowApiSettings(!showApiSettings)}
-              className="flex items-center justify-center p-2.5 bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 rounded-xl transition"
-              title="ตั้งค่าเซิร์ฟเวอร์ API"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-            <button
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
             >
@@ -717,30 +693,6 @@ export default function AutoWordPage() {
           </div>
         </div>
       </div>
-
-      {/* API Settings Panel */}
-      {showApiSettings && (
-        <div className="p-4 rounded-2xl bg-slate-800 text-white border border-slate-700 flex flex-col md:flex-row items-start md:items-center gap-4 shadow-lg animate-fade-in">
-          <div className="flex-1 w-full">
-            <label className="text-xs font-semibold text-slate-300 block mb-1">OCR Backend URL (Cloudflare Tunnel หรือ Localhost)</label>
-            <input 
-              type="text" 
-              value={ocrApiUrl}
-              onChange={(e) => setOcrApiUrl(e.target.value)}
-              placeholder="เช่น https://xxxx.trycloudflare.com หรือ http://localhost:5000"
-              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400"
-            />
-          </div>
-          <div className="shrink-0 pt-1 md:pt-5">
-            <button 
-              onClick={() => setShowApiSettings(false)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold shadow-md"
-            >
-              บันทึกและปิด
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Scanning Status Loader Banner */}
       {isScanning && (
