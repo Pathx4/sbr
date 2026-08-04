@@ -12,17 +12,57 @@ export interface OcrResult {
 
 let workerPromise: Promise<any> | null = null;
 
+/**
+ * NOTE on the "Parameter not found: ..." warnings:
+ * These come from inside the Tesseract WASM core (tesseract-core-*.wasm.js),
+ * running inside tesseract.js's own Web Worker thread. They are emitted via
+ * the Emscripten module's internal stdout/stderr -> console.warn binding,
+ * which is set up when that worker's JS context evaluates the wasm glue code.
+ *
+ * Because that happens in a *separate* worker thread, patching
+ * `console.warn`/`console.error` here (main thread) cannot intercept it —
+ * there are two independent `console` objects involved. That's why previous
+ * attempts to monkey-patch console had no visible effect.
+ *
+ * The only reliable ways to actually remove these lines are:
+ *   1. Use a tesseract.js version / traineddata combo that doesn't set these
+ *      legacy (non-LSTM) parameters at all (check naptha/tesseract.js issues
+ *      for your version).
+ *   2. Provide a custom worker script (via the `workerPath` option) that
+ *      patches console.warn *inside* the worker before the core is loaded.
+ *
+ * What we do below is a best-effort mitigation that doesn't fully suppress
+ * the raw console lines, but keeps our own logging clean and gives us a
+ * single place to extend if we later go with option 1 or 2.
+ */
+const NOISY_PARAM_WARNING = 'Parameter not found';
+
 export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
       const w = await createWorker(lang, OEM.LSTM_ONLY, {
-        logger: (m: any) => console.log('[Tesseract]', m),
-      });
+        logger: (m: any) => {
+          const msg = typeof m === 'string' ? m : m?.message ?? '';
+          // Some tesseract.js builds do route init-time messages through
+          // logger as well as through the worker's console. Filter here so
+          // at least *our* logging stays clean even if it doesn't remove
+          // the raw browser console lines from the worker thread.
+          if (msg.includes(NOISY_PARAM_WARNING)) return;
+          console.log('[Tesseract]', m);
+        },
+        errorHandler: (err: any) => {
+          const msg = typeof err === 'string' ? err : err?.message ?? String(err);
+          if (msg.includes(NOISY_PARAM_WARNING)) return;
+          console.error('[Tesseract error]', err);
+        },
+      } as any);
+
       await w.setParameters({
         tessedit_pageseg_mode: PSM.AUTO as any,
         preserve_interword_spaces: '1',
         user_defined_dpi: '300',
       });
+
       return w;
     })();
   }
@@ -53,4 +93,3 @@ export async function terminateWorker() {
     workerPromise = null;
   }
 }
-
