@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { runTesseract } from '../utils/tesseractWorker';
 import { createWorker } from 'tesseract.js';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
@@ -95,6 +96,12 @@ const formatIsoRangeToThai = (startDateStr: string, endDateStr: string): string 
   } else {
     return `ระหว่างวันที่ ${sD} ${months[sM - 1]} ${sY + 543} - ${eD} ${months[eM - 1]} ${eY + 543}`;
   }
+};
+
+export const getTodayThaiDate = (): string => {
+  const d = new Date();
+  const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
 };
 
 export default function AutoWordPage() {
@@ -260,7 +267,6 @@ export default function AutoWordPage() {
     return { duplicateInvIds, duplicateDetails };
   }, [invoices]);
 
-  // Handle OCR Extraction for Full Image (API First, Fallback to Offline)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -271,90 +277,12 @@ export default function AutoWordPage() {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const imagePreview = URL.createObjectURL(file);
-      
-      let parsed: any = null;
-      let usedOffline = false;
-
-      // Candidate API URLs to try (in order of priority)
-      const urlsToTry: string[] = [];
-      if (ocrApiUrl) urlsToTry.push(ocrApiUrl.replace(/\/$/, ''));
-      if (window.location.origin && window.location.origin.startsWith('http') && !urlsToTry.includes(window.location.origin.replace(/\/$/, ''))) {
-        urlsToTry.push(window.location.origin.replace(/\/$/, ''));
-      }
-      const activeFallback = 'https://pushing-ada-ottawa-cigarettes.trycloudflare.com';
-      if (!urlsToTry.includes(activeFallback)) {
-        urlsToTry.push(activeFallback);
-      }
-
-      // 1. Try API Candidates
-      for (const targetUrl of urlsToTry) {
-        if (parsed) break;
-        setScanStatus('กำลังส่งรูปภาพไปวิเคราะห์ที่เซิร์ฟเวอร์หลัก (PaddleOCR)...');
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 90000); // 90s timeout for Cloudflare / AI OCR
-          
-          const response = await fetch(`${targetUrl}/api/extract-bill`, {
-            method: 'POST',
-            headers: {
-              'Bypass-Tunnel-Remainder': 'true',
-              'bypass-tunnel-reminder': 'true'
-            },
-            body: formData,
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.words) {
-              setScanStatus('วิเคราะห์ AI สำเร็จ กำลังจัดเรียงข้อมูล...');
-              const headerText = data.words.slice(0, 15).map((w: any) => w.text).join(' ');
-              parsed = parseThaiReceiptOcr(data, headerText);
-              setOcrApiUrl(targetUrl);
-            }
-          }
-        } catch (err) {
-          console.warn(`API fetch to ${targetUrl} failed:`, err);
-        }
-      }
-
-      // 2. Fallback to Tesseract.js (Offline) if API failed or no URL
-      if (!parsed) {
-        usedOffline = true;
-        setScanStatus('⚠️ ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กำลังใช้โหมดออฟไลน์ (Tesseract.js)...');
-        try {
-          const worker = await createWorker('tha+eng');
-          await worker.setParameters({
-            tessedit_pageseg_mode: '6' as any,
-            preserve_interword_spaces: '1'
-          });
-          
-          const headerDataUrl = await preprocessImageForOcr(file, 'header');
-          const headerRet = await worker.recognize(headerDataUrl);
-          const headerText = headerRet.data.text;
-          
-          const binDataUrl = await preprocessImageForOcr(file, 'binarized');
-          const binRet = await worker.recognize(binDataUrl);
-          
-          const grayDataUrl = await preprocessImageForOcr(file, 'grayscale');
-          const grayRet = await worker.recognize(grayDataUrl);
-          
-          const binConfidence = binRet.data.confidence || 0;
-          const grayConfidence = grayRet.data.confidence || 0;
-          const bestData = grayConfidence > binConfidence ? grayRet.data : binRet.data;
-          
-          parsed = parseThaiReceiptOcr(bestData, headerText);
-          await worker.terminate();
-        } catch (err: any) {
-          console.error("Tesseract error:", err);
-          setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนออฟไลน์: ${err.message || err}` });
-          continue;
-        }
-      }
+      // Preprocess image for high-precision contrast before client-side Tesseract OCR
+      const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
+      const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+        setScanProgress(Math.round(((i + pct / 100) / files.length) * 100));
+      });
+      const parsed = parseThaiReceiptOcr(rawText);
 
       if (!parsed) continue;
 
@@ -365,45 +293,49 @@ export default function AutoWordPage() {
         invoice_number: parsed.invoice_number || '',
         invoice_date: parsed.invoice_date || getTodayThaiDate(),
         discount: 0,
-        items: parsed.items.length > 0 ? parsed.items.map((item: any, idx: number) => ({
-          id: Date.now().toString() + '_item_' + idx,
-          item_code: item.item_code || '',
-          description: item.description,
-          quantity: item.quantity,
-          unit: item.unit || 'ชิ้น',
-          unit_price: item.unit_price,
-          total_price: item.total_price
-        })) : [
-          {
-            id: Date.now().toString() + '_item_0',
-            item_code: '',
-            description: 'รายการพัสดุ/สินค้า',
-            quantity: 1,
-            unit: 'ชิ้น',
-            unit_price: parsed.total_amount || 0,
-            total_price: parsed.total_amount || 0
-          }
-        ],
+        items:
+          parsed.items && parsed.items.length > 0
+            ? parsed.items.map((item: any, idx: number) => ({
+                id: Date.now().toString() + '_item_' + idx,
+                item_code: item.item_code || '',
+                description: item.description,
+                quantity: item.quantity,
+                unit: item.unit || 'ชิ้น',
+                unit_price: item.unit_price,
+                total_price: item.total_price,
+              }))
+            : [
+                {
+                  id: Date.now().toString() + '_item_0',
+                  item_code: '',
+                  description: 'รายการพัสดุ/สินค้า',
+                  quantity: 1,
+                  unit: 'ชิ้น',
+                  unit_price: parsed.total_amount || 0,
+                  total_price: parsed.total_amount || 0,
+                },
+              ],
         imagePreview,
-        fileObject: file
+        fileObject: file,
       };
 
-      if (parsed.invoice_number && invoices.some(inv => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase())) {
+      // Duplicate invoice number check
+      if (
+        parsed.invoice_number &&
+        invoices.some(
+          (inv) => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase()
+        )
+      ) {
         setStatusMsg({
           type: 'error',
-          text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" มีอยู่ในระบบแล้ว!`
+          text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" มีอยู่ในระบบแล้ว!`,
         });
       }
 
-      setInvoices(prev => [...prev, newInvoice]);
+      setInvoices((prev) => [...prev, newInvoice]);
       setActiveInvoiceId(newInvId);
       setScanProgress(Math.round(((i + 1) / files.length) * 100));
-
-      if (usedOffline) {
-        setStatusMsg({ type: 'error', text: '⚠️ เซิร์ฟเวอร์หลักไม่ตอบสนอง ระบบได้สลับมาใช้โหมดออฟไลน์แล้ว (ความแม่นยำอาจลดลง)' });
-      } else {
-        setStatusMsg({ type: 'success', text: 'สแกนอ่านบิลด้วยเซิร์ฟเวอร์ AI สำเร็จ!' });
-      }
+      setStatusMsg({ type: 'success', text: 'สแกนบิลด้วย Tesseract.js สำเร็จ!' });
     }
 
     setIsScanning(false);
