@@ -15,35 +15,15 @@ let workerPromise: Promise<any> | null = null;
 export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
-      const originalWarn = console.warn;
-      const originalError = console.error;
-
-      const shouldFilter = (args: any[]) =>
-        args.some((a) => typeof a === 'string' && a.includes('Parameter not found'));
-
-      console.warn = (...args: any[]) => {
-        if (shouldFilter(args)) return;
-        originalWarn.apply(console, args);
-      };
-      console.error = (...args: any[]) => {
-        if (shouldFilter(args)) return;
-        originalError.apply(console, args);
-      };
-
-      try {
-        const w = await createWorker(lang, OEM.LSTM_ONLY, {
-          logger: (m: any) => console.log('[Tesseract]', m),
-        });
-        await w.setParameters({
-          tessedit_pageseg_mode: PSM.AUTO as any,
-          preserve_interword_spaces: '1',
-          user_defined_dpi: '300',
-        });
-        return w;
-      } finally {
-        console.warn = originalWarn;
-        console.error = originalError;
-      }
+      const w = await createWorker(lang, OEM.LSTM_ONLY, {
+        logger: (m: any) => console.log('[Tesseract]', m),
+      });
+      await w.setParameters({
+        tessedit_pageseg_mode: PSM.AUTO as any,
+        preserve_interword_spaces: '1',
+        user_defined_dpi: '300',
+      });
+      return w;
     })();
   }
   return workerPromise;
