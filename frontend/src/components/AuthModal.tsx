@@ -60,23 +60,32 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
           (name) => name.toLowerCase() === cleanInput
         );
 
-        // 3. Search client-side contacts list (compatible with GitHub Pages)
+        // 3. Search client-side contacts list (by Email, Username, or Nickname e.g. ปูปู้, เลิฟ, หนิง, โฟร์ค/โฟล์ค)
+        const normalizedInput = cleanInput === 'โฟร์ค' ? 'โฟล์ค' : cleanInput;
+
         const matchedContact = (contactsData as any[]).find((c) => {
-          if (!c.email) return false;
-          const rawEmails = String(c.email).toLowerCase().split(/\s+/);
-          return rawEmails.some((em: string) => em === cleanInput || em.split('@')[0] === username);
+          const cName = String(c.name || '').toLowerCase();
+          const cEmail = String(c.email || '').toLowerCase();
+          const rawEmails = cEmail.split(/\s+/);
+          
+          // Match email or username prefix
+          const emailMatch = cEmail && rawEmails.some((em: string) => em === cleanInput || em.split('@')[0] === username);
+          
+          // Match nickname in parentheses or full name
+          const nicknameMatch = cName.includes(`(${normalizedInput})`) || (normalizedInput.length >= 2 && cName.includes(normalizedInput));
+
+          return emailMatch || nicknameMatch;
         });
 
         let user: AuthUser | null = null;
 
         if (matchedContact) {
+          const primaryEmail = matchedContact.email ? String(matchedContact.email).split(/\s+/)[0] : `${username}@gistda.or.th`;
           user = {
             name: matchedContact.name,
             nickname: matchedContact.name.match(/\(([^)]+)\)/)?.[1] || null,
             position: matchedContact.position || 'บุคลากร สทอภ.',
-            email: cleanInput.includes('@')
-              ? cleanInput
-              : (matchedContact.email ? String(matchedContact.email).split(/\s+/)[0] : `${cleanInput}@gistda.or.th`),
+            email: cleanInput.includes('@') ? cleanInput : primaryEmail,
             section: matchedContact.section || 'สทอภ.',
             is_head: matchedContact.is_head || false,
           };
