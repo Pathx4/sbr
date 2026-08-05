@@ -9,7 +9,7 @@ const BUDGET_SHEET_ID = "1eWkRl_E_PCYWZ_EGRo7_ZC7gP5XlAC_bFVeH2VhD4Tc";
 
 // 🔴 ID ของ Google Sheet ใบที่ 2 (ระบบรายงานจัดซื้อจัดจ้าง)
 // (หากใช้ไฟล์เดียวกัน ให้ใช้ ID เดียวกัน หรือเปลี่ยนเป็น ID ของไฟล์จัดซื้อจัดจ้างได้เลย)
-const PROCUREMENT_SHEET_ID = "1eWkRl_E_PCYWZ_EGRo7_ZC7gP5XlAC_bFVeH2VhD4Tc";
+const PROCUREMENT_SHEET_ID = "1XtlZ878S-3UXudK9dAtLvjGQMYYn0jKCcEF14sCGp9Y";
 
 function getSpreadsheetDoc(type) {
   try {
@@ -121,6 +121,13 @@ function saveActivityData(data) {
       }
     }
 
+    // --- 🛠️ หาแถวสุดท้ายที่แท้จริงที่มีข้อมูล (อ้างอิงจากคอลัมน์ A) ---
+    var columnA = sheet.getRange("A:A").getValues();
+    var trueLastRow = 0;
+    
+    for (var i = columnA.length - 1; i >= 0; i--) {
+      if (columnA[i][0] !== "") {
+        trueLastRow = i + 1;
         break;
       }
     }
