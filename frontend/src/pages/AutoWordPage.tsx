@@ -9,6 +9,7 @@ import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
 import { preprocessImageForOcr, parseThaiReceiptOcr, extractVendorNameFromText, cleanCompanyName } from '../utils/imageOcrOptimizer';
+import { getStoredUser } from '../utils/auth';
 
 interface Item {
   id: string;
@@ -159,15 +160,32 @@ export default function AutoWordPage() {
     const data = contactsData as Contact[];
     if (Array.isArray(data)) {
       setContacts(data);
-      const defaultReq = data.find(c => c.name.includes('ศิริพักตร์'));
-      if (defaultReq) {
-        setRequesterName(defaultReq.name);
-        setRequesterPosition(defaultReq.position || 'เจ้าหน้าที่ผู้รับผิดชอบ');
-      }
-      const defaultApp = data.find(c => c.name.includes('ปราณปริยา') || c.is_head);
+
+      // 1. Default Approver: น.ส.ปราณปริยา  วงค์ษา (นก)
+      const defaultApp = data.find(c => c.name.includes('ปราณปริยา'));
       if (defaultApp) {
         setApproverName(defaultApp.name);
-        setApproverPosition(defaultApp.position || 'ผอ.สคร.');
+        setApproverPosition(
+          defaultApp.position === 'ผู้อำนวยการสำนัก'
+            ? 'ผู้อำนวยการสำนักบริหารเครือข่ายและสร้างความตระหนัก'
+            : (defaultApp.position || 'ผู้อำนวยการสำนักบริหารเครือข่ายและสร้างความตระหนัก')
+        );
+      } else {
+        setApproverName('น.ส.ปราณปริยา  วงค์ษา (นก)');
+        setApproverPosition('ผู้อำนวยการสำนักบริหารเครือข่ายและสร้างความตระหนัก');
+      }
+
+      // 2. Default Requester: Auto-fill from currently logged-in user profile
+      const loggedUser = getStoredUser();
+      if (loggedUser && loggedUser.name) {
+        setRequesterName(loggedUser.name);
+        setRequesterPosition(loggedUser.position || 'เจ้าหน้าที่ผู้รับผิดชอบ');
+      } else {
+        const defaultReq = data.find(c => c.name.includes('ศิริพักตร์'));
+        if (defaultReq) {
+          setRequesterName(defaultReq.name);
+          setRequesterPosition(defaultReq.position || 'เจ้าหน้าที่ผู้รับผิดชอบ');
+        }
       }
     }
   }, []);
