@@ -10,8 +10,19 @@ interface AuthModalProps {
 
 // List of special allowed emails (e.g. Interns/Contractors without @gistda.or.th email)
 const SPECIAL_ALLOWED_EMAILS = [
-  // Add your email address or intern emails here:
   'pakimthamthung@gmail.com',
+];
+
+// List of allowed intern nicknames/names
+const SPECIAL_ALLOWED_NAMES = [
+  'ปูปู้',
+  'เลิฟ',
+  'หนิง',
+  'โฟร์ค',
+  'pupu',
+  'love',
+  'ning',
+  'folk',
 ];
 
 export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
@@ -24,9 +35,11 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) {
-      setError('กรุณากรอกอีเมลองค์กร');
+    const inputStr = email.trim();
+    const cleanInput = inputStr.toLowerCase();
+
+    if (!cleanInput) {
+      setError('กรุณากรอกอีเมลองค์กร หรือ ชื่อเล่น');
       return;
     }
 
@@ -35,50 +48,60 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
 
     setTimeout(() => {
       try {
-        const username = cleanEmail.split('@')[0];
+        const username = cleanInput.split('@')[0];
 
         // 1. Check special allowed intern/guest emails list
-        const isSpecialAllowed = SPECIAL_ALLOWED_EMAILS.some(
-          (em) => em.toLowerCase() === cleanEmail
+        const isSpecialAllowedEmail = SPECIAL_ALLOWED_EMAILS.some(
+          (em) => em.toLowerCase() === cleanInput
         );
 
-        // 2. Search client-side contacts list (compatible with GitHub Pages)
-        const matched = (contactsData as any[]).find((c) => {
+        // 2. Check special allowed intern names/nicknames (ปูปู้, เลิฟ, หนิง, โฟร์ค)
+        const matchedSpecialName = SPECIAL_ALLOWED_NAMES.find(
+          (name) => name.toLowerCase() === cleanInput
+        );
+
+        // 3. Search client-side contacts list (compatible with GitHub Pages)
+        const matchedContact = (contactsData as any[]).find((c) => {
           if (!c.email) return false;
           const rawEmails = String(c.email).toLowerCase().split(/\s+/);
-          return rawEmails.some((em: string) => em === cleanEmail || em.split('@')[0] === username);
+          return rawEmails.some((em: string) => em === cleanInput || em.split('@')[0] === username);
         });
 
         let user: AuthUser | null = null;
 
-        if (matched) {
+        if (matchedContact) {
           user = {
-            name: matched.name,
-            nickname: matched.name.match(/\(([^)]+)\)/)?.[1] || null,
-            position: matched.position || 'บุคลากร สทอภ.',
-            email: cleanEmail.includes('@')
-              ? cleanEmail
-              : (matched.email ? String(matched.email).split(/\s+/)[0] : `${cleanEmail}@gistda.or.th`),
-            section: matched.section || 'สทอภ.',
-            is_head: matched.is_head || false,
+            name: matchedContact.name,
+            nickname: matchedContact.name.match(/\(([^)]+)\)/)?.[1] || null,
+            position: matchedContact.position || 'บุคลากร สทอภ.',
+            email: cleanInput.includes('@')
+              ? cleanInput
+              : (matchedContact.email ? String(matchedContact.email).split(/\s+/)[0] : `${cleanInput}@gistda.or.th`),
+            section: matchedContact.section || 'สทอภ.',
+            is_head: matchedContact.is_head || false,
           };
-        } else if (isSpecialAllowed) {
-          // Special access for intern
+        } else if (matchedSpecialName || isSpecialAllowedEmail) {
+          // Special access for intern by name or email
+          const displayName = matchedSpecialName 
+            ? (matchedSpecialName.charAt(0).toUpperCase() + matchedSpecialName.slice(1))
+            : inputStr;
+
           user = {
-            name: username,
+            name: `น้อง${displayName} (ฝึกงาน)`,
+            nickname: displayName,
             position: 'นักศึกษาฝึกงาน (สทอภ.)',
-            email: cleanEmail,
-            section: 'สทอภ.',
+            email: cleanInput.includes('@') ? cleanInput : `${cleanInput}@intern.gistda`,
+            section: 'สทอภ. (นักศึกษาฝึกงาน)',
             is_head: false,
           };
-        } else if (cleanEmail.includes('@')) {
-          const domain = cleanEmail.split('@')[1];
+        } else if (cleanInput.includes('@')) {
+          const domain = cleanInput.split('@')[1];
           // Restrict strictly to GISTDA organization domain (@gistda.or.th or subdomains)
           if (domain === 'gistda.or.th' || domain.endsWith('.gistda.or.th')) {
             user = {
               name: username,
               position: 'บุคลากร สทอภ.',
-              email: cleanEmail,
+              email: cleanInput,
               section: 'สทอภ.',
               is_head: false,
             };
@@ -89,7 +112,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
           setStoredUser(user, rememberMe);
           onSuccess(user);
         } else {
-          setError('อนุญาตเฉพาะอีเมลองค์กร (@gistda.or.th) หรืออีเมลนักศึกษาฝึกงานที่ได้รับอนุมัติเท่านั้น');
+          setError('อนุญาตเฉพาะอีเมลองค์กร (@gistda.or.th) หรือรายชื่อนักศึกษาฝึกงาน (ปูปู้, เลิฟ, หนิง, โฟร์ค) เท่านั้น');
         }
       } catch (err) {
         console.error('Auth error:', err);
@@ -99,7 +122,6 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
       }
     }, 300);
   };
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
@@ -117,7 +139,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             ยืนยันตัวตนก่อนเข้าใช้งาน
           </h2>
           <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
-            กรุณากรอกอีเมลองค์กรของคุณ เพื่อเข้าสู่ระบบจัดสรรงบประมาณและเอกสารอัตโนมัติ
+            กรุณากรอกอีเมลองค์กร หรือชื่อเล่นนักศึกษาฝึกงานเพื่อเข้าสู่ระบบ
           </p>
         </div>
 
@@ -133,15 +155,15 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              อีเมลองค์กร (Work Email)
+              อีเมลองค์กร หรือ ชื่อเล่นนักศึกษาฝึกงาน
             </label>
             <div className="relative">
               <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
-                type="email"
+                type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="เช่น somchai@gistda.or.th"
+                placeholder="เช่น ปูปู้, เลิฟ, หนิง, โฟร์ค หรืออีเมล สทอภ."
                 required
                 className="w-full pl-12 pr-4 py-3.5 bg-slate-50/80 border border-slate-200 rounded-2xl text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all font-medium"
               />
@@ -158,7 +180,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
               className="w-4 h-4 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500/20 cursor-pointer"
             />
             <label htmlFor="rememberMe" className="text-xs text-slate-600 select-none cursor-pointer flex-1">
-              <span className="font-semibold text-slate-800">จำอีเมลของฉันไว้ในเครื่องนี้</span>
+              <span className="font-semibold text-slate-800">จำการเข้าสู่ระบบของฉันไว้ในเครื่องนี้</span>
               <span className="block text-[11px] text-slate-400">ถ้าไม่ติ๊ก เมื่อปิดเว็บจะต้องกรอกใหม่</span>
             </label>
           </div>
@@ -172,7 +194,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>กำลังตรวจสอบอีเมล...</span>
+                <span>กำลังตรวจสอบ...</span>
               </>
             ) : (
               <>
@@ -186,7 +208,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
         {/* Footer info */}
         <div className="mt-6 pt-4 border-t border-slate-100 text-center">
           <p className="text-[11px] text-slate-400">
-            ระบบจำกัดสิทธิ์เฉพาะบุคลากรภายใน สทอภ.
+            ระบบจำกัดสิทธิ์เฉพาะบุคลากรภายในและนักศึกษาฝึกงาน สทอภ.
           </p>
         </div>
       </div>
