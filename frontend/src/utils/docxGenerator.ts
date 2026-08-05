@@ -51,6 +51,24 @@ function formatPrice(val: number): string {
 }
 
 /**
+ * Formats vendor name with 'จาก' / 'จากบริษัท' prefix cleanly without duplicate 'บริษัท'
+ */
+function formatVendorWithPrefix(vendor: string): string {
+  if (!vendor) return '';
+  const trimmed = vendor.trim();
+  if (
+    trimmed.startsWith('บริษัท') ||
+    trimmed.startsWith('ร้าน') ||
+    trimmed.startsWith('ห้างหุ้นส่วน') ||
+    trimmed.startsWith('หจก.') ||
+    trimmed.startsWith('บจก.')
+  ) {
+    return `จาก${trimmed}`;
+  }
+  return `จากบริษัท ${trimmed}`;
+}
+
+/**
  * Generates Official Thai Government Memo Document (.docx) matching the exact template layout
  */
 export async function generateWordDocument(data: DocxPayload): Promise<Blob> {
@@ -208,7 +226,7 @@ export async function generateWordDocument(data: DocxPayload): Promise<Blob> {
         children: [
           new TextRun({ text: `\t${item.idx}. ค่า `, font: FONT_NAME, size: FONT_SIZE }),
           new TextRun({ text: descText, font: FONT_NAME, size: FONT_SIZE, bold: true }),
-          new TextRun({ text: `  จำนวน  ${item.qty}  ${item.unit}  เป็นเงิน  ${priceStr}  บาท  จากบริษัท  ${item.vendor}  ตามใบเสร็จรับเงิน/ใบกำกับภาษี เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`, font: FONT_NAME, size: FONT_SIZE })
+          new TextRun({ text: `  จำนวน  ${item.qty}  ${item.unit}  เป็นเงิน  ${priceStr}  บาท  ${formatVendorWithPrefix(item.vendor)}  ตามใบเสร็จรับเงิน/ใบกำกับภาษี เลขที่ ${item.invNum} ลงวันที่ ${item.invDate}`, font: FONT_NAME, size: FONT_SIZE })
         ]
       })
     );
