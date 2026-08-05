@@ -15,19 +15,6 @@ const ALLOWED_USERS = [
   'thanthiya@gistda.or.th',
   'watcharee@gistda.or.th',
   'wageeporn@gistda.or.th',
-  'siripak',
-  'thanthiya',
-  'watcharee',
-  'wageeporn',
-  'ปูปู้',
-  'เลิฟ',
-  'หนิง',
-  'โฟร์ค',
-  'โฟล์ค',
-  'pupu',
-  'love',
-  'ning',
-  'folk',
 ];
 
 export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
@@ -73,10 +60,10 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
           const cName = String(c.name || '').toLowerCase();
           const cEmail = String(c.email || '').toLowerCase();
           const rawEmails = cEmail.split(/\s+/);
-          
+
           // Match email or username prefix
           const emailMatch = cEmail && rawEmails.some((em: string) => em === cleanInput || em.split('@')[0] === username);
-          
+
           // Match nickname in parentheses or full name
           const nicknameMatch = cName.includes(`(${normalizedInput})`) || (normalizedInput.length >= 2 && cName.includes(normalizedInput));
 
