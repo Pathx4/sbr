@@ -160,6 +160,70 @@ def get_contacts():
         load_contacts_from_excel()
     return _contacts_cache
 
+@app.route('/api/auth/login', methods=['POST'])
+def auth_login():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip().lower()
+    
+    if not email:
+        return jsonify({"success": False, "message": "กรุณากรอกอีเมล"}), 400
+    
+    contacts = get_contacts()
+    matched_contact = None
+    
+    # 1. Exact match on email field
+    for c in contacts:
+        if c.get('email') and str(c.get('email')).strip().lower() == email:
+            matched_contact = c
+            break
+            
+    # 2. Match username prefix (e.g., entering 'somchai' or 'somchai@gistda.or.th')
+    if not matched_contact:
+        username = email.split('@')[0]
+        for c in contacts:
+            c_email = str(c.get('email') or '').strip().lower()
+            if c_email and (c_email == email or c_email.split('@')[0] == username):
+                matched_contact = c
+                break
+
+    if matched_contact:
+        return jsonify({
+            "success": True,
+            "user": {
+                "name": matched_contact.get('name'),
+                "nickname": matched_contact.get('nickname'),
+                "position": matched_contact.get('position'),
+                "email": matched_contact.get('email') or email,
+                "section": matched_contact.get('section'),
+                "sheet": matched_contact.get('sheet'),
+                "is_head": matched_contact.get('is_head', False)
+            }
+        })
+    
+    # Fallback: If valid organizational domain, allow login as guest/staff
+    if "@" in email:
+        domain = email.split('@')[1]
+        if domain in ["gistda.or.th", "gmail.com"]:
+            fallback_user = {
+                "name": email.split('@')[0],
+                "nickname": None,
+                "position": "บุคลากร สทอภ.",
+                "email": email,
+                "section": "สทอภ.",
+                "sheet": "ทั่วไป",
+                "is_head": False
+            }
+            return jsonify({
+                "success": True,
+                "user": fallback_user
+            })
+
+    return jsonify({
+        "success": False,
+        "message": "ไม่พบอีเมลนี้ในระบบบุคลากร กรุณาตรวจสอบอีเมลอีกครั้ง"
+    }), 404
+
+
 # Define Schema for Gemini Bill Extraction
 class BillItem(BaseModel):
     item_code: Optional[str] = Field(None, description="The product code, SKU, or barcode (e.g. MS4-000939). If not available, leave null.")
