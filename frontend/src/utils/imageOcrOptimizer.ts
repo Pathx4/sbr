@@ -361,12 +361,13 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
   const correctedWords = words.map(w => fuzzyCorrectWord(w));
   text = correctedWords.join(' ');
 
-  // 8. Strip trailing numeric junk that looks like leaked price data
-  //    e.g. "สีขาว 3ม. 1.000 5" → "สีขาว 3ม."
+  // 8. Strip trailing numeric junk that looks like leaked price data & VAT codes
+  //    e.g. "สีขาว 3ม. 1.000 559.000 559.00 V" → "สีขาว 3ม."
   text = text
-    .replace(/\s+\d+\.\d{3}\s*\d*\s*$/, '')
-    .replace(/\s+\d{1,2}\.\d{3}\s+\d{1,6}\s*$/, '')
-    .replace(/\s+\d{1,6}\s*[!|]\s*$/, '');
+    .replace(/[\s|]+[VvNtX]\s*$/g, '')
+    .replace(/(\s+[\d,]+(\.\d{1,3})?)+[\s|]*[VvNtX]?\s*$/g, '')
+    .replace(/\s+\d+\.\d{1,3}\s*\d*[\s|]*[VvNtX]?\s*$/g, '')
+    .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '');
 
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -734,10 +735,11 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     if (isNewItemRow) {
       let cleanDesc = line;
 
-      // Strip trailing numeric/price columns (e.g., "1 98.00 98.00 0.00" or "1 285" or "1.000 5")
+      // Strip trailing numeric/price columns & VAT code indicators (e.g., "1.000 559.000 559.00 V" -> "")
       cleanDesc = cleanDesc
-        .replace(/(\s+\d+)?(\s+[\d,]+\.\d{2})+$/g, '')
-        .replace(/\s+\d+\.\d{3}\s*\d*\s*$/g, '')
+        .replace(/[\s|]+[VvNtX]\s*$/g, '')
+        .replace(/(\s+[\d,]+(\.\d{1,3})?)+[\s|]*[VvNtX]?\s*$/g, '')
+        .replace(/\s+\d+\.\d{1,3}\s*\d*[\s|]*[VvNtX]?\s*$/g, '')
         .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '')
         .trim();
 
