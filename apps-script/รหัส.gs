@@ -29,10 +29,17 @@ function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? e.parameter.page.toString().toLowerCase() : 'index';
   
   if (page === 'procurement' || page === 'index2' || page === 'รายงานจัดซื้อจัดจ้าง' || page === 'report') {
-    return HtmlService.createHtmlOutputFromFile('รายงานจัดซื้อจัดจ้าง')
-        .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
-        .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
-        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    try {
+      return HtmlService.createHtmlOutputFromFile('Index2')
+          .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
+          .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch (err) {
+      return HtmlService.createHtmlOutputFromFile('รายงานจัดซื้อจัดจ้าง')
+          .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
+          .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    }
   }
 
   return HtmlService.createHtmlOutputFromFile('Index')
