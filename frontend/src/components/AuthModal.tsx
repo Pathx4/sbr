@@ -8,6 +8,12 @@ interface AuthModalProps {
   onSuccess: (user: AuthUser) => void;
 }
 
+// List of special allowed emails (e.g. Interns/Contractors without @gistda.or.th email)
+const SPECIAL_ALLOWED_EMAILS = [
+  // Add your email address or intern emails here:
+  'intern@gmail.com',
+];
+
 export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
@@ -31,7 +37,12 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
       try {
         const username = cleanEmail.split('@')[0];
 
-        // Search client-side contacts list (compatible with GitHub Pages)
+        // 1. Check special allowed intern/guest emails list
+        const isSpecialAllowed = SPECIAL_ALLOWED_EMAILS.some(
+          (em) => em.toLowerCase() === cleanEmail
+        );
+
+        // 2. Search client-side contacts list (compatible with GitHub Pages)
         const matched = (contactsData as any[]).find((c) => {
           if (!c.email) return false;
           const rawEmails = String(c.email).toLowerCase().split(/\s+/);
@@ -51,10 +62,19 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             section: matched.section || 'สทอภ.',
             is_head: matched.is_head || false,
           };
+        } else if (isSpecialAllowed) {
+          // Special access for intern
+          user = {
+            name: username,
+            position: 'นักศึกษาฝึกงาน (สทอภ.)',
+            email: cleanEmail,
+            section: 'สทอภ.',
+            is_head: false,
+          };
         } else if (cleanEmail.includes('@')) {
           const domain = cleanEmail.split('@')[1];
-          // Allow organizational email domain fallback
-          if (domain.endsWith('gistda.or.th') || domain === 'gmail.com') {
+          // Restrict strictly to GISTDA organization domain (@gistda.or.th or subdomains)
+          if (domain === 'gistda.or.th' || domain.endsWith('.gistda.or.th')) {
             user = {
               name: username,
               position: 'บุคลากร สทอภ.',
@@ -69,7 +89,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
           setStoredUser(user, rememberMe);
           onSuccess(user);
         } else {
-          setError('ไม่พบอีเมลนี้ในระบบบุคลากร กรุณาตรวจสอบอีเมลอีกครั้ง');
+          setError('อนุญาตเฉพาะอีเมลองค์กร (@gistda.or.th) หรืออีเมลนักศึกษาฝึกงานที่ได้รับอนุมัติเท่านั้น');
         }
       } catch (err) {
         console.error('Auth error:', err);

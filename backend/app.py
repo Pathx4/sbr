@@ -203,7 +203,7 @@ def auth_login():
     # Fallback: If valid organizational domain, allow login as guest/staff
     if "@" in email:
         domain = email.split('@')[1]
-        if domain in ["gistda.or.th", "gmail.com"]:
+        if domain == "gistda.or.th" or domain.endswith(".gistda.or.th"):
             fallback_user = {
                 "name": email.split('@')[0],
                 "nickname": None,
