@@ -792,18 +792,18 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
       else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
 
-      const isZeroPriceJunk = itemPrice === 0 && !item_code && !HARDWARE_MASTER_DICTIONARY.some(kw => cleanDesc.includes(kw));
+      const isZeroPriceJunk = itemPrice === 0 && !item_code && cleanDesc.length < 5;
 
       if (
         cleanDesc.length >= 3 &&
         !isZeroPriceJunk &&
         !THAI_MONTH_PATTERNS.test(cleanDesc) &&
-        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่)/i.test(cleanDesc) &&
+        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ)/i.test(cleanDesc) &&
         !/^\d+\s*รายการ/i.test(cleanDesc) &&
         // Reject garbled OCR noise — descriptions that are mostly symbols/punctuation
         /[ก-ฮa-zA-Z]{2,}/i.test(cleanDesc) &&
         // Reject lines that are clearly address lines or date/signature lines
-        !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ผู้รับเงิน|ผู้ส่งของ|ลงชื่อ|อนุมัติ/i.test(cleanDesc) &&
+        !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ผู้รับเงิน|ผู้ส่งของ|ลงชื่อ|อนุมัติ|หมายเหตุ/i.test(cleanDesc) &&
         !isGarbledThaiGibberish(cleanDesc)
       ) {
         items.push({
@@ -824,7 +824,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
         if (
           cleanContinuation.length >= 2 &&
-          !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล)/i.test(cleanContinuation) &&
+          !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|โปรด|เงื่อนไข)/i.test(cleanContinuation) &&
           !/^\d+\s*รายการ/i.test(cleanContinuation) &&
           !isGarbledThaiGibberish(cleanContinuation)
         ) {
@@ -834,24 +834,12 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
   });
 
-  // 6. Deduplicate items with same SKU and price (keep first/cleanest occurrence)
+  // 6. Deduplicate items ONLY if item_code, description, and price are 100% identical
   const dedupedItems: ParsedReceipt['items'] = [];
   for (const item of items) {
     const isDuplicate = dedupedItems.some(existing => {
-      // Same SKU and same unit price = duplicate
-      if (existing.item_code && item.item_code && existing.item_code === item.item_code && existing.unit_price === item.unit_price) {
+      if (existing.item_code && item.item_code && existing.item_code === item.item_code && existing.description === item.description && existing.unit_price === item.unit_price) {
         return true;
-      }
-      // Same unit price and very similar description (Levenshtein distance <= 30% of length)
-      if (existing.unit_price === item.unit_price && existing.unit_price > 0) {
-        const shorter = Math.min(existing.description.length, item.description.length);
-        if (shorter >= 5) {
-          const dist = levenshteinDistance(existing.description, item.description);
-          if (dist <= Math.ceil(shorter * 0.35)) {
-            // Keep the one with shorter (cleaner) description or more real words
-            return true;
-          }
-        }
       }
       return false;
     });
