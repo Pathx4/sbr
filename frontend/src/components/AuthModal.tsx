@@ -11,7 +11,7 @@ interface AuthModalProps {
 // List of special allowed emails (e.g. Interns/Contractors without @gistda.or.th email)
 const SPECIAL_ALLOWED_EMAILS = [
   // Add your email address or intern emails here:
-  'intern@gmail.com',
+  'pakimthamthung@gmail.com',
 ];
 
 export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
@@ -56,8 +56,8 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             name: matched.name,
             nickname: matched.name.match(/\(([^)]+)\)/)?.[1] || null,
             position: matched.position || 'บุคลากร สทอภ.',
-            email: cleanEmail.includes('@') 
-              ? cleanEmail 
+            email: cleanEmail.includes('@')
+              ? cleanEmail
               : (matched.email ? String(matched.email).split(/\s+/)[0] : `${cleanEmail}@gistda.or.th`),
             section: matched.section || 'สทอภ.',
             is_head: matched.is_head || false,
