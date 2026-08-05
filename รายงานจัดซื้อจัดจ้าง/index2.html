@@ -283,24 +283,24 @@
                             </button>
                         </nav>
 
-                        <!-- ส่วนปุ่มทางลัดเชื่อมต่อรายงานรูปแบบที่ 2 & ระบบที่เกี่ยวข้อง -->
+                        <!-- ส่วนปุ่มทางลัดเชื่อมต่อรายงานรูปแบบที่ 1 & ระบบที่เกี่ยวข้อง -->
                         <div class="pt-4 border-t border-slate-100 space-y-2.5">
                             <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">รายงานและระบบเพิ่มเติม</h4>
                             
-                            <!-- ปุ่มเปิดหน้า รายงานจัดซื้อจัดจ้างแบบที่ 2 (index2.html) -->
-                            <a href="index2.html" id="btnGoToIndex2"
-                                onclick="if(typeof google !== 'undefined' && google.script && google.script.url){google.script.url.getLocation(function(loc){window.top.location.href=loc.url+'?page=index2';}); return false;}"
-                                class="flex items-center justify-between w-full px-4 py-3 rounded-2xl bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/80 transition-all duration-200 text-xs font-bold text-indigo-900 shadow-sm group">
+                            <!-- ปุ่มสลับกลับไปหน้า รายงานจัดซื้อจัดจ้างแบบหลัก (index.html) -->
+                            <a href="index.html" id="btnGoToIndex1"
+                                onclick="if(typeof google !== 'undefined' && google.script && google.script.url){google.script.url.getLocation(function(loc){window.top.location.href=loc.url+'?page=index';}); return false;}"
+                                class="flex items-center justify-between w-full px-4 py-3 rounded-2xl bg-blue-50/70 hover:bg-blue-100 border border-blue-200/80 transition-all duration-200 text-xs font-bold text-blue-900 shadow-sm group">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="p-2 rounded-xl bg-indigo-600 text-white shadow-xs group-hover:scale-110 transition-transform">
-                                        <i class="fa-solid fa-chart-line text-sm"></i>
+                                    <div class="p-2 rounded-xl bg-blue-600 text-white shadow-xs group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-house-laptop text-sm"></i>
                                     </div>
                                     <div>
-                                        <span class="block text-indigo-900 font-bold">รายงานจัดซื้อจัดจ้าง (แบบที่ 2)</span>
-                                        <span class="block text-[10px] text-indigo-600 font-normal">เปิดแดชบอร์ด index2.html</span>
+                                        <span class="block text-blue-900 font-bold">รายงานจัดซื้อจัดจ้าง (แบบที่ 1)</span>
+                                        <span class="block text-[10px] text-blue-600 font-normal">กลับสู่แดชบอร์ดหลัก index.html</span>
                                     </div>
                                 </div>
-                                <i class="fa-solid fa-chevron-right text-xs text-indigo-600 group-hover:translate-x-1 transition-transform"></i>
+                                <i class="fa-solid fa-chevron-right text-xs text-blue-600 group-hover:translate-x-1 transition-transform"></i>
                             </a>
 
                             <!-- ปุ่มระบบประมาณค่าใช้จ่าย (สีส้ม) -->

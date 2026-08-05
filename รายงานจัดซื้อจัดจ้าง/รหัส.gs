@@ -5,8 +5,10 @@
  * เพื่อรองรับการแสดงผลข้อมูลแบบไดนามิกบนหน้าจอแดชบอร์ด
  */
 
-function doGet() {
-  return HtmlService.createTemplateFromFile('Index')
+function doGet(e) {
+  const page = (e && e.parameter && e.parameter.page) ? e.parameter.page.toString().toLowerCase() : 'index';
+  const templateFile = (page === 'index2') ? 'index2' : 'index';
+  return HtmlService.createTemplateFromFile(templateFile)
     .evaluate()
     .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
