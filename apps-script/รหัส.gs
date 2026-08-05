@@ -674,3 +674,106 @@ function generateSampleData() {
   writeSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", mockAmountsUnder, projectsUnder);
   writeSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", mockAmountsOver, projectsOver);
 }
+
+/**
+ * 📊 ดึงข้อมูลจัดซื้อจัดจ้างสำหรับหน้า Index2 / รายงานจัดซื้อจัดจ้างผู้บริหาร
+ */
+function getDashboardData(selectedReport) {
+  try {
+    selectedReport = selectedReport || "จัดซื้อจัดจ้างทั้งหมด";
+    const ss = getSpreadsheetDoc('procurement');
+    
+    let allItems = [];
+    let sheetNameTitle = selectedReport;
+    
+    const fetchSheetData = (sheetName, isOver) => {
+      const sheet = ss.getSheetByName(sheetName);
+      if (!sheet) return [];
+      const values = sheet.getDataRange().getDisplayValues();
+      if (values.length <= 1) return [];
+      
+      const items = [];
+      for (let i = 1; i < values.length; i++) {
+        const row = values[i];
+        if (!row[0] && !row[1] && !row[6] && !row[8]) continue;
+        
+        let contractAmount = 0;
+        if (isOver) {
+          contractAmount = cleanNumber(row[10]) || cleanNumber(row[15]) || 0;
+        } else {
+          contractAmount = cleanNumber(row[9]) || cleanNumber(row[10]) || 0;
+        }
+        
+        const projName = isOver ? (row[6] || row[1] || "-") : (row[8] || row[1] || "-");
+        const docNo = row[1] || "-";
+        const reqNo = isOver ? (row[4] || "-") : (row[7] || "-");
+        const eproNo = isOver ? (row[9] || "-") : (row[3] || "-");
+        const dept = isOver ? (row[11] || row[22] || "ไม่ระบุฝ่าย") : (row[11] || "ไม่ระบุฝ่าย");
+        const status = isOver ? (row[23] || row[12] || "อยู่ระหว่างกระบวนการจัดจ้าง") : (row[12] || "อยู่ระหว่างกระบวนการจัดจ้าง");
+        const period = isOver ? (row[7] || row[12] || "-") : (row[10] || "-");
+        const installments = isOver ? (row[8] || row[13] || "-") : (row[11] || "-");
+        
+        items.push({
+          id: i,
+          projectId: row[0] || i,
+          docNo: docNo,
+          eproNo: eproNo,
+          projectName: projName,
+          budget: cleanNumber(row[2]) || contractAmount,
+          median: cleanNumber(row[3]) || contractAmount,
+          contractAmount: contractAmount,
+          savings: Math.max(0, (cleanNumber(row[2]) || contractAmount) - contractAmount),
+          department: dept,
+          method: isOver ? (row[5] || "วิธี e-Bidding") : (row[5] || "วิธีเฉพาะเจาะจง"),
+          status: status,
+          vendor: row[6] || row[7] || "ผู้เสนอราคา",
+          requestNo: reqNo,
+          date: row[16] || "12/03/2026",
+          contractNo: isOver ? (row[9] || "-") : (row[1] || "-"),
+          period: period,
+          installments: installments,
+          sheetType: isOver ? "over" : "under"
+        });
+      }
+      return items;
+    };
+
+    if (selectedReport.includes("เกิน5แสน") && !selectedReport.includes("ไม่เกิน")) {
+      allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
+      sheetNameTitle = "จัดซื้อจัดจ้าง 2569 (เกิน5แสน)";
+    } else if (selectedReport.includes("ไม่เกิน5แสน")) {
+      allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
+      sheetNameTitle = "จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)";
+    } else {
+      const underItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
+      const overItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
+      allItems = underItems.concat(overItems);
+      sheetNameTitle = "จัดซื้อจัดจ้างทั้งหมด [ภาพรวม]";
+    }
+
+    if (allItems.length === 0) {
+      generateSampleData();
+      if (selectedReport.includes("เกิน5แสน") && !selectedReport.includes("ไม่เกิน")) {
+        allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
+      } else if (selectedReport.includes("ไม่เกิน5แสน")) {
+        allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
+      } else {
+        const underItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
+        const overItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
+        allItems = underItems.concat(overItems);
+      }
+    }
+
+    return {
+      status: "success",
+      sheetName: sheetNameTitle,
+      data: allItems
+    };
+
+  } catch (error) {
+    return {
+      status: "error",
+      message: error.toString()
+    };
+  }
+}
