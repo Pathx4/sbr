@@ -1541,8 +1541,7 @@
                     </a>
 
                     <!-- 6. แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร (เปิดหน้า Index2) -->
-                    <a href="javascript:void(0);" id="btnProcurementDashboard"
-                        onclick="var baseUrl = window.top.location.href.split('?')[0].split('#')[0]; window.top.location.href = baseUrl + '?page=index2';"
+                    <a href="<?= typeof webAppUrl !== 'undefined' ? webAppUrl : '?' ?>?page=index2" target="_top" id="btnProcurementDashboard"
                         class="flex items-center justify-between bg-blue-50/70 hover:bg-blue-100 border border-blue-200/80 p-3.5 rounded-xl transition-all cursor-pointer text-xs font-semibold text-blue-800 shadow-sm group">
                         <div class="flex items-center group-hover:scale-105 transition-transform duration-300">
                             <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor"

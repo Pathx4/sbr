@@ -27,22 +27,29 @@ function getSpreadsheetDoc(type) {
  */
 function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? e.parameter.page.toString().toLowerCase() : 'index';
+  var webAppUrl = ScriptApp.getService().getUrl();
   
   if (page === 'procurement' || page === 'index2' || page === 'รายงานจัดซื้อจัดจ้าง' || page === 'report') {
     try {
-      return HtmlService.createHtmlOutputFromFile('Index2')
+      var t2 = HtmlService.createTemplateFromFile('Index2');
+      t2.webAppUrl = webAppUrl;
+      return t2.evaluate()
           .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
           .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
           .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
     } catch (err) {
-      return HtmlService.createHtmlOutputFromFile('รายงานจัดซื้อจัดจ้าง')
+      var tReport = HtmlService.createTemplateFromFile('รายงานจัดซื้อจัดจ้าง');
+      tReport.webAppUrl = webAppUrl;
+      return tReport.evaluate()
           .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
           .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
           .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
     }
   }
 
-  return HtmlService.createHtmlOutputFromFile('Index')
+  var t1 = HtmlService.createTemplateFromFile('Index');
+  t1.webAppUrl = webAppUrl;
+  return t1.evaluate()
       .setTitle('ระบบแดชบอร์ดอัจฉริยะ สบร.')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
