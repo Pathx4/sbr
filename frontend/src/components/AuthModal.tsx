@@ -148,7 +148,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             ยืนยันตัวตนก่อนเข้าใช้งาน
           </h2>
           <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
-            กรุณากรอกอีเมลองค์กร หรือชื่อเล่นนักศึกษาฝึกงานเพื่อเข้าสู่ระบบ
+            กรุณากรอกอีเมลองค์กรของคุณ เพื่อเข้าสู่ระบบจัดสรรงบประมาณและเอกสารอัตโนมัติ
           </p>
         </div>
 
@@ -164,7 +164,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              อีเมลองค์กร หรือ ชื่อเล่นนักศึกษาฝึกงาน
+              อีเมล (Email)
             </label>
             <div className="relative">
               <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -172,7 +172,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="เช่น ปูปู้, เลิฟ, หนิง, โฟร์ค หรืออีเมล สทอภ."
+                placeholder="เช่น name@gistda.or.th"
                 required
                 className="w-full pl-12 pr-4 py-3.5 bg-slate-50/80 border border-slate-200 rounded-2xl text-slate-800 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all font-medium"
               />
