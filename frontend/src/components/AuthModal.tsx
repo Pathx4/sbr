@@ -8,17 +8,22 @@ interface AuthModalProps {
   onSuccess: (user: AuthUser) => void;
 }
 
-// List of special allowed emails (e.g. Interns/Contractors without @gistda.or.th email)
-const SPECIAL_ALLOWED_EMAILS = [
+// Strictly allowed emails and nicknames (Only Pakim + 4 team members)
+const ALLOWED_USERS = [
   'pakimthamthung@gmail.com',
-];
-
-// List of allowed intern nicknames/names
-const SPECIAL_ALLOWED_NAMES = [
+  'siripak@gistda.or.th',
+  'thanthiya@gistda.or.th',
+  'watcharee@gistda.or.th',
+  'wageeporn@gistda.or.th',
+  'siripak',
+  'thanthiya',
+  'watcharee',
+  'wageeporn',
   'ปูปู้',
   'เลิฟ',
   'หนิง',
   'โฟร์ค',
+  'โฟล์ค',
   'pupu',
   'love',
   'ning',
@@ -39,7 +44,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
     const cleanInput = inputStr.toLowerCase();
 
     if (!cleanInput) {
-      setError('กรุณากรอกอีเมลองค์กร หรือ ชื่อเล่น');
+      setError('กรุณากรอกอีเมล');
       return;
     }
 
@@ -50,17 +55,18 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
       try {
         const username = cleanInput.split('@')[0];
 
-        // 1. Check special allowed intern/guest emails list
-        const isSpecialAllowedEmail = SPECIAL_ALLOWED_EMAILS.some(
-          (em) => em.toLowerCase() === cleanInput
+        // Strict Check: Must be in ALLOWED_USERS list
+        const isAllowed = ALLOWED_USERS.some(
+          (item) => item.toLowerCase() === cleanInput || item.toLowerCase() === username
         );
 
-        // 2. Check special allowed intern names/nicknames (ปูปู้, เลิฟ, หนิง, โฟร์ค)
-        const matchedSpecialName = SPECIAL_ALLOWED_NAMES.find(
-          (name) => name.toLowerCase() === cleanInput
-        );
+        if (!isAllowed) {
+          setError('ไม่มีสิทธิ์เข้าใช้งานระบบนี้ (อนุญาตเฉพาะบุคคลที่ได้รับอนุมัติเท่านั้น)');
+          setLoading(false);
+          return;
+        }
 
-        // 3. Search client-side contacts list (by Email, Username, or Nickname e.g. ปูปู้, เลิฟ, หนิง, โฟร์ค/โฟล์ค)
+        // Search client-side contacts list for official profile
         const normalizedInput = cleanInput === 'โฟร์ค' ? 'โฟล์ค' : cleanInput;
 
         const matchedContact = (contactsData as any[]).find((c) => {
@@ -89,39 +95,31 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             section: matchedContact.section || 'สทอภ.',
             is_head: matchedContact.is_head || false,
           };
-        } else if (matchedSpecialName || isSpecialAllowedEmail) {
-          // Special access for intern by name or email
-          const displayName = matchedSpecialName 
-            ? (matchedSpecialName.charAt(0).toUpperCase() + matchedSpecialName.slice(1))
-            : inputStr;
-
+        } else if (cleanInput.includes('pakimthamthung')) {
           user = {
-            name: `น้อง${displayName} (ฝึกงาน)`,
-            nickname: displayName,
-            position: 'นักศึกษาฝึกงาน (สทอภ.)',
-            email: cleanInput.includes('@') ? cleanInput : `${cleanInput}@intern.gistda`,
-            section: 'สทอภ. (นักศึกษาฝึกงาน)',
+            name: 'คุณ Pakim (ผู้ดูแลระบบ)',
+            nickname: 'Pakim',
+            position: 'ผู้ดูแลระบบ / นักศึกษาฝึกงาน',
+            email: cleanInput,
+            section: 'สทอภ.',
+            is_head: true,
+          };
+        } else {
+          // Fallback for allowed user
+          user = {
+            name: inputStr,
+            position: 'บุคลากร สทอภ.',
+            email: cleanInput.includes('@') ? cleanInput : `${cleanInput}@gistda.or.th`,
+            section: 'สทอภ.',
             is_head: false,
           };
-        } else if (cleanInput.includes('@')) {
-          const domain = cleanInput.split('@')[1];
-          // Restrict strictly to GISTDA organization domain (@gistda.or.th or subdomains)
-          if (domain === 'gistda.or.th' || domain.endsWith('.gistda.or.th')) {
-            user = {
-              name: username,
-              position: 'บุคลากร สทอภ.',
-              email: cleanInput,
-              section: 'สทอภ.',
-              is_head: false,
-            };
-          }
         }
 
         if (user) {
           setStoredUser(user, rememberMe);
           onSuccess(user);
         } else {
-          setError('อนุญาตเฉพาะอีเมลองค์กร (@gistda.or.th) หรือรายชื่อนักศึกษาฝึกงาน (ปูปู้, เลิฟ, หนิง, โฟร์ค) เท่านั้น');
+          setError('ไม่มีสิทธิ์เข้าใช้งานระบบนี้');
         }
       } catch (err) {
         console.error('Auth error:', err);
