@@ -327,6 +327,10 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
 
   // 5. Thai Technical & Hardware Word Corrections (SAFE only — no destructive blanket replacements)
   text = text
+    .replace(/ปลิ๊ก|ปลื๊ก|ปลัก(?!ๆ)/g, 'ปลั๊ก')
+    .replace(/ใส้เต็ม/g, 'ไส้เต็ม')
+    .replace(/สสีดํา|สสีดำ/g, 'สีดำ')
+    .replace(/กันนํา|กันนำ/g, 'กันน้ำ')
     .replace(/ป้องดัน/g, 'ป้องกัน')
     .replace(/ลิเรียม/g, 'ลิเธียม')
     .replace(/ลิเธย(?!ม)/g, 'ลิเธียม')
@@ -336,8 +340,11 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/เชลล์/g, 'เซลล์')
     .replace(/ชิสเต็ม/g, 'ซิสเต็ม')
     .replace(/สวิทช์/g, 'สวิตช์')
-    .replace(/ปลัก(?!ๆ)/g, 'ปลั๊ก')
     .replace(/บหาชน/g, 'มหาชน')
+    .replace(/จำกัค|จำกัต/g, 'จำกัด')
+    .replace(/1\s*fou/gi, '1 ก้อน')
+    .replace(/22\s*aWG|22\/เพด/gi, '22AWG')
+    .replace(/18\s*เผด|18ลเพ/gi, '18AWG')
     .replace(/ใหม่\s*พร้/g, 'พร้อม')
     .replace(/พร้อมอ:/g, 'พร้อม');
 
@@ -736,10 +743,23 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
       // Extract SKU / Barcode if available
       let item_code = '';
-      const skuMatch = cleanDesc.match(/\[([0-9A-Z\-]+)\]|([0-9]{10,13})|([A-Z0-9\-]{5,15}\b)/);
+      const skuMatch = cleanDesc.match(/[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/);
       if (skuMatch) {
-        item_code = skuMatch[1] || skuMatch[2] || skuMatch[3] || '';
-        cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\[\]]/g, '').trim();
+        let rawCode = skuMatch[1] || '';
+        // Fix Thai OCR misreads in bracket codes (e.g. ม0204 -> M0204, 50164 -> S0164, pJ033 -> P0033)
+        rawCode = rawCode
+          .replace(/^ม/gi, 'M')
+          .replace(/^พ/gi, 'P')
+          .replace(/^แห/gi, 'H')
+          .replace(/^pJ/i, 'P0')
+          .replace(/^501/i, 'S01')
+          .replace(/^603/i, 'G03')
+          .replace(/^604/i, 'G04');
+
+        if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode)) {
+          item_code = rawCode;
+          cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
+        }
       }
 
       // Clean leading row numbers e.g. "1.", "2.", "15."
