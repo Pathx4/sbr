@@ -735,6 +735,12 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     if (isNewItemRow) {
       let cleanDesc = line;
 
+      // If line is reconstructed with 2D column gap spacing (3+ spaces), isolate leftmost column for description
+      const colSegments = line.split(/\s{3,}/);
+      if (colSegments.length >= 2) {
+        cleanDesc = colSegments[0];
+      }
+
       // Strip trailing numeric/price columns & VAT code indicators (e.g., "1.000 559.000 559.00 V" -> "")
       cleanDesc = cleanDesc
         .replace(/[\s|]+[VvNtX]\s*$/g, '')
