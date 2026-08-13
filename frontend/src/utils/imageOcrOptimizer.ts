@@ -660,6 +660,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     'เลขประจำตัวผู้เสียภาษี', 'สำนักงานใหญ่', 'เลขที่ใบเสร็จ', 'เลขที่ใบกำกับ', 'วันที่', 'DATE',
     // Table header keywords — column labels, not product items
     'รายละเอียด', 'ราคา/หน่วย', 'รวม (บาท)', 'รหัสสินค้า', 'จำนวน', 'หน่วยละ', 'จำนวนเงิน', 'DESCRIPTION', 'QTY', 'PRICE', 'AMOUNT', 'ITEM',
+    'ORDER NO', 'ORDER', 'ลำดับ', 'รายการ', 'ชื่อสินค้า', 'รายละเอียดสินค้า', 'NO.', 'รหัส', 'หน่วย', 'มูลค่า', 'ส่วนลด',
     // Invoice/receipt keywords
     'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'Tax Invoice', 'Receipt', 'INVOICE', 'DOCUMENT'
   ];
@@ -781,7 +782,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(line);
 
     // 5. Table header detection — lines with column labels
-    const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line);
+    const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(line);
 
     // A line is a NEW ITEM ROW if it has a row index, SKU prefix, or valid price
     // BUT NOT if it's an address line or table header
