@@ -606,16 +606,31 @@ export function reconstructTextFromBboxes(words: TesseractWord[]): string {
 
   const rows: TesseractWord[][] = [];
   let currentRow: TesseractWord[] = [sortedWords[0]];
-  const Y_TOLERANCE = 15; // Max vertical pixel difference to be considered same row
 
-  // 2. Cluster into rows based on Y-tolerance
+  // 2. Cluster into rows using Vertical Intersection (Y-Overlap)
   for (let i = 1; i < sortedWords.length; i++) {
     const word = sortedWords[i];
     
-    // If the word's Y-start is close to the current row's average Y, add it
-    const avgY = currentRow.reduce((sum, w) => sum + w.bbox.y0, 0) / currentRow.length;
+    // Calculate the median/average Y bounds of the current row
+    let sumY0 = 0, sumY1 = 0;
+    for (const w of currentRow) {
+      sumY0 += w.bbox.y0;
+      sumY1 += w.bbox.y1;
+    }
+    const avgY0 = sumY0 / currentRow.length;
+    const avgY1 = sumY1 / currentRow.length;
     
-    if (Math.abs(word.bbox.y0 - avgY) <= Y_TOLERANCE) {
+    // Check vertical overlap
+    const overlapStart = Math.max(avgY0, word.bbox.y0);
+    const overlapEnd = Math.min(avgY1, word.bbox.y1);
+    const overlapHeight = overlapEnd - overlapStart;
+    
+    const wordHeight = word.bbox.y1 - word.bbox.y0;
+    const rowHeight = avgY1 - avgY0;
+    const minHeight = Math.min(wordHeight, rowHeight);
+    
+    // If they overlap by at least 35% of the minimum height, they belong to the same row
+    if (overlapHeight > 0 && (overlapHeight / minHeight) > 0.35) {
       currentRow.push(word);
     } else {
       rows.push(currentRow);
@@ -626,7 +641,7 @@ export function reconstructTextFromBboxes(words: TesseractWord[]): string {
     rows.push(currentRow);
   }
 
-  // 3. Rebuild text with simulated column spacing
+  // 3. Rebuild text with simulated column spacing (X-axis)
   const rebuiltLines: string[] = [];
   for (const row of rows) {
     // Sort words in this row horizontally (left to right)
@@ -639,9 +654,9 @@ export function reconstructTextFromBboxes(words: TesseractWord[]): string {
       const word = row[i];
       const gap = word.bbox.x0 - lastX;
       
-      // If gap is significant, add extra spaces to simulate columns
-      if (i > 0 && gap > 40) {
-        lineText += '    '; // Column separator
+      // If gap is significant (> 35 pixels), add extra spaces to simulate columns
+      if (i > 0 && gap > 35) {
+        lineText += '    '; // Column separator (4 spaces) used by parsing logic
       } else if (i > 0) {
         lineText += ' ';
       }
