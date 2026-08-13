@@ -84,18 +84,50 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'binari
         const data = imageData.data;
 
         if (mode === 'grayscale') {
-          // Grayscale Contrast Mode for Numbers & English SKUs
+          // Grayscale Contrast Mode + Sharpening for clearer text edges
+          // 1. Grayscale & Contrast
           for (let i = 0; i < data.length; i += 4) {
             let gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-            gray = Math.max(0, Math.min(255, ((gray - 128) * 1.35) + 128));
+            gray = Math.max(0, Math.min(255, ((gray - 128) * 1.5) + 128)); // Increased contrast from 1.35 to 1.5
             data[i] = gray;
             data[i + 1] = gray;
             data[i + 2] = gray;
           }
+          
+          // 2. Simple Sharpening Filter (Convolution)
+          const w = width;
+          const h = height;
+          const tempData = new Uint8ClampedArray(data);
+          
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = (y * w + x) * 4;
+              // Sharpen Kernel:
+              //  0 -1  0
+              // -1  5 -1
+              //  0 -1  0
+              const top = ((y - 1) * w + x) * 4;
+              const bottom = ((y + 1) * w + x) * 4;
+              const left = (y * w + (x - 1)) * 4;
+              const right = (y * w + (x + 1)) * 4;
+              
+              let val = 5 * tempData[idx] 
+                      - tempData[top] 
+                      - tempData[bottom] 
+                      - tempData[left] 
+                      - tempData[right];
+              
+              val = Math.max(0, Math.min(255, val));
+              
+              data[idx] = val;
+              data[idx + 1] = val;
+              data[idx + 2] = val;
+            }
+          }
         } else {
           // Binarized Otsu Thresholding Mode for Thai Text & Tables
           const threshold = otsuThreshold(data, width, height);
-          const contrastFactor = 1.25;
+          const contrastFactor = 1.35;
 
           for (let i = 0; i < data.length; i += 4) {
             let gray = data[i];
