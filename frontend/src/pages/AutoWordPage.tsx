@@ -31,6 +31,7 @@ interface Invoice {
   items: Item[];
   imagePreview?: string;
   fileObject?: File;
+  isMultiPage?: boolean;
 }
 
 interface Contact {
@@ -214,6 +215,10 @@ export default function AutoWordPage() {
       for (let j = i + 1; j < invoices.length; j++) {
         const invA = invoices[i];
         const invB = invoices[j];
+
+        if (invA.isMultiPage || invB.isMultiPage) {
+          continue;
+        }
 
         let isDup = false;
         let reason = '';
@@ -505,6 +510,54 @@ export default function AutoWordPage() {
     }
   };
 
+  // Toggle Multi-Page Receipt status (Mark as Continuation Page 2 of 2)
+  const handleToggleMultiPage = (invId: string) => {
+    setInvoices(prev => prev.map(inv => inv.id === invId ? { ...inv, isMultiPage: !inv.isMultiPage } : inv));
+    const targetInv = invoices.find(i => i.id === invId);
+    const newStatus = !targetInv?.isMultiPage;
+    setStatusMsg({
+      type: 'success',
+      text: newStatus 
+        ? '📄 กำหนดบิลนี้เป็นบิลหลายหน้า (ยกเว้นการเตือนบิลซ้ำ) เรียบร้อยแล้ว!'
+        : 'ยกเลิกการกำหนดเป็นบิลหลายหน้าแล้ว'
+    });
+  };
+
+  // Merge items from source/secondary invoice into primary target invoice
+  const handleMergeInvoices = (sourceInvId: string) => {
+    const sourceInv = invoices.find(inv => inv.id === sourceInvId);
+    if (!sourceInv) return;
+
+    const getCleanNum = (num?: string) => num ? num.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : '';
+    const getCleanVendor = (v?: string) => v ? v.replace(/[^\wก-ฮa-zA-Z0-9]/g, '').toLowerCase() : '';
+
+    const numSource = getCleanNum(sourceInv.invoice_number);
+    const vendorSource = getCleanVendor(sourceInv.vendor_name);
+
+    // Find target invoice (same invoice number or vendor)
+    const target = invoices.find(inv => inv.id !== sourceInvId && (
+      (numSource && getCleanNum(inv.invoice_number) === numSource) ||
+      (vendorSource && getCleanVendor(inv.vendor_name) === vendorSource)
+    )) || invoices.find(inv => inv.id !== sourceInvId);
+
+    if (!target) {
+      setStatusMsg({ type: 'error', text: 'ไม่พบบิลหลักที่จะรับรายการมาร์จพัสดุ' });
+      return;
+    }
+
+    const newMergedItems = sourceInv.items.map((item, idx) => ({
+      ...item,
+      id: Date.now().toString() + '_merged_' + idx
+    }));
+
+    setInvoices(prev => prev.map(inv => inv.id === target.id ? { ...inv, items: [...inv.items, ...newMergedItems], isMultiPage: true } : inv).filter(inv => inv.id !== sourceInvId));
+    setActiveInvoiceId(target.id);
+    setStatusMsg({
+      type: 'success',
+      text: `🔗 รวมรายการพัสดุ ${newMergedItems.length} รายการ จากบิลหน้า 2 เข้ากับบิลหลัก (${target.vendor_name || 'บิลหลัก'}) เรียบร้อยแล้ว!`
+    });
+  };
+
   const handleUpdateInvoice = (invId: string, field: keyof Invoice, val: any) => {
     setInvoices(prev => prev.map(inv => inv.id === invId ? { ...inv, [field]: val } : inv));
   };
@@ -686,10 +739,10 @@ export default function AutoWordPage() {
               <span>Interactive Side-by-Side Crop OCR Engine (No Server Needed)</span>
             </div>
             <h1 className="text-2xl font-black tracking-tight font-display text-white">
-              ระบบเอกสารอัตโนมัติ (Auto-Word & Excel Generator)
+              ระบบเอกสารจัดซื้อจัดจ้างจากใบกำกับภาษีอัตโนมัติ (Tax Invoice & Excel Generator)
             </h1>
             <p className="text-slate-300 text-xs max-w-3xl">
-              แสดงรูปภาพบิลคู่กับตารางข้อมูล คุณสามารถลากกรอบสี่เหลี่ยมบนรูปภาพบิลฝั่งซ้ายเพื่อสแกนเฉพาะจุด เช่น ลากคลุมตารางสินค้าหรือชื่อร้านค้า ข้อความจะวิ่งลงตารางให้อัตโนมัติทันที
+              แสดงรูปภาพใบกำกับภาษี/ใบเสร็จรับเงินคู่กับตารางข้อมูล คุณสามารถลากกรอบสี่เหลี่ยมบนรูปภาพฝั่งซ้ายเพื่อสแกนเฉพาะจุด เช่น ลากคลุมตารางสินค้าหรือชื่อร้านค้า ข้อความจะวิ่งลงตารางให้อัตโนมัติทันที
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -698,7 +751,7 @@ export default function AutoWordPage() {
               className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
             >
               <Upload className="w-4 h-4" />
-              <span>+ อัปโหลดรูปบิลใหม่</span>
+              <span>+ อัปโหลดใบกำกับภาษี/ใบเสร็จ</span>
             </button>
             <input
               ref={fileInputRef}
@@ -717,7 +770,7 @@ export default function AutoWordPage() {
         <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex flex-col space-y-2">
           <div className="flex items-center gap-3 text-xs font-bold">
             <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
-            <span>{scanStatus || 'กำลังประมวลผลสแกนข้อความ...'}</span>
+            <span>{scanStatus || 'กำลังประมวลผลสแกนอ่านใบกำกับภาษี...'}</span>
           </div>
           {scanProgress > 0 && (
             <div className="w-full bg-blue-200 rounded-full h-1.5 overflow-hidden">
@@ -743,26 +796,42 @@ export default function AutoWordPage() {
       {/* Global Top Duplicate Invoice Alert Banner */}
       {duplicateInvoicesInfo.duplicateDetails.length > 0 && (
         <div className="p-4 rounded-3xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 text-white shadow-xl space-y-2 border-2 border-rose-300 animate-pulse">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-black text-sm md:text-base">
               <AlertTriangle className="w-6 h-6 text-amber-300 shrink-0" />
-              <span>⚠️ ตรวจพบบิลซ้ำในระบบ! ({duplicateInvoicesInfo.duplicateInvIds.size} ใบเสร็จมีข้อมูลตรงกัน)</span>
+              <span>⚠️ ตรวจพบบิล/ใบกำกับภาษีซ้ำในระบบ! ({duplicateInvoicesInfo.duplicateInvIds.size} ใบเสร็จมีข้อมูลตรงกัน)</span>
             </div>
             {activeInvoice && duplicateInvoicesInfo.duplicateInvIds.has(activeInvoice.id) && (
-              <button
-                type="button"
-                onClick={() => handleDeleteInvoice(activeInvoice.id)}
-                className="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs rounded-xl shadow-md transition shrink-0"
-              >
-                ลบบิลซ้ำใบนี้ออก
-              </button>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleMergeInvoices(activeInvoice.id)}
+                  className="px-3 py-1.5 bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl shadow-md transition"
+                >
+                  🔗 รวมบิล 2 หน้า
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleMultiPage(activeInvoice.id)}
+                  className="px-3 py-1.5 bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs rounded-xl shadow-md transition"
+                >
+                  📄 เป็นบิลหน้าต่อ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteInvoice(activeInvoice.id)}
+                  className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs rounded-xl shadow-md transition"
+                >
+                  ลบบิลซ้ำใบนี้ออก
+                </button>
+              </div>
             )}
           </div>
           <p className="text-xs text-rose-100 font-semibold">
             รายละเอียดบิลที่ซ้ำกัน: {duplicateInvoicesInfo.duplicateDetails.join(' | ')}
           </p>
           <p className="text-[11px] text-rose-200 font-medium">
-            💡 กรุณาคลิกเลือกปุ่มแท็บบิลสีแดงด้านซ้าย แล้วกด "ลบบิลซ้ำใบนี้ออก" ก่อนสร้างเอกสาร
+            💡 สำหรับใบกำกับภาษีที่มี 2 หน้า คุณสามารถกดปุ่ม "🔗 รวมบิล 2 หน้า" เพื่อรวมรายการสินค้าลงใบกำกับภาษีเดียวกันได้ทันที
           </p>
         </div>
       )}
@@ -774,11 +843,11 @@ export default function AutoWordPage() {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-blue-600" />
-              <h2 className="font-bold text-slate-800 text-sm">รูปภาพบิล (ลากคลุมกรอบเพื่อสแกน)</h2>
+              <h2 className="font-bold text-slate-800 text-sm">รูปภาพใบกำกับภาษี (ลากคลุมกรอบเพื่อสแกน)</h2>
             </div>
             {activeInvoice && (
               <span className="text-[11px] font-semibold text-slate-500">
-                บิลที่ {invoices.findIndex(i => i.id === activeInvoice.id) + 1} / {invoices.length}
+                เอกสารที่ {invoices.findIndex(i => i.id === activeInvoice.id) + 1} / {invoices.length}
               </span>
             )}
           </div>
@@ -798,12 +867,16 @@ export default function AutoWordPage() {
                         : isDup ? 'bg-rose-100 text-rose-800 border border-rose-300 font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
-                    <span>{inv.vendor_name ? inv.vendor_name.slice(0, 15) : `บิลที่ ${idx + 1}`}</span>
-                    {isDup && (
+                    <span>{inv.vendor_name ? inv.vendor_name.slice(0, 15) : `เอกสารที่ ${idx + 1}`}</span>
+                    {inv.isMultiPage ? (
+                      <span className="px-1.5 py-0.2 bg-blue-700 text-white text-[9px] font-bold rounded-full">
+                        📄 บิลหลายหน้า
+                      </span>
+                    ) : isDup ? (
                       <span className="px-1.5 py-0.2 bg-rose-600 text-white text-[9px] font-black rounded-full animate-pulse">
                         ⚠️ บิลซ้ำ
                       </span>
-                    )}
+                    ) : null}
                   </button>
                 );
               })}
@@ -822,7 +895,7 @@ export default function AutoWordPage() {
                 <img
                   ref={imageRef}
                   src={activeInvoice.imagePreview}
-                  alt="Receipt Preview"
+                  alt="Tax Invoice Preview"
                   draggable={false}
                   onDragStart={e => e.preventDefault()}
                   className="max-w-full max-h-[580px] object-contain select-none pointer-events-none"
@@ -881,8 +954,8 @@ export default function AutoWordPage() {
                 <Upload className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-800">คลิกที่นี่ เพื่อเลือกรูปภาพบิล</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">รองรับรูปถ่ายบิล JPG, PNG, WEBP</p>
+                <p className="text-xs font-bold text-slate-800">คลิกที่นี่ เพื่อเลือกรูปภาพใบกำกับภาษี / ใบเสร็จรับเงิน</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">รองรับรูปถ่ายใบกำกับภาษีเต็มรูปแบบ, ใบเสร็จรับเงิน JPG, PNG, WEBP</p>
               </div>
             </div>
           )}
@@ -1158,17 +1231,50 @@ export default function AutoWordPage() {
             <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-sm space-y-4">
               {/* Active Invoice Duplicate Card Warning */}
               {duplicateInvoicesInfo.duplicateInvIds.has(activeInvoice.id) && (
-                <div className="p-3.5 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-900 flex flex-wrap items-center justify-between gap-3 text-xs font-bold shadow-xs">
-                  <div className="flex items-center gap-2">
+                <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-400 text-rose-900 space-y-3 shadow-xs">
+                  <div className="flex items-center gap-2 font-bold text-xs">
                     <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
                     <span>⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จนี้มีข้อมูลซ้ำกับบิลอื่นในระบบ (เลขที่บิล / ร้านค้า / ยอดเงิน)</span>
                   </div>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMergeInvoices(activeInvoice.id)}
+                      className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>🔗 รวมรายการพัสดุเข้าด้วยกัน (บิล 2 หน้า)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleMultiPage(activeInvoice.id)}
+                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                    >
+                      📄 เป็นบิลหน้าต่อ (ไม่เตือนซ้ำ)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteInvoice(activeInvoice.id)}
+                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+                    >
+                      🗑️ ลบบิลซ้ำนี้ออก
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeInvoice.isMultiPage && (
+                <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 text-blue-900 flex items-center justify-between text-xs font-semibold">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>📄 บิลนี้ถูกกำหนดเป็น "บิลหลายหน้า" (ระบบจะนำรายการสินค้าทั้งหมดรวมสร้างลงเอกสารฉบับเดียว)</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => handleDeleteInvoice(activeInvoice.id)}
-                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shrink-0 transition shadow-sm"
+                    onClick={() => handleToggleMultiPage(activeInvoice.id)}
+                    className="text-[11px] text-blue-700 hover:underline font-bold px-2 py-0.5 rounded bg-white border border-blue-200"
                   >
-                    ลบบิลซ้ำนี้ออก
+                    ยกเลิกโหมดบิลหลายหน้า
                   </button>
                 </div>
               )}

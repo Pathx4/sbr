@@ -12,18 +12,41 @@ const BUDGET_SHEET_ID = "1eWkRl_E_PCYWZ_EGRo7_ZC7gP5XlAC_bFVeH2VhD4Tc";
 const PROCUREMENT_SHEET_ID = "1XtlZ878S-3UXudK9dAtLvjGQMYYn0jKCcEF14sCGp9Y";
 
 function getSpreadsheetDoc(type) {
+  if (type === 'procurement' && PROCUREMENT_SHEET_ID) {
+    try {
+      var docProc = SpreadsheetApp.openById(PROCUREMENT_SHEET_ID);
+      if (docProc) return docProc;
+    } catch (e) {
+      Logger.log("ไม่สามารถเปิด PROCUREMENT_SHEET_ID ได้: " + e.toString());
+    }
+  }
+  
   try {
     var doc = SpreadsheetApp.getActiveSpreadsheet();
     if (doc) return doc;
   } catch (e) {}
   
-  var targetId = (type === 'procurement') ? PROCUREMENT_SHEET_ID : BUDGET_SHEET_ID;
-  return SpreadsheetApp.openById(targetId);
+  var targetId = (type === 'procurement' && PROCUREMENT_SHEET_ID) ? PROCUREMENT_SHEET_ID : BUDGET_SHEET_ID;
+  try {
+    return SpreadsheetApp.openById(targetId);
+  } catch (err) {
+    return SpreadsheetApp.openById(BUDGET_SHEET_ID);
+  }
+}
+
+/**
+ * ฟังก์ชันทำความสะอาดตัวเลข ป้องกันข้อผิดพลาดกรณีดึงตัวเลขที่มีคอมม่าหรือข้อความปนมา
+ */
+function cleanNumber(val) {
+  if (val === undefined || val === null || val === "") return 0;
+  if (typeof val === 'number') return val;
+  const parsed = parseFloat(val.toString().replace(/[^\d.-]/g, ''));
+  return isNaN(parsed) ? 0 : parsed;
 }
 
 /**
  * 1. ฟังก์ชันเปิดหน้าเว็บ (Dynamic Page Loader)
- * รองรับการสลับหน้า index.html (งบประมาณ) และ รายงานจัดซื้อจัดจ้าง.html
+ * รองรับการสลับหน้า index.html (งบประมาณ) และ รายงานจัดซื้อจัดจ้าง.html / index2.html
  */
 function doGet(e) {
   var page = (e && e.parameter && e.parameter.page) ? e.parameter.page.toString().toLowerCase() : 'index';
@@ -31,19 +54,28 @@ function doGet(e) {
   
   if (page === 'procurement' || page === 'index2' || page === 'รายงานจัดซื้อจัดจ้าง' || page === 'report') {
     try {
-      var t2 = HtmlService.createTemplateFromFile('Index2');
+      var t2 = HtmlService.createTemplateFromFile('index2');
       t2.webAppUrl = webAppUrl;
       return t2.evaluate()
           .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
           .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
           .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
     } catch (err) {
-      var tReport = HtmlService.createTemplateFromFile('รายงานจัดซื้อจัดจ้าง');
-      tReport.webAppUrl = webAppUrl;
-      return tReport.evaluate()
-          .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
-          .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
-          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      try {
+        var t2Upper = HtmlService.createTemplateFromFile('Index2');
+        t2Upper.webAppUrl = webAppUrl;
+        return t2Upper.evaluate()
+            .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
+            .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      } catch (err2) {
+        var tReport = HtmlService.createTemplateFromFile('รายงานจัดซื้อจัดจ้าง');
+        tReport.webAppUrl = webAppUrl;
+        return tReport.evaluate()
+            .setTitle('แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร')
+            .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+            .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+      }
     }
   }
 
@@ -294,41 +326,9 @@ function addRecord(data) {
   }
 }
 
-// 6. ฟังก์ชันดึงข้อมูลจากตาราง "ตัวชี้วัด สำนัก"
-function getKpiSheetData() {
-  try {
-    var doc = getSpreadsheetDoc('budget');
-    var sheet = doc.getSheetByName("ตัวชี้วัด สำนัก");
-    if (!sheet) {
-      var sheets = doc.getSheets();
-      for (var i = 0; i < sheets.length; i++) {
-        var name = sheets[i].getName().replace(/\s+/g, "");
-        if (name === "ตัวชี้วัดสำนัก") {
-          sheet = sheets[i];
-          break;
-        }
-      }
-    }
-    
-    if (!sheet) return [];
-    return sheet.getDataRange().getDisplayValues();
-  } catch (e) {
-    return [];
-  }
-}
-
-// =================================================================
-// 🔴 ส่วนที่ 2: ฟังก์ชันสำหรับแดชบอร์ดจัดซื้อจัดจ้าง (รายงานจัดซื้อจัดจ้าง.html)
-// =================================================================
-
-function cleanNumber(val) {
-  if (val === null || val === undefined) return 0;
-  if (typeof val === 'number') return val;
-  const cleanStr = val.toString().replace(/[^\d.-]/g, '');
-  const num = parseFloat(cleanStr);
-  return isNaN(num) ? 0 : num;
-}
-
+/**
+ * ค้นหาแถวที่เป็นหัวข้อตาราง (Header Row) ที่แท้จริงโดยการตรวจจับคำสำคัญ
+ */
 function findHeaderRow(values) {
   let bestRowIndex = 0;
   let maxScore = -1;
@@ -341,7 +341,9 @@ function findHeaderRow(values) {
       if (!cell) return;
       const cellStr = cell.toString().toLowerCase();
       keywords.forEach(kw => {
-        if (cellStr.includes(kw)) score++;
+        if (cellStr.includes(kw)) {
+          score++;
+        }
       });
     });
     if (score > maxScore) {
@@ -352,39 +354,10 @@ function findHeaderRow(values) {
   return maxScore > 0 ? bestRowIndex : 0;
 }
 
-function getDashboardData(targetSheetName) {
-  try {
-    const ss = getSpreadsheetDoc('procurement');
-    
-    if (targetSheetName === "จัดซื้อจัดจ้างทั้งหมด") {
-      const dataUnder = getSheetDataByName(ss, "จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)");
-      const dataOver = getSheetDataByName(ss, "จัดซื้อจัดจ้าง 2569 (เกิน5แสน)");
-      
-      let combinedData = [];
-      if (dataUnder.status === "success") combinedData = combinedData.concat(dataUnder.data);
-      if (dataOver.status === "success") combinedData = combinedData.concat(dataOver.data);
-      
-      combinedData.forEach((item, idx) => {
-        item.id = idx + 1;
-      });
-      
-      return {
-        status: "success",
-        data: combinedData,
-        sheetName: "จัดซื้อจัดจ้างทั้งหมด [ภาพรวม]",
-        isAll: true
-      };
-    } else {
-      return getSheetDataByName(ss, targetSheetName || "จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)");
-    }
-  } catch (error) {
-    return {
-      status: "error",
-      message: "เกิดข้อผิดพลาด: " + error.toString()
-    };
-  }
-}
-
+/**
+ * ดึงข้อมูลสเปรดชีตจัดวางพิกัดตรงตามโครงสร้างของแผ่นงานจริง
+ * ใช้โค้ดเดิมที่ดึงข้อมูลได้ถูกต้อง — แยกคอลัมน์ตามชื่อชีต
+ */
 function getSheetDataByName(ss, sheetName) {
   const sheet = ss.getSheetByName(sheetName);
   if (!sheet) {
@@ -396,6 +369,7 @@ function getSheetDataByName(ss, sheetName) {
     return { status: "empty", data: [] };
   }
   
+  // โหลดคอลัมน์กว้าง 24 คอลัมน์ (A ถึง X) ครอบคลุมพิกัดข้อมูลที่จำเป็นทั้งหมด
   const range = sheet.getRange(1, 1, lastRow, 24);
   const values = range.getValues();
   const headerRowIndex = findHeaderRow(values);
@@ -420,53 +394,61 @@ function getSheetDataByName(ss, sheetName) {
     let budget = 0;
     let rawRowValues = [];
 
-    for (let c = 0; c < Math.min(row.length, 13); c++) {
+    let eproNo = "";
+
+    // เซฟแถว A ถึง M ทั้งหมด
+    // เก็บค่าดิบทั้ง 24 คอลัมน์ (ถึงคอลัมน์ X Index 23)
+    for (let c = 0; c < Math.min(row.length, 24); c++) {
       rawRowValues.push(row[c] ? row[c].toString().trim() : "");
     }
     
-    contractAmountK = cleanNumber(row[10]);
-    contractAmountP = cleanNumber(row[15]);
+    // ดึงค่าสัญญาจริงจากทั้ง คอลัมน์ K และ คอลัมน์ P
+    contractAmountK = cleanNumber(row[10]); // คอลัมน์ K (Index 10)
+    contractAmountP = cleanNumber(row[15]); // คอลัมน์ P (Index 15)
     
-    if (sheetName.includes("ไม่เกิน5แสน")) {
-      projectId = row[0] ? row[0].toString().trim() : "";
-      docNo = row[1] ? row[1].toString().trim() : "";
-      requestNo = row[7] ? row[7].toString().trim() : "";
-      projectName = row[8] ? row[8].toString().trim() : "";
-      period = row[10] ? row[10].toString().trim() : "-";
-      installments = row[11] ? row[11].toString().trim() : "-";
-      contractAmount = cleanNumber(row[10]);
-      department = row[11] ? row[11].toString().trim() : "ไม่ระบุฝ่าย";
-      status = row[12] ? row[12].toString().trim() : "อยู่ระหว่างกระบวนการจัดจ้าง";
+    // ฟังก์ชันตรวจสอบและสกัดข้อความสถานะจัดซื้อจัดจ้างอันแรกสุด (อันบนสุด) กรณีมีหลายสเตจในช่องเดียวกัน
+    function extractValidStatus(v1, v2, v3) {
+      function getFirstStatusPhrase(val) {
+        if (!val) return "";
+        var str = val.toString().trim();
+        // แยกบรรทัดและเครื่องหมายคั่น (/, ,, \n, \r) เพื่อดึงข้อความอันแรกสุด (อันบนสุด)
+        var phrases = str.split(/[\/\n\r,]+/);
+        for (var i = 0; i < phrases.length; i++) {
+          var phrase = phrases[i].trim();
+          if (phrase && !phrase.includes("วัน") && isNaN(parseFloat(phrase))) {
+            return phrase;
+          }
+        }
+        return phrases[0] ? phrases[0].trim() : "";
+      }
       
-      method = row[5] ? row[5].toString().trim() : "วิธีเฉพาะเจาะจง";
-      vendor = row[6] ? row[6].toString().trim() : "ยังไม่ได้ทำสัญญา";
-      date = row[8] ? row[8].toString().trim() : "-";
-      budget = cleanNumber(row[2]);
-    } else if (sheetName.includes("เกิน5แสน")) {
-      projectId = row[1] ? row[1].toString().trim() : "";
-      docNo = row[1] ? row[1].toString().trim() : "";
-      projectName = row[6] ? row[6].toString().trim() : "";
-      requestNo = row[4] ? row[4].toString().trim() : "";
-      period = row[12] ? row[12].toString().trim() : "-";
-      installments = row[13] ? row[13].toString().trim() : "-";
-      contractAmount = cleanNumber(row[10]);
-      department = row[11] ? row[11].toString().trim() : "ไม่ระบุฝ่าย";
-      status = row[23] ? row[23].toString().trim() : "อยู่ระหว่างกระบวนการจัดจ้าง";
-      
-      method = row[5] ? row[5].toString().trim() : "วิธี e-Bidding";
-      vendor = row[7] ? row[7].toString().trim() : "ยังไม่ได้ทำสัญญา";
-      date = row[16] ? row[16].toString().trim() : "-";
-      budget = cleanNumber(row[2]);
-    } else {
-      projectId = row[0] ? row[0].toString().trim() : "";
-      docNo = row[1] ? row[1].toString().trim() : "";
-      projectName = row[8] || row[6] || "";
-      contractAmount = cleanNumber(row[13]) || cleanNumber(row[15]);
-      department = row[11] || row[22] || "ไม่ระบุ";
-      status = row[12] || row[23] || "เตรียมการ";
+      var candidates = [v1, v2, v3];
+      for (var k = 0; k < candidates.length; k++) {
+        var s = getFirstStatusPhrase(candidates[k]);
+        if (s && !s.includes("วัน") && isNaN(parseFloat(s))) {
+          return s;
+        }
+      }
+      return "อยู่ระหว่างกระบวนการจัดจ้าง";
     }
+
+    projectId = row[0] ? row[0].toString().trim() : "";       // A: ลำดับ
+    docNo = row[1] ? row[1].toString().trim() : "";           // B: เลขที่เอกสาร AX
+    eproNo = row[2] ? row[2].toString().trim() : "";          // C: เลขที่ใบสั่ง E-PRO
+    method = row[3] ? row[3].toString().trim() : (sheetName.includes("เกิน") ? "วิธี e-Bidding" : "วิธีเฉพาะเจาะจง"); // D: วิธีการจัดหา
+    requestNo = row[4] ? row[4].toString().trim() : "";       // E: เลขที่ รายงานขอซื้อ/จ้าง
+    projectName = row[5] ? row[5].toString().trim() : (row[6] ? row[6].toString().trim() : "ไม่ได้ระบุรายการ"); // F: รายการ (ชื่อโครงการ/งาน)
+    vendor = row[6] ? row[6].toString().trim() : "ยังไม่ได้ทำสัญญา"; // G: คู่สัญญา / บริษัท / ผู้ชนะ
+    period = row[7] ? row[7].toString().trim() : "-";         // H: ระยะเวลาดำเนินการ
+    installments = row[8] ? row[8].toString().trim() : "-";   // I: จำนวนงวด
+    date = row[9] ? row[9].toString().trim() : "-";           // J: วันลงนาม / เลขที่สัญญา
+    contractAmount = cleanNumber(row[10]);                    // K: วงเงินสัญญาจริง
+    department = row[11] ? row[11].toString().trim() : "ไม่ระบุฝ่าย"; // L: ฝ่าย
+    status = extractValidStatus(row[12], row[23], row[8]);     // M: สถานะของงาน
     
-    if (!docNo && !projectName && contractAmount === 0) {
+    // ข้ามเฉพาะแถวที่ว่างเปล่าทุกช่องจริงๆ เท่านั้น (ไม่ข้ามโครงการที่อยู่ระหว่างจัดจ้างที่ยังไม่สรุปวงเงิน)
+    var rawJoined = rawRowValues.join("").trim();
+    if (!rawJoined || (!projectName && !docNo && !status)) {
       return;
     }
     
@@ -474,6 +456,7 @@ function getSheetDataByName(ss, sheetName) {
       id: i + 1,
       projectId: projectId,
       docNo: docNo,
+      eproNo: eproNo,
       projectName: projectName,
       requestNo: requestNo,
       period: period,
@@ -488,7 +471,8 @@ function getSheetDataByName(ss, sheetName) {
       date: date,
       budget: budget,
       rawRowValues: rawRowValues,
-      sheetType: sheetName.includes("เกิน5แสน") ? "over" : "under"
+      sheetName: sheetName,
+      sheetType: (!sheetName.includes("ไม่เกิน") && (sheetName.includes("เกิน5แสน") || sheetName.includes("เกิน 5 แสน") || sheetName.includes("เกิน"))) ? "over" : "under"
     });
   });
   
@@ -497,6 +481,42 @@ function getSheetDataByName(ss, sheetName) {
     data: formattedData,
     sheetName: sheetName
   };
+}
+
+/**
+ * ดึงข้อมูลดิบจากชีตที่ระบุและประมวลผลส่งกลับให้หน้า Frontend
+ */
+function getDashboardData(targetSheetName) {
+  try {
+    const ss = getSpreadsheetDoc('procurement');
+    
+    if (!targetSheetName || targetSheetName === "จัดซื้อจัดจ้างทั้งหมด" || targetSheetName.includes("ทั้งหมด")) {
+      const dataUnder = getSheetDataByName(ss, "จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)");
+      const dataOver = getSheetDataByName(ss, "จัดซื้อจัดจ้าง 2569 (เกิน5แสน)");
+      
+      let combinedData = [];
+      if (dataUnder.status === "success") combinedData = combinedData.concat(dataUnder.data);
+      if (dataOver.status === "success") combinedData = combinedData.concat(dataOver.data);
+      
+      combinedData.forEach((item, idx) => {
+        item.id = idx + 1;
+      });
+      
+      return {
+        status: "success",
+        data: combinedData,
+        sheetName: "จัดซื้อจัดจ้างทั้งหมด [ภาพรวม]",
+        isAll: true
+      };
+    } else {
+      return getSheetDataByName(ss, targetSheetName || "จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)");
+    }
+  } catch (error) {
+    return {
+      status: "error",
+      message: "เกิดข้อผิดพลาดคลาวด์เซิร์ฟเวอร์: " + error.toString()
+    };
+  }
 }
 
 function appendRecordToSheet(rowData) {
@@ -542,13 +562,22 @@ function appendRecordToSheet(rowData) {
 }
 
 function generateSampleData() {
-  const ss = getSpreadsheetDoc('procurement');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const check = Browser.msgBox("ยืนยันการทำจำลองข้อมูล", "ระบบจะสร้างฐานข้อมูลตัวอย่างจำลองบนแผ่นงานใหม่แยกตาม 8 สถานะมาตรฐานล่าสุดของคุณ ต้องการดำเนินการต่อหรือไม่?", Browser.Buttons.YES_NO);
+  if (check === "no") return;
+
   const mockDepts = ["ฝ่ายเทคโนโลยีสารสนเทศ", "ฝ่ายบริหารงานทั่วไป", "ฝ่ายจัดส่งและคลังสินค้า", "ฝ่ายทรัพยากรบุคคล", "ฝ่ายบัญชีและการเงิน"];
+  
+  // 8 สถานะความรับผิดชอบมาตรฐานใหม่
   const standardStatuses = [
-    "อยู่ระหว่างกระบวนการจัดจ้าง", "งานระหว่างทำ", "ส่งมอบงานแล้ว รอตรวจรับ", 
-    "อยู่ระหว่าง คกก. ตรวจรับ", "ส่งรายงานตรวจรับแล้ว", "รอพัสดุตรวจ", 
-    "อนุมัติรายงานตรวจรับแล้ว", "เบิกจ่ายแล้ว/จบงาน", "ดำเนินงานงวด 1", 
-    "ดำเนินงานงวด 2", "ดำเนินงานงวด 3", "ดำเนินงานงวดสุดท้าย"
+    "อยู่ระหว่างกระบวนการจัดจ้าง",
+    "งานระหว่างทำ",
+    "ส่งมอบงานแล้ว รอตรวจรับ",
+    "อยู่ระหว่าง คกก. ตรวจรับ",
+    "ส่งรายงานตรวจรับแล้ว /รอพัสดุตรวจ",
+    "อนุมัติรายงานตรวจรับแล้ว",
+    "เบิกจ่ายแล้ว/จบงาน",
+    "ยกเลิกการจัดซื้อ/จัดจ้าง"
   ];
 
   const mockAmountsUnder = [
@@ -673,107 +702,4 @@ function generateSampleData() {
 
   writeSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", mockAmountsUnder, projectsUnder);
   writeSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", mockAmountsOver, projectsOver);
-}
-
-/**
- * 📊 ดึงข้อมูลจัดซื้อจัดจ้างสำหรับหน้า Index2 / รายงานจัดซื้อจัดจ้างผู้บริหาร
- */
-function getDashboardData(selectedReport) {
-  try {
-    selectedReport = selectedReport || "จัดซื้อจัดจ้างทั้งหมด";
-    const ss = getSpreadsheetDoc('procurement');
-    
-    let allItems = [];
-    let sheetNameTitle = selectedReport;
-    
-    const fetchSheetData = (sheetName, isOver) => {
-      const sheet = ss.getSheetByName(sheetName);
-      if (!sheet) return [];
-      const values = sheet.getDataRange().getDisplayValues();
-      if (values.length <= 1) return [];
-      
-      const items = [];
-      for (let i = 1; i < values.length; i++) {
-        const row = values[i];
-        if (!row[0] && !row[1] && !row[6] && !row[8]) continue;
-        
-        let contractAmount = 0;
-        if (isOver) {
-          contractAmount = cleanNumber(row[10]) || cleanNumber(row[15]) || 0;
-        } else {
-          contractAmount = cleanNumber(row[9]) || cleanNumber(row[10]) || 0;
-        }
-        
-        const projName = isOver ? (row[6] || row[1] || "-") : (row[8] || row[1] || "-");
-        const docNo = row[1] || "-";
-        const reqNo = isOver ? (row[4] || "-") : (row[7] || "-");
-        const eproNo = isOver ? (row[9] || "-") : (row[3] || "-");
-        const dept = isOver ? (row[11] || row[22] || "ไม่ระบุฝ่าย") : (row[11] || "ไม่ระบุฝ่าย");
-        const status = isOver ? (row[23] || row[12] || "อยู่ระหว่างกระบวนการจัดจ้าง") : (row[12] || "อยู่ระหว่างกระบวนการจัดจ้าง");
-        const period = isOver ? (row[7] || row[12] || "-") : (row[10] || "-");
-        const installments = isOver ? (row[8] || row[13] || "-") : (row[11] || "-");
-        
-        items.push({
-          id: i,
-          projectId: row[0] || i,
-          docNo: docNo,
-          eproNo: eproNo,
-          projectName: projName,
-          budget: cleanNumber(row[2]) || contractAmount,
-          median: cleanNumber(row[3]) || contractAmount,
-          contractAmount: contractAmount,
-          savings: Math.max(0, (cleanNumber(row[2]) || contractAmount) - contractAmount),
-          department: dept,
-          method: isOver ? (row[5] || "วิธี e-Bidding") : (row[5] || "วิธีเฉพาะเจาะจง"),
-          status: status,
-          vendor: row[6] || row[7] || "ผู้เสนอราคา",
-          requestNo: reqNo,
-          date: row[16] || "12/03/2026",
-          contractNo: isOver ? (row[9] || "-") : (row[1] || "-"),
-          period: period,
-          installments: installments,
-          sheetType: isOver ? "over" : "under"
-        });
-      }
-      return items;
-    };
-
-    if (selectedReport.includes("เกิน5แสน") && !selectedReport.includes("ไม่เกิน")) {
-      allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
-      sheetNameTitle = "จัดซื้อจัดจ้าง 2569 (เกิน5แสน)";
-    } else if (selectedReport.includes("ไม่เกิน5แสน")) {
-      allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
-      sheetNameTitle = "จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)";
-    } else {
-      const underItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
-      const overItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
-      allItems = underItems.concat(overItems);
-      sheetNameTitle = "จัดซื้อจัดจ้างทั้งหมด [ภาพรวม]";
-    }
-
-    if (allItems.length === 0) {
-      generateSampleData();
-      if (selectedReport.includes("เกิน5แสน") && !selectedReport.includes("ไม่เกิน")) {
-        allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
-      } else if (selectedReport.includes("ไม่เกิน5แสน")) {
-        allItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
-      } else {
-        const underItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)", false);
-        const overItems = fetchSheetData("จัดซื้อจัดจ้าง 2569 (เกิน5แสน)", true);
-        allItems = underItems.concat(overItems);
-      }
-    }
-
-    return {
-      status: "success",
-      sheetName: sheetNameTitle,
-      data: allItems
-    };
-
-  } catch (error) {
-    return {
-      status: "error",
-      message: error.toString()
-    };
-  }
 }

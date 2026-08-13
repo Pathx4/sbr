@@ -147,6 +147,19 @@ const TYPO_MAP: Record<string, string> = {
   'หจก': 'หจก.',
   'บาn': 'บาท',
   'บาทท': 'บาท',
+  'ดาม': 'ด้าม',
+  'แผน': 'แผ่น',
+  'รีม': 'รีม',
+  'ซอง': 'ซอง',
+  'กอน': 'ก้อน',
+  'ขวด': 'ขวด',
+  'ถุง': 'ถุง',
+  'แกลลอน': 'แกลลอน',
+  'เมตร': 'เมตร',
+  'มม': 'มม.',
+  'ซม': 'ซม.',
+  'กิโลกรัม': 'กิโลกรัม',
+  'กก': 'กก.',
   // Hardware & Electrical Misread Corrections (SAFE entries only)
   'พเผลปลั๊ก': 'พาวเวอร์ปลั๊ก',
   'พเอ0ปลั๊ก': 'พาวเวอร์ปลั๊ก',
@@ -209,19 +222,31 @@ const HARDWARE_MASTER_DICTIONARY = [
 const MASTER_VENDOR_DICTIONARY = [
   'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด',
   'บริษัท ซีโอแอล จำกัด (มหาชน)',
+  'บริษัท ออฟฟิศเมท (ไทย) จำกัด',
+  'บริษัท ออฟฟิศเมท จำกัด',
   'บริษัท โฮม โปรดักส์ เซ็นเตอร์ จำกัด (มหาชน)',
   'บริษัท ดูโฮม จำกัด (มหาชน)',
   'บริษัท สยามโกลบอลเฮ้าส์ จำกัด (มหาชน)',
+  'บริษัท เจ.ไอ.บี. คอมพิวเตอร์ กรุ๊ป จำกัด',
   'บริษัท ไอที ซิตี้ จำกัด (มหาชน)',
   'บริษัท แอดไวซ์ ไอที อินฟิเนท จำกัด (มหาชน)',
   'บริษัท บีทูเอส จำกัด',
   'บริษัท บิ๊กซี ซูเปอร์เซ็นเตอร์ จำกัด (มหาชน)',
   'บริษัท เอก-ชัย ดีสทริบิวชั่น ซิสเทม จำกัด',
+  'บริษัท ซีพี แอ็กซ์ตร้า จำกัด (มหาชน)',
+  'บริษัท สยามแม็คโคร จำกัด (มหาชน)',
+  'บริษัท บุญถาวร เซรามิค จำกัด',
+  'บริษัท มิสเตอร์. ดี.ไอ.วาย. (กรุงเทพ) จำกัด',
+  'บริษัท เมกา โฮม เซ็นเตอร์ จำกัด',
   'บริษัท เอส. สมาร์ทเทค ซิสเต็ม จำกัด',
   'บริษัท อมร อีเล็คโทรนิคส์ จำกัด',
+  'บริษัท อมร ศูนย์รวมอะไหล่อิเล็กทรอนิกส์ จำกัด',
   'บริษัท นัฐพงษ์ เซลส์แอนด์เซอร์วิส จำกัด',
   'บริษัท ศุภการ เอ็นจิเนียริ่ง จำกัด',
-  'บริษัท ไทยพิพัฒน์ ฮาร์ดแวร์ จำกัด'
+  'บริษัท ไทยพิพัฒน์ ฮาร์ดแวร์ จำกัด',
+  'Shopee Official Store',
+  'Lazada Official Store',
+  'TikTok Shop'
 ];
 
 export function fuzzyCorrectWord(word: string): string {
@@ -647,10 +672,10 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     vendor_name = extractVendorNameFromText(text);
   }
 
-  // 2. Extract Invoice Number
+  // 2. Extract Invoice Number (Optimized for Thai Tax Invoices / ใบกำกับภาษี)
   for (const line of lines) {
-    const match = line.match(/(?:เลขที่|ใบเสร็จ|ใบกำกับ|INV|TAX|DOC|No\.?)[^\w\d]*([A-Z0-9\/\-]{4,25})/i);
-    if (match && match[1] && !/^\d{13}$/.test(match[1])) {
+    const match = line.match(/(?:เลขที่ใบกำกับภาษี|เลขที่ใบกำกับ|เลขที่ใบเสร็จ|เลขที่|Tax\s*Invoice\s*No\.?|TAX\s*INV\.?|TAX\s*NO\.?|INV\s*NO\.?|DOC\s*NO\.?|TIV|No\.?)[^\w\d]*([A-Z0-9\/\-]{4,25})/i);
+    if (match && match[1] && !/^\d{13}$/.test(match[1]) && !/^(?:COMPANY|LIMITED|TAX|BRANCH|PAGE|ORIGINAL|COPY)$/i.test(match[1])) {
       invoice_number = match[1];
       break;
     }
@@ -667,8 +692,12 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       let y = parseInt(dateMatch[3], 10);
 
       if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
-        if (y < 100) y += 2500;
-        if (y < 2500 && y > 2000) y += 543;
+        if (y < 100) {
+          if (y >= 60 && y <= 99) y += 2500;
+          else if (y >= 20 && y <= 50) y += 2500;
+          else y += 2000 + 543;
+        }
+        if (y > 2000 && y < 2500) y += 543;
         const monthName = thaiMonths[m - 1] || 'พฤศจิกายน';
         invoice_date = `${d} ${monthName} ${y}`;
         break;
@@ -682,21 +711,47 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       let y = parseInt(textDateMatch[3], 10);
 
       if (d >= 1 && d <= 31) {
-        if (y < 100) y += 2500;
-        if (y < 2500 && y > 2000) y += 543;
+        if (y < 100) {
+          if (y >= 60 && y <= 99) y += 2500;
+          else if (y >= 20 && y <= 50) y += 2500;
+          else y += 2000 + 543;
+        }
+        if (y > 2000 && y < 2500) y += 543;
         invoice_date = `${d} ${monthStr} ${y}`;
         break;
       }
     }
   }
 
-  // 4. Extract Total Amount
+  // 4. Extract Total Amount (Priority scanner for Tax Invoice Net Grand Total vs Subtotal & VAT 7%)
+  // Priority 1: High-precision Net Grand Total keywords in Thai Tax Invoices
   for (const line of lines.slice().reverse()) {
-    if (/(?:ราคารวม|รวมเงิน|สุทธิ|TOTAL|GRAND TOTAL|AMOUNT)[^\d]*([\d,]+\.?\d*)/i.test(line)) {
-      const match = line.match(/([\d,]+\.\d{2})/);
+    if (/(?:จำนวนเงินรวมทั้งสิ้น|รวมเงินทั้งสิ้น|ยอดชำระสุทธิ|จำนวนเงินสุทธิ|ยอดรวมสุทธิ|GRAND TOTAL|NET AMOUNT|NET TOTAL|TOTAL AMOUNT)[^\d]*([\d,]+(?:\.\d{2}|\.\-|\b))/i.test(line)) {
+      const match = line.match(/([\d,]+(?:\.\d{2}|\.-))/);
       if (match) {
-        total_amount = parseFloat(match[1].replace(/,/g, ''));
-        break;
+        const cleanedVal = match[1].replace(/\.-/, '.00').replace(/,/g, '');
+        const parsed = parseFloat(cleanedVal);
+        if (!isNaN(parsed) && parsed > 0) {
+          total_amount = parsed;
+          break;
+        }
+      }
+    }
+  }
+
+  // Priority 2: Fallback general total keywords if Net Grand Total keyword not found
+  if (total_amount === 0) {
+    for (const line of lines.slice().reverse()) {
+      if (/(?:ราคารวม|รวมเงิน|สุทธิ|ยอดชำระ|ชำระทั้งสิ้น|รวมทั้งสิ้น|TOTAL|AMOUNT)[^\d]*([\d,]+(?:\.\d{2}|\.\-|\b))/i.test(line)) {
+        const match = line.match(/([\d,]+(?:\.\d{2}|\.-))/);
+        if (match) {
+          const cleanedVal = match[1].replace(/\.-/, '.00').replace(/,/g, '');
+          const parsed = parseFloat(cleanedVal);
+          if (!isNaN(parsed) && parsed > 0) {
+            total_amount = parsed;
+            break;
+          }
+        }
       }
     }
   }
@@ -712,14 +767,14 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
     // 2. Check if line starts with SKU / Barcode bracket code e.g. "[P0002]", "[M0103]"
     // BUT reject literal 'SKU' text (that's a table header, not a product code)
-    const skuTest = /^\s*\[?([A-Z0-9\-]{3,12})\]?/i.exec(line);
-    const hasSkuPrefix = skuTest && /P\d|M\d|A\d|PJ\d|SIM\d|INV|DOC/i.test(line)
+    const skuTest = /^\s*\[?([A-Z0-9\-]{3,13})\]?/i.exec(line);
+    const hasSkuPrefix = skuTest && /P\d|M\d|A\d|PJ\d|SIM\d|INV|DOC|\d{8,13}/i.test(line)
       && !/^\s*SKU\b/i.test(line);
 
-    // 3. Check if line has price numbers at the end (e.g. "285.00" or "285")
-    const priceMatches = line.match(/([\d,]+\.\d{2})/g) || line.match(/\s+(\d{1,6})\s*$/);
+    // 3. Check if line has price numbers at the end (e.g. "285.00" or "285.-" or "285")
+    const priceMatches = line.match(/([\d,]+(?:\.\d{2}|\.-))/g) || line.match(/\s+(\d{1,6})\s*$/);
     const hasPriceAtEnd = priceMatches && priceMatches.length >= 1;
-    const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/,/g, ''))).filter(p => p > 0) : [];
+    const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/\.-/, '.00').replace(/,/g, ''))).filter(p => p > 0) : [];
     const itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
 
     // 4. Address line detection — lines with address keywords are NEVER product items
@@ -744,14 +799,14 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       // Strip trailing numeric/price columns & VAT code indicators (e.g., "1.000 559.000 559.00 V" -> "")
       cleanDesc = cleanDesc
         .replace(/[\s|]+[VvNtX]\s*$/g, '')
-        .replace(/(\s+[\d,]+(\.\d{1,3})?)+[\s|]*[VvNtX]?\s*$/g, '')
+        .replace(/(\s+[\d,]+(\.\d{1,3}|\.-)?)+[\s|]*[VvNtX]?\s*$/g, '')
         .replace(/\s+\d+\.\d{1,3}\s*\d*[\s|]*[VvNtX]?\s*$/g, '')
         .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '')
         .trim();
 
-      // Extract SKU / Barcode if available
+      // Extract SKU / Barcode / Item Code if available (EAN-13, ART., ITEM:, CODE:, bracket codes)
       let item_code = '';
-      const skuMatch = cleanDesc.match(/[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/);
+      const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
       if (skuMatch) {
         let rawCode = skuMatch[1] || '';
         // Fix Thai OCR misreads in bracket codes (e.g. ม0204 -> M0204, 50164 -> S0164, pJ033 -> P0033)
@@ -764,7 +819,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
           .replace(/^603/i, 'G03')
           .replace(/^604/i, 'G04');
 
-        if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode)) {
+        if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
           item_code = rawCode;
           cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
         }
@@ -775,12 +830,12 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
       // Detect quantity if present before prices
       let quantity = 1;
-      const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+\.\d{2}/);
+      const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+(?:\.\d{2}|\.-)/);
       if (qtyMatch && qtyMatch[1]) {
         quantity = parseInt(qtyMatch[1], 10) || 1;
       }
 
-      // Unit detection
+      // High-precision Thai unit detection
       let unit = 'ชิ้น';
       if (/กล่อง/i.test(cleanDesc)) unit = 'กล่อง';
       else if (/แพ็ค|แพค/i.test(cleanDesc)) unit = 'แพ็ค';
@@ -791,6 +846,20 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       else if (/แท่ง/i.test(cleanDesc)) unit = 'แท่ง';
       else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
       else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
+      else if (/แผ่น/i.test(cleanDesc)) unit = 'แผ่น';
+      else if (/ด้าม/i.test(cleanDesc)) unit = 'ด้าม';
+      else if (/ตัว/i.test(cleanDesc)) unit = 'ตัว';
+      else if (/เล่ม/i.test(cleanDesc)) unit = 'เล่ม';
+      else if (/รีม/i.test(cleanDesc)) unit = 'รีม';
+      else if (/ซอง/i.test(cleanDesc)) unit = 'ซอง';
+      else if (/ก้อน/i.test(cleanDesc)) unit = 'ก้อน';
+      else if (/ขวด/i.test(cleanDesc)) unit = 'ขวด';
+      else if (/หลอด/i.test(cleanDesc)) unit = 'หลอด';
+      else if (/ถุง/i.test(cleanDesc)) unit = 'ถุง';
+      else if (/คู่/i.test(cleanDesc)) unit = 'คู่';
+      else if (/แกลลอน/i.test(cleanDesc)) unit = 'แกลลอน';
+      else if (/กิโลกรัม|กก\./i.test(cleanDesc)) unit = 'กิโลกรัม';
+      else if (/เมตร|ม\./i.test(cleanDesc)) unit = 'เมตร';
 
       const isZeroPriceJunk = itemPrice === 0 && !item_code && cleanDesc.length < 5;
 
