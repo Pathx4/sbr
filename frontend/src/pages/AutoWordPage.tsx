@@ -283,7 +283,7 @@ export default function AutoWordPage() {
       const imagePreview = URL.createObjectURL(file);
 
       // Step 1/3: Image Preprocessing & High-DPI Upscaling + Noise Reduction + Sharpening
-      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพและขยาย Resolution (High-DPI Preprocessing)...`);
+      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพ 5 ขั้นตอน (Noise Reduction, CLAHE, Morphological Dilation)...`);
       setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
       const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
 
