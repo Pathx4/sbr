@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { runTesseract } from '../utils/tesseractWorker';
-import { extractReceiptWithGemini } from '../utils/geminiOcrService';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye, Settings, Zap
+  Loader2, Crop, Eye
 } from 'lucide-react';
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
@@ -155,11 +154,6 @@ export default function AutoWordPage() {
   const [isGeneratingIllus, setIsGeneratingIllus] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // AI & Settings state
-  const [geminiApiKey, setGeminiApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
-  const [isGeminiMode, setIsGeminiMode] = useState(() => localStorage.getItem('use_gemini_ocr') === 'true');
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-
   // Load Contacts directly from local contacts.json on mount
   useEffect(() => {
     const data = contactsData as Contact[];
@@ -287,63 +281,21 @@ export default function AutoWordPage() {
       const file = files[i];
       const imagePreview = URL.createObjectURL(file);
 
-      // Branch logic based on OCR Mode
-      let parsed: any = null;
+      // Step 1/3: Image Preprocessing & High-DPI Upscaling
+      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพและขยาย Resolution (High-DPI Grayscale Preprocessing)...`);
+      setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
+      const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
 
-      if (isGeminiMode && geminiApiKey) {
-        // --- GEMINI AI MODE ---
-        try {
-          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/1: กำลังส่งภาพให้ AI วิเคราะห์ข้อมูล...`);
-          setScanProgress(30);
-          
-          // Convert file to base64
-          const base64String = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-          
-          const geminiResult = await extractReceiptWithGemini(base64String, geminiApiKey);
-          setScanProgress(90);
-          
-          // Adapt Gemini response to ParsedReceipt format
-          parsed = {
-            vendor_name: geminiResult.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
-            invoice_number: geminiResult.invoice_number || '',
-            invoice_date: geminiResult.invoice_date || getTodayThaiDate(),
-            total_amount: 0,
-            items: geminiResult.items || []
-          };
-          
-          // Calculate total
-          parsed.total_amount = parsed.items.reduce((sum: number, item: any) => sum + (item.total_price || 0), 0);
-          
-        } catch (error: any) {
-          console.error("Gemini Error:", error);
-          alert(`เกิดข้อผิดพลาดจาก Gemini API: ${error.message}\nระบบจะสลับไปใช้โหมดออฟไลน์แทน`);
-          // Fallback handled below if parsed is still null
-        }
-      }
+      // Step 2/3: Dual-Language AI OCR Engine
+      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 2/3: กำลังถอดข้อความภาษาไทย-อังกฤษด้วย Tesseract.js OCR...`);
+      const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+        setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
+      });
 
-      if (!parsed) {
-        // --- TESSERACT OFFLINE MODE (Fallback or Default) ---
-        // Step 1/3: Image Preprocessing & High-DPI Upscaling
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพและขยาย Resolution (High-DPI Grayscale Preprocessing)...`);
-        setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
-        const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
-
-        // Step 2/3: Dual-Language AI OCR Engine
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 2/3: กำลังถอดข้อความภาษาไทย-อังกฤษด้วย Tesseract.js OCR...`);
-        const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
-          setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
-        });
-
-        // Step 3/3: 2D Spatial Table Reconstruction & Noise Filtering
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 3/3: กำลังจัดกลุ่มพิกัดตาราง 2D (Spatial Table Clustering) และคัดกรองข้อความขยะ...`);
-        setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
-        parsed = parseThaiReceiptOcr(rawText);
-      }
+      // Step 3/3: 2D Spatial Table Reconstruction & Noise Filtering
+      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 3/3: กำลังจัดกลุ่มพิกัดตาราง 2D (Spatial Table Clustering) และคัดกรองข้อความขยะ...`);
+      setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
+      const parsed = parseThaiReceiptOcr(rawText);
 
       if (!parsed) continue;
 
@@ -793,13 +745,6 @@ export default function AutoWordPage() {
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
-              onClick={() => setShowSettingsModal(true)}
-              className="flex items-center justify-center w-10 h-10 bg-slate-800 hover:bg-slate-700 text-white rounded-xl shadow-lg transition border border-slate-700"
-              title="ตั้งค่า OCR / AI"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            <button
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg transition"
             >
@@ -817,77 +762,6 @@ export default function AutoWordPage() {
           </div>
         </div>
       </div>
-
-      {/* Settings Modal */}
-      {showSettingsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
-            <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg text-blue-700">
-                  <Settings className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-slate-800">ตั้งค่าระบบอ่านบิลอัตโนมัติ (OCR)</h3>
-              </div>
-              <button onClick={() => setShowSettingsModal(false)} className="text-slate-400 hover:text-slate-700 text-xl font-black">&times;</button>
-            </div>
-            
-            <div className="p-6 space-y-5">
-              <div className="flex flex-col gap-3">
-                <label className={`flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:bg-slate-50 ${!isGeminiMode ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200'}`}
-                       onClick={() => setIsGeminiMode(false)}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${!isGeminiMode ? 'border-blue-600' : 'border-slate-300'}`}>
-                    {!isGeminiMode && <div className="w-2.5 h-2.5 bg-blue-600 rounded-full" />}
-                  </div>
-                  <div>
-                    <div className="font-bold text-sm text-slate-800">โหมดฟรีออฟไลน์ (Tesseract.js)</div>
-                    <p className="text-xs text-slate-500 mt-1">ประมวลผลบนเครื่องของคุณ ไม่ส่งข้อมูลออกอินเทอร์เน็ต เหมาะสำหรับบิลที่พิมพ์ชัดเจน ไม่เอียง</p>
-                  </div>
-                </label>
-
-                <label className={`flex items-start gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 hover:bg-slate-50 ${isGeminiMode ? 'border-purple-500 bg-purple-50/50' : 'border-slate-200'}`}
-                       onClick={() => setIsGeminiMode(true)}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${isGeminiMode ? 'border-purple-600' : 'border-slate-300'}`}>
-                    {isGeminiMode && <div className="w-2.5 h-2.5 bg-purple-600 rounded-full" />}
-                  </div>
-                  <div className="w-full">
-                    <div className="flex items-center gap-2">
-                      <div className="font-bold text-sm text-slate-800">โหมดแม่นยำสูงสุด (Gemini AI Vision)</div>
-                      <span className="px-2 py-0.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[10px] font-bold rounded-full flex items-center gap-1"><Zap className="w-3 h-3"/> แนะนำ</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1 mb-3">วิเคราะห์บิลที่ซับซ้อน เอียง ยับ ให้ความแม่นยำสูงถึง 99% (ต้องใช้ API Key)</p>
-                    
-                    {isGeminiMode && (
-                      <div className="space-y-2 animate-in slide-in-from-top-2">
-                        <label className="text-[10px] font-semibold text-slate-600 block">Google Gemini API Key:</label>
-                        <input
-                          type="password"
-                          value={geminiApiKey}
-                          onChange={(e) => setGeminiApiKey(e.target.value)}
-                          placeholder="AIzaSy..."
-                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                        />
-                        <div className="text-[10px] text-slate-500">
-                          สามารถขอรับ API Key ได้ฟรีที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-blue-600 underline">Google AI Studio</a>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </label>
-              </div>
-            </div>
-            
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-              <button 
-                onClick={() => setShowSettingsModal(false)}
-                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl shadow-lg transition"
-              >
-                บันทึกการตั้งค่า
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Scanning Status Loader Banner */}
       {isScanning && (

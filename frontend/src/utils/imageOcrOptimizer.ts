@@ -852,11 +852,22 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '')
         .trim();
 
+      // Clean leading row numbers e.g. "1.", "2.", "15."
+      cleanDesc = cleanDesc.replace(/^\s*\d{1,3}[\.\)\s]+/, '').trim();
+      
+      // Clean leading VAT indicators (V, N, X) separated by space if they got merged (e.g. "V 885189950")
+      cleanDesc = cleanDesc.replace(/^[VvNtTxX]\s+/, '').trim();
+
       // Extract SKU / Barcode / Item Code if available (EAN-13, ART., ITEM:, CODE:, bracket codes)
       let item_code = '';
-      const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
+      // Allow spaces inside the SKU to handle OCR space hallucination (e.g. "885 189950 1107")
+      const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ][0-9A-Z\-ก-ฮ\s]{2,16}[0-9A-Z\-ก-ฮ])[\)\]\}]?/i);
       if (skuMatch) {
         let rawCode = skuMatch[1] || '';
+        
+        // Remove spaces inside the extracted SKU
+        rawCode = rawCode.replace(/\s+/g, '');
+        
         // Fix Thai OCR misreads in bracket codes (e.g. ม0204 -> M0204, 50164 -> S0164, pJ033 -> P0033)
         rawCode = rawCode
           .replace(/^ม/gi, 'M')
@@ -867,14 +878,13 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
           .replace(/^603/i, 'G03')
           .replace(/^604/i, 'G04');
 
-        if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
+        if (/^[A-Z0-9\-]{3,18}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
           item_code = rawCode;
           cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
         }
       }
 
-      // Clean leading row numbers e.g. "1.", "2.", "15."
-      cleanDesc = cleanThaiText(cleanDesc.replace(/^\d{1,3}[\.\)\s]+/, ''));
+      cleanDesc = cleanThaiText(cleanDesc);
 
       // Detect quantity if present before prices
       let quantity = 1;
