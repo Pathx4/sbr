@@ -154,6 +154,7 @@ export default function AutoWordPage() {
   const [isGeneratingIllus, setIsGeneratingIllus] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+
   // Load Contacts directly from local contacts.json on mount
   useEffect(() => {
     const data = contactsData as Contact[];
@@ -281,12 +282,12 @@ export default function AutoWordPage() {
       const file = files[i];
       const imagePreview = URL.createObjectURL(file);
 
-      // Step 1/3: Image Preprocessing & High-DPI Upscaling
-      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพและขยาย Resolution (High-DPI Grayscale Preprocessing)...`);
+      // Step 1/3: Image Preprocessing & High-DPI Upscaling + Noise Reduction + Sharpening
+      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพและขยาย Resolution (High-DPI Preprocessing)...`);
       setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
       const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
 
-      // Step 2/3: Dual-Language AI OCR Engine
+      // Step 2/3: Dual-Language OCR Engine (Thai + English)
       setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 2/3: กำลังถอดข้อความภาษาไทย-อังกฤษด้วย Tesseract.js OCR...`);
       const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
         setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));

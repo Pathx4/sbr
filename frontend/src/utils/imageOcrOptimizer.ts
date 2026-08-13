@@ -84,46 +84,145 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'binari
         const data = imageData.data;
 
         if (mode === 'grayscale') {
-          // Grayscale Contrast Mode + Sharpening for clearer text edges
-          // 1. Grayscale & Contrast
+          // =============== ADVANCED MULTI-STAGE IMAGE PREPROCESSING ===============
+          // Pipeline: Grayscale → Noise Reduction → Adaptive Contrast → Sharpen → Clean
+          
+          const w = width;
+          const h = height;
+          
+          // Stage 1: Convert to Grayscale
           for (let i = 0; i < data.length; i += 4) {
-            let gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-            gray = Math.max(0, Math.min(255, ((gray - 128) * 1.5) + 128)); // Increased contrast from 1.35 to 1.5
+            const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
             data[i] = gray;
             data[i + 1] = gray;
             data[i + 2] = gray;
           }
           
-          // 2. Simple Sharpening Filter (Convolution)
-          const w = width;
-          const h = height;
-          const tempData = new Uint8ClampedArray(data);
-          
+          // Stage 2: Noise Reduction (3x3 Median Filter)
+          // Critical for receipt photos taken with phone cameras (removes salt-and-pepper noise)
+          const noiseBuffer = new Uint8ClampedArray(data);
           for (let y = 1; y < h - 1; y++) {
             for (let x = 1; x < w - 1; x++) {
               const idx = (y * w + x) * 4;
-              // Sharpen Kernel:
-              //  0 -1  0
-              // -1  5 -1
-              //  0 -1  0
-              const top = ((y - 1) * w + x) * 4;
-              const bottom = ((y + 1) * w + x) * 4;
-              const left = (y * w + (x - 1)) * 4;
-              const right = (y * w + (x + 1)) * 4;
+              // Collect 3x3 neighborhood
+              const neighbors: number[] = [];
+              for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                  neighbors.push(noiseBuffer[((y + dy) * w + (x + dx)) * 4]);
+                }
+              }
+              // Sort to find median
+              neighbors.sort((a, b) => a - b);
+              const median = neighbors[4]; // middle of 9 values
+              data[idx] = median;
+              data[idx + 1] = median;
+              data[idx + 2] = median;
+            }
+          }
+          
+          // Stage 3: Adaptive Local Contrast Enhancement (CLAHE-inspired)
+          // Divides image into tiles and equalizes contrast locally — 
+          // much better than global contrast for receipts with uneven lighting
+          const tileSize = 64; // Tile size in pixels
+          const tilesX = Math.ceil(w / tileSize);
+          const tilesY = Math.ceil(h / tileSize);
+          
+          // Calculate local min/max for each tile
+          const tileStats: { min: number; max: number }[] = new Array(tilesX * tilesY);
+          for (let ty = 0; ty < tilesY; ty++) {
+            for (let tx = 0; tx < tilesX; tx++) {
+              let localMin = 255, localMax = 0;
+              const startY = ty * tileSize;
+              const startX = tx * tileSize;
+              const endY = Math.min(startY + tileSize, h);
+              const endX = Math.min(startX + tileSize, w);
+              for (let py = startY; py < endY; py++) {
+                for (let px = startX; px < endX; px++) {
+                  const val = data[(py * w + px) * 4];
+                  if (val < localMin) localMin = val;
+                  if (val > localMax) localMax = val;
+                }
+              }
+              tileStats[ty * tilesX + tx] = { min: localMin, max: localMax };
+            }
+          }
+          
+          // Apply adaptive contrast using interpolated tile statistics
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = (y * w + x) * 4;
+              const tx = Math.min(Math.floor(x / tileSize), tilesX - 1);
+              const ty = Math.min(Math.floor(y / tileSize), tilesY - 1);
+              const stat = tileStats[ty * tilesX + tx];
+              const range = stat.max - stat.min;
               
-              let val = 5 * tempData[idx] 
-                      - tempData[top] 
-                      - tempData[bottom] 
-                      - tempData[left] 
-                      - tempData[right];
-              
-              val = Math.max(0, Math.min(255, val));
-              
+              let val = data[idx];
+              if (range > 20) {
+                // Normalize to 0-255 within local tile range, then boost contrast
+                val = Math.round(((val - stat.min) / range) * 255);
+                // Additional contrast boost
+                val = Math.max(0, Math.min(255, ((val - 128) * 1.4) + 128));
+              } else {
+                // Very low contrast tile — likely background, push to white
+                val = val > 128 ? 255 : 0;
+              }
               data[idx] = val;
               data[idx + 1] = val;
               data[idx + 2] = val;
             }
           }
+          
+          // Stage 4: Unsharp Masking (Sharpen edges while preserving smooth areas)
+          const sharpBuffer = new Uint8ClampedArray(data);
+          const sharpAmount = 1.2; // Sharpening strength
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = (y * w + x) * 4;
+              // 3x3 Gaussian blur approximation for the "unsharp" mask
+              const blurred = (
+                sharpBuffer[((y-1)*w+(x-1))*4] + sharpBuffer[((y-1)*w+x)*4]*2 + sharpBuffer[((y-1)*w+(x+1))*4] +
+                sharpBuffer[((y)*w+(x-1))*4]*2 + sharpBuffer[((y)*w+x)*4]*4 + sharpBuffer[((y)*w+(x+1))*4]*2 +
+                sharpBuffer[((y+1)*w+(x-1))*4] + sharpBuffer[((y+1)*w+x)*4]*2 + sharpBuffer[((y+1)*w+(x+1))*4]
+              ) / 16;
+              
+              const original = sharpBuffer[idx];
+              const sharpened = Math.round(original + sharpAmount * (original - blurred));
+              const val = Math.max(0, Math.min(255, sharpened));
+              data[idx] = val;
+              data[idx + 1] = val;
+              data[idx + 2] = val;
+            }
+          }
+          
+          // Stage 5: Morphological Dilation (1-pass)
+          // Connects broken Thai character strokes that Tesseract struggles with
+          // Only dilate DARK pixels (text) — this thickens thin text slightly
+          const morphBuffer = new Uint8ClampedArray(data);
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = (y * w + x) * 4;
+              if (morphBuffer[idx] > 100) { // Only process light pixels
+                // Check if any neighbor is dark (< 80) — if so, make this pixel darker too
+                let hasDarkNeighbor = false;
+                for (let dy = -1; dy <= 1 && !hasDarkNeighbor; dy++) {
+                  for (let dx = -1; dx <= 1 && !hasDarkNeighbor; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    if (morphBuffer[((y+dy)*w+(x+dx))*4] < 80) {
+                      hasDarkNeighbor = true;
+                    }
+                  }
+                }
+                if (hasDarkNeighbor && morphBuffer[idx] < 160) {
+                  // Semi-dark pixel adjacent to dark pixel — push darker to connect strokes
+                  const darkened = Math.max(0, morphBuffer[idx] - 40);
+                  data[idx] = darkened;
+                  data[idx + 1] = darkened;
+                  data[idx + 2] = darkened;
+                }
+              }
+            }
+          }
+          
         } else {
           // Binarized Otsu Thresholding Mode for Thai Text & Tables
           const threshold = otsuThreshold(data, width, height);
@@ -852,22 +951,11 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '')
         .trim();
 
-      // Clean leading row numbers e.g. "1.", "2.", "15."
-      cleanDesc = cleanDesc.replace(/^\s*\d{1,3}[\.\)\s]+/, '').trim();
-      
-      // Clean leading VAT indicators (V, N, X) separated by space if they got merged (e.g. "V 885189950")
-      cleanDesc = cleanDesc.replace(/^[VvNtTxX]\s+/, '').trim();
-
       // Extract SKU / Barcode / Item Code if available (EAN-13, ART., ITEM:, CODE:, bracket codes)
       let item_code = '';
-      // Allow spaces inside the SKU to handle OCR space hallucination (e.g. "885 189950 1107")
-      const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ][0-9A-Z\-ก-ฮ\s]{2,16}[0-9A-Z\-ก-ฮ])[\)\]\}]?/i);
+      const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
       if (skuMatch) {
         let rawCode = skuMatch[1] || '';
-        
-        // Remove spaces inside the extracted SKU
-        rawCode = rawCode.replace(/\s+/g, '');
-        
         // Fix Thai OCR misreads in bracket codes (e.g. ม0204 -> M0204, 50164 -> S0164, pJ033 -> P0033)
         rawCode = rawCode
           .replace(/^ม/gi, 'M')
@@ -878,48 +966,89 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
           .replace(/^603/i, 'G03')
           .replace(/^604/i, 'G04');
 
-        if (/^[A-Z0-9\-]{3,18}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
+        if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
           item_code = rawCode;
           cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
         }
       }
 
-      cleanDesc = cleanThaiText(cleanDesc);
+      // Clean leading row numbers e.g. "1.", "2.", "15."
+      cleanDesc = cleanThaiText(cleanDesc.replace(/^\d{1,3}[\.\)\s]+/, ''));
 
-      // Detect quantity if present before prices
+      // Detect quantity if present — look in column segments if available
       let quantity = 1;
-      const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+(?:\.\d{2}|\.-)/);
-      if (qtyMatch && qtyMatch[1]) {
-        quantity = parseInt(qtyMatch[1], 10) || 1;
+      let unit_price = itemPrice;
+      let total_price_final = itemPrice;
+      
+      // If we have column segments, try to extract quantity and prices from them
+      if (colSegments.length >= 3) {
+        // Typical receipt column layout: Description | Qty | Unit | UnitPrice | TotalPrice
+        // Or: Description | Qty | UnitPrice | TotalPrice
+        const numericSegments = colSegments.slice(1).map(s => s.trim()).filter(s => /[\d,]+/.test(s));
+        
+        if (numericSegments.length >= 2) {
+          // Try to extract quantity from first numeric segment (usually small integer)
+          const qtyCandidate = parseFloat(numericSegments[0].replace(/[^\d.]/g, ''));
+          if (!isNaN(qtyCandidate) && qtyCandidate >= 1 && qtyCandidate <= 9999 && qtyCandidate === Math.floor(qtyCandidate)) {
+            quantity = qtyCandidate;
+          }
+          
+          // Extract prices from last two numeric segments
+          const prices = numericSegments
+            .map(s => {
+              const m = s.match(/([\d,]+(?:\.\d{2}|\.\-))/);
+              return m ? parseFloat(m[1].replace(/\.-/, '.00').replace(/,/g, '')) : 0;
+            })
+            .filter(p => p > 0);
+          
+          if (prices.length >= 2) {
+            unit_price = prices[prices.length - 2]; // Second to last = unit price
+            total_price_final = prices[prices.length - 1]; // Last = total price
+          } else if (prices.length === 1) {
+            unit_price = prices[0];
+            total_price_final = prices[0] * quantity;
+          }
+        }
+      } else {
+        // Fallback: try regex-based quantity extraction from the raw line
+        const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+(?:\.\d{2}|\.-)/)
+                       || line.match(/\s+(\d+)\s+(?:ชิ้น|อัน|แผ่น|เมตร|ม\.|แท่ง|ม้วน|กล่อง|แพ็ค|ชุด|ด้าม|ตัว|คู่|ถุง|ขวด|หลอด|ซอง|ก้อน|เล่ม|รีม|แกลลอน|ถัง|เส้น|กก\.|กิโลกรัม|เครื่อง)/i);
+        if (qtyMatch && qtyMatch[1]) {
+          quantity = parseInt(qtyMatch[1], 10) || 1;
+        }
+        total_price_final = unit_price * quantity;
       }
 
-      // High-precision Thai unit detection
+      // High-precision Thai unit detection — check column segments first, then description text
       let unit = 'ชิ้น';
-      if (/กล่อง/i.test(cleanDesc)) unit = 'กล่อง';
-      else if (/แพ็ค|แพค/i.test(cleanDesc)) unit = 'แพ็ค';
-      else if (/เครื่อง/i.test(cleanDesc)) unit = 'เครื่อง';
-      else if (/ม้วน/i.test(cleanDesc)) unit = 'ม้วน';
-      else if (/ถัง/i.test(cleanDesc)) unit = 'ถัง';
-      else if (/ชุด/i.test(cleanDesc)) unit = 'ชุด';
-      else if (/แท่ง/i.test(cleanDesc)) unit = 'แท่ง';
-      else if (/เส้น/i.test(cleanDesc)) unit = 'เส้น';
-      else if (/อัน/i.test(cleanDesc)) unit = 'อัน';
-      else if (/แผ่น/i.test(cleanDesc)) unit = 'แผ่น';
-      else if (/ด้าม/i.test(cleanDesc)) unit = 'ด้าม';
-      else if (/ตัว/i.test(cleanDesc)) unit = 'ตัว';
-      else if (/เล่ม/i.test(cleanDesc)) unit = 'เล่ม';
-      else if (/รีม/i.test(cleanDesc)) unit = 'รีม';
-      else if (/ซอง/i.test(cleanDesc)) unit = 'ซอง';
-      else if (/ก้อน/i.test(cleanDesc)) unit = 'ก้อน';
-      else if (/ขวด/i.test(cleanDesc)) unit = 'ขวด';
-      else if (/หลอด/i.test(cleanDesc)) unit = 'หลอด';
-      else if (/ถุง/i.test(cleanDesc)) unit = 'ถุง';
-      else if (/คู่/i.test(cleanDesc)) unit = 'คู่';
-      else if (/แกลลอน/i.test(cleanDesc)) unit = 'แกลลอน';
-      else if (/กิโลกรัม|กก\./i.test(cleanDesc)) unit = 'กิโลกรัม';
-      else if (/เมตร|ม\./i.test(cleanDesc)) unit = 'เมตร';
+      // Check if unit text appears in any column segment
+      const allText = colSegments.length > 1 ? colSegments.join(' ') : cleanDesc;
 
-      const isZeroPriceJunk = itemPrice === 0 && !item_code && cleanDesc.length < 5;
+      if (/กล่อง/i.test(allText)) unit = 'กล่อง';
+      else if (/แพ็ค|แพค/i.test(allText)) unit = 'แพ็ค';
+      else if (/เครื่อง/i.test(allText)) unit = 'เครื่อง';
+      else if (/ม้วน/i.test(allText)) unit = 'ม้วน';
+      else if (/ถัง/i.test(allText)) unit = 'ถัง';
+      else if (/ชุด/i.test(allText)) unit = 'ชุด';
+      else if (/แท่ง/i.test(allText)) unit = 'แท่ง';
+      else if (/เส้น/i.test(allText)) unit = 'เส้น';
+      else if (/อัน/i.test(allText)) unit = 'อัน';
+      else if (/แผ่น/i.test(allText)) unit = 'แผ่น';
+      else if (/ด้าม/i.test(allText)) unit = 'ด้าม';
+      else if (/ตัว/i.test(allText)) unit = 'ตัว';
+      else if (/เล่ม/i.test(allText)) unit = 'เล่ม';
+      else if (/รีม/i.test(allText)) unit = 'รีม';
+      else if (/ซอง/i.test(allText)) unit = 'ซอง';
+      else if (/ก้อน/i.test(allText)) unit = 'ก้อน';
+      else if (/ขวด/i.test(allText)) unit = 'ขวด';
+      else if (/หลอด/i.test(allText)) unit = 'หลอด';
+      else if (/ถุง/i.test(allText)) unit = 'ถุง';
+      else if (/คู่/i.test(allText)) unit = 'คู่';
+      else if (/แกลลอน/i.test(allText)) unit = 'แกลลอน';
+      else if (/กิโลกรัม|กก\./i.test(allText)) unit = 'กิโลกรัม';
+      else if (/เมตร|ม\./i.test(allText)) unit = 'เมตร';
+
+      const isZeroPriceJunk = unit_price === 0 && !item_code && cleanDesc.length < 5;
 
       if (
         cleanDesc.length >= 3 &&
@@ -938,8 +1067,8 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
           description: cleanDesc,
           quantity,
           unit,
-          unit_price: itemPrice,
-          total_price: itemPrice * quantity
+          unit_price,
+          total_price: total_price_final
         });
       }
     } else {
