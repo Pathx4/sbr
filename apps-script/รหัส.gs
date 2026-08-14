@@ -4,10 +4,10 @@
  * 2. รายงานจัดซื้อจัดจ้าง.html = แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร
  */
 
-// 🟢 ID ของ Google Sheet ใบที่ 1 (ระบบบริหารงบประมาณและกิจกรรม)
+//  ID ของ Google Sheet ใบที่ 1 (ระบบบริหารงบประมาณและกิจกรรม)
 const BUDGET_SHEET_ID = "1eWkRl_E_PCYWZ_EGRo7_ZC7gP5XlAC_bFVeH2VhD4Tc";
 
-// 🔴 ID ของ Google Sheet ใบที่ 2 (ระบบรายงานจัดซื้อจัดจ้าง)
+//  ID ของ Google Sheet ใบที่ 2 (ระบบรายงานจัดซื้อจัดจ้าง)
 // (หากใช้ไฟล์เดียวกัน ให้ใช้ ID เดียวกัน หรือเปลี่ยนเป็น ID ของไฟล์จัดซื้อจัดจ้างได้เลย)
 const PROCUREMENT_SHEET_ID = "1XtlZ878S-3UXudK9dAtLvjGQMYYn0jKCcEF14sCGp9Y";
 
@@ -101,9 +101,9 @@ function doGet(e) {
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('📊 แดชบอร์ดผู้บริหาร')
+  ui.createMenu(' แดชบอร์ดผู้บริหาร')
     .addItem('เปิดหน้า Dashboard หลัก', 'openDashboardSidebar')
-    .addItem('💡 สร้างข้อมูลจัดซื้อจัดจ้างจำลอง', 'generateSampleData')
+    .addItem(' สร้างข้อมูลจัดซื้อจัดจ้างจำลอง', 'generateSampleData')
     .addToUi();
 }
 
@@ -115,7 +115,7 @@ function openDashboardSidebar() {
 }
 
 // =================================================================
-// 🟢 ส่วนที่ 1: ฟังก์ชันสำหรับระบบบริหารงบประมาณ (index.html)
+//  ส่วนที่ 1: ฟังก์ชันสำหรับระบบบริหารงบประมาณ (index.html)
 // =================================================================
 
 function getSheetData() {
@@ -176,7 +176,7 @@ function saveActivityData(data) {
       }
     }
 
-    // --- 🛠️ หาแถวสุดท้ายที่แท้จริงที่มีข้อมูล (อ้างอิงจากคอลัมน์ A) ---
+    // --- ️ หาแถวสุดท้ายที่แท้จริงที่มีข้อมูล (อ้างอิงจากคอลัมน์ A) ---
     var columnA = sheet.getRange("A:A").getValues();
     var trueLastRow = 0;
     
@@ -220,7 +220,7 @@ function saveActivityData(data) {
     newRow[14] = Number(data.rewardPeople) || 0;                // คอลัมน์ O: สิทธิ์สมนาคุณ (คน)
     newRow[15] = Number(data.rewardValue) || 0;                 // คอลัมน์ P: สิทธิ์สมนาคุณ (บาท)
 
-    // --- 🛠️ นำข้อมูลไปวางต่อท้ายในแถวที่ว่างจริงๆ (trueLastRow + 1) ---
+    // --- ️ นำข้อมูลไปวางต่อท้ายในแถวที่ว่างจริงๆ (trueLastRow + 1) ---
     sheet.getRange(trueLastRow + 1, 1, 1, newRow.length).setValues([newRow]);
     
     return { status: "success" };

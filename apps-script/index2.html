@@ -7,7 +7,7 @@
     <title>ระบบรายงานจัดซื้อจัดจ้างสำหรับผู้บริหาร</title>
 
     <!-- Tailwind CSS & Google Fonts & Font Awesome -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- โหลดแบบอักษร Sarabun (มีหัวกลมมนชัดเจน อ่านง่ายเป็นทางการ) และ Inter สำหรับส่วนของตัวเลข -->
@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script></script>
 
     <script>
         tailwind.config = {
@@ -691,7 +691,7 @@
             if (refreshBtn) refreshBtn.classList.add('animate-spin');
 
             if (typeof google !== 'undefined' && google.script && google.script.run) {
-                console.log("🌐 ดึงข้อมูลจริงจาก Google Sheets ผ่าน google.script.run.getDashboardData");
+                console.log(" ดึงข้อมูลจริงจาก Google Sheets ผ่าน google.script.run.getDashboardData");
                 google.script.run
                     .withSuccessHandler(function (response) {
                         handleFetchSuccess(response);
