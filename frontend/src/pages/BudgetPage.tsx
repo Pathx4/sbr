@@ -429,9 +429,9 @@ function BudgetPage() {
             <Badge pulse>Budget Allocation System v2.0</Badge>
           </motion.div>
           <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-bold tracking-tight text-foreground leading-[1.1] mb-6">
-            ระบบจัดสรรงบประมาณ<br />
+            ระบบประมาณค่าใช้จ่าย<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-secondary">
-              อัจฉริยะ
+              กิจกรรม
             </span>
           </motion.h1>
           <motion.p variants={fadeInUp} className="text-lg text-muted-foreground max-w-2xl leading-relaxed">

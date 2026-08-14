@@ -133,7 +133,7 @@ export default function AuthModal({ isOpen, onSuccess }: AuthModalProps) {
             ยืนยันตัวตนก่อนเข้าใช้งาน
           </h2>
           <p className="text-sm text-slate-500 mt-1.5 leading-relaxed">
-            กรุณากรอกอีเมลองค์กรของคุณ เพื่อเข้าสู่ระบบจัดสรรงบประมาณและเอกสารอัตโนมัติ
+            กรุณากรอกอีเมลองค์กรของคุณ เพื่อเข้าสู่ระบบประมาณค่าใช้จ่ายกิจกรรมและเอกสารอัตโนมัติ
           </p>
         </div>
 

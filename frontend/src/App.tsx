@@ -72,7 +72,7 @@ export default function App() {
               }
             >
               <Calculator className="w-5 h-5 text-blue-500" />
-              <span className="text-sm font-medium">ระบบจัดสรรงบประมาณ</span>
+              <span className="text-sm font-medium">ระบบประมาณค่าใช้จ่ายกิจกรรม</span>
             </NavLink>
 
             <NavLink
