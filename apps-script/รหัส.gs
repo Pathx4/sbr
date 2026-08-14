@@ -79,12 +79,21 @@ function doGet(e) {
     }
   }
 
-  var t1 = HtmlService.createTemplateFromFile('Index');
-  t1.webAppUrl = webAppUrl;
-  return t1.evaluate()
-      .setTitle('ระบบแดชบอร์ดอัจฉริยะ สบร.')
-      .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
-      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  try {
+    var t1 = HtmlService.createTemplateFromFile('index');
+    t1.webAppUrl = webAppUrl;
+    return t1.evaluate()
+        .setTitle('ระบบแดชบอร์ดอัจฉริยะ สบร.')
+        .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (errIndex) {
+    var t1Upper = HtmlService.createTemplateFromFile('Index');
+    t1Upper.webAppUrl = webAppUrl;
+    return t1Upper.evaluate()
+        .setTitle('ระบบแดชบอร์ดอัจฉริยะ สบร.')
+        .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+        .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
 }
 
 /**

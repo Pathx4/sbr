@@ -988,10 +988,7 @@
             color: var(--space-text-dim) !important;
         }
 
-        .exec-table {
-            border-collapse: separate;
-            border-spacing: 0;
-        }
+        /* Duplicate .exec-table removed (primary at line 636) */
 
         /* Responsive Mobile Sidebar overlay */
         @media (max-width: 1023px) {
@@ -1351,7 +1348,7 @@
     <div id="sidebarOverlay" onclick="toggleMobileSidebar()"
         class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden lg:hidden"></div>
 
-    <div id="toastNotification"
+    <div id="toastNotification" role="alert" aria-live="assertive"
         class="fixed top-5 right-5 z-50 bg-sky-600 text-white px-5 py-4 rounded-xl shadow-2xl transform translate-y-[-120px] opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3">
         <div class="bg-sky-500 p-1.5 rounded-lg shrink-0" id="toastIconBg">
             <svg id="toastIcon" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1416,7 +1413,8 @@
                                 class="block text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1">เลือกปีงบประมาณ</label>
                             <select id="filterYear" onchange="handleYearChange()"
                                 class="exec-input text-sm cursor-pointer font-semibold">
-                                <option value="2569" selected>ปีงบประมาณ 2569</option>
+                                <option value="2568">ปีงบประมาณ 2568</option>
+                                <option value="2569">ปีงบประมาณ 2569</option>
                                 <option value="2570">ปีงบประมาณ 2570</option>
                                 <option value="2571">ปีงบประมาณ 2571</option>
                             </select>
@@ -1424,8 +1422,9 @@
                         <div>
                             <label
                                 class="block text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1">เลือกฝ่ายงานปฏิบัติการ</label>
-                            <select id="filterDept" onchange="updateUI()" class="exec-input text-sm cursor-pointer">
+                            <select id="filterDept" onchange="updateUI()" class="exec-input text-sm cursor-pointer" aria-label="เลือกฝ่ายงานปฏิบัติการ">
                                 <option value="all">ทุกฝ่าย</option>
+                                <option value="ฝบร.">ฝบร. : ฝ่ายบริหารจัดการ สบร.</option>
                                 <option value="ฝมร.">ฝมร. : ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้</option>
                                 <option value="ฝสร.">ฝสร. : ฝ่ายส่งเสริมองค์ความรู้</option>
                                 <option value="ฝถร.">ฝถร. : ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้</option>
@@ -1541,7 +1540,7 @@
                     </a>
 
                     <!-- 6. แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร (สีเหลือง/ส้ม Amber) -->
-                    <a href="<?= typeof webAppUrl !== 'undefined' ? webAppUrl : '?' ?>?page=index2" target="_top"
+                    <a href="<?!= (typeof webAppUrl !== 'undefined' && webAppUrl) ? (webAppUrl.indexOf('?') !== -1 ? webAppUrl + '&page=index2' : webAppUrl + '?page=index2') : '?page=index2' ?>" target="_top"
                         id="btnProcurementDashboard"
                         class="flex items-center justify-between bg-amber-50/80 hover:bg-amber-100 border border-amber-200/90 p-3.5 rounded-xl transition-all cursor-pointer text-xs font-semibold text-amber-900 shadow-sm group">
                         <div class="flex items-center group-hover:scale-105 transition-transform duration-300">
@@ -2047,6 +2046,8 @@
 
                             <div class="flex flex-wrap gap-4 text-xs font-semibold self-start sm:self-center">
                                 <div class="flex items-center text-slate-600"><span
+                                        class="w-3.5 h-3.5 rounded-md bg-indigo-500 mr-1.5"></span>ฝบร.</div>
+                                <div class="flex items-center text-slate-600"><span
                                         class="w-3.5 h-3.5 rounded-md bg-blue-500 mr-1.5"></span>ฝมร.</div>
                                 <div class="flex items-center text-slate-600"><span
                                         class="w-3.5 h-3.5 rounded-md bg-emerald-500 mr-1.5"></span>ฝสร.</div>
@@ -2235,8 +2236,303 @@
         </div>
     </div>
 
+        <!-- 🚀 SPACE ROCKET LAUNCH CELEBRATION OVERLAY -->
+    <div id="rocketLaunchOverlay"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-500"
+        style="background: radial-gradient(circle, #f0f9ff 0%, #bae6fd 100%);">
+        <canvas id="rocketLaunchCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+
+        <!-- Telemetry HUD Left Panel -->
+        <div id="hudLeftPanel" class="hud-telemetry hud-left hidden">
+            <div class="hud-title">Navigation Status</div>
+            <div class="hud-metric-row">
+                <span>SYSTEM</span>
+                <span class="text-emerald-400 font-bold">ONLINE</span>
+            </div>
+            <div class="hud-metric-row">
+                <span>STABILITY</span>
+                <span class="text-emerald-400 font-bold">99.8%</span>
+            </div>
+            <div class="hud-metric-row mt-4 text-[10px] text-slate-400 font-bold">ALTITUDE INDICATOR</div>
+            <div class="hud-value mt-1" id="hudAltitude">0 m</div>
+            <div class="hud-progress-mini">
+                <div class="hud-progress-fill" id="hudAltitudeProgress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Telemetry HUD Right Panel -->
+        <div id="hudRightPanel" class="hud-telemetry hud-right hidden">
+            <div class="hud-title">Engine Telemetry</div>
+            <div class="hud-metric-row">
+                <span>THRUST</span>
+                <span class="text-sky-300 font-bold" id="hudThrust">0%</span>
+            </div>
+            <div class="hud-metric-row">
+                <span>REACTOR TEMP</span>
+                <span class="text-amber-400 font-bold" id="hudTemp">28°C</span>
+            </div>
+            <div class="hud-metric-row mt-4 text-[10px] text-slate-400 font-bold">VELOCITY RATE</div>
+            <div class="hud-value mt-1" id="hudVelocity">Mach 0.00</div>
+            <div class="hud-progress-mini">
+                <div class="hud-progress-fill" id="hudVelocityProgress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <button onclick="closeRocketCelebration()"
+            class="absolute top-6 right-6 z-50 bg-slate-800/10 hover:bg-slate-800/20 border border-slate-800/20 text-slate-800 px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md tracking-wide uppercase cursor-pointer">Close
+            Command Center [X]</button>
+
+        <!-- Countdown Screen -->
+        <div id="rocketCountdownPanel" class="text-center z-10 select-none">
+            <h2 class="text-xs font-bold text-sky-700 tracking-[0.3em] uppercase mb-4 animate-pulse">System
+                Initialization</h2>
+            <div id="rocketCountdownNumber"
+                class="text-8xl md:text-9xl font-black text-slate-800 font-mono tracking-widest leading-none drop-shadow-[0_0_15px_rgba(2,132,199,0.2)]">
+                10</div>
+            <p class="text-sm font-semibold text-slate-600 mt-6 tracking-widest uppercase">Pre-Launch Fuel
+                Pressurization</p>
+        </div>
+
+        <!-- SVG Rocket Ship -->
+        <div id="spaceRocket"
+            class="absolute bottom-[-350px] left-1/2 transform -translate-x-1/2 z-20 pointer-events-none"
+            style="width: 140px; height: 350px;">
+            <div class="relative w-full h-full flex flex-col justify-end">
+                <div id="rocketFlame"
+                    class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-24 bg-gradient-to-t from-transparent via-orange-500 to-yellow-300 opacity-0 rounded-b-full blur-[2px] transition-all duration-300">
+                </div>
+                <svg viewBox="0 0 100 250" class="w-full h-full drop-shadow-[0_0_15px_rgba(2,132,199,0.3)]">
+                    <!-- Thruster fire flame layers -->
+                    <path class="rocket-thruster-fire" d="M35 185 L50 240 L65 185 Z" fill="#ff5500" opacity="0.9" />
+                    <path class="rocket-thruster-fire-inner" d="M42 185 L50 220 L58 185 Z" fill="#ffdd00"
+                        opacity="0.95" />
+                    <!-- Wings -->
+                    <path d="M15 150 L30 180 L35 150 Z" fill="#1e293b" stroke="rgba(2,132,199,0.3)" stroke-width="1" />
+                    <path d="M85 150 L70 180 L65 150 Z" fill="#1e293b" stroke="rgba(2,132,199,0.3)" stroke-width="1" />
+                    <!-- Main Body Hull -->
+                    <path d="M30 60 C30 20, 70 20, 70 60 L70 170 L30 170 Z" fill="#f8fafc" />
+                    <path d="M50 10 C65 30, 70 50, 70 60 L30 60 C30 50, 35 30, 50 10 Z" fill="#0284c7" />
+                    <!-- Window viewport -->
+                    <circle cx="50" cy="85" r="14" fill="#0f172a" stroke="#cbd5e1" stroke-width="2" />
+                    <circle cx="50" cy="85" r="11" fill="#0ea5e9" opacity="0.8" />
+                    <path d="M42 77 A11 11 0 0 1 58 77 Z" fill="#ffffff" opacity="0.4" />
+                    <!-- Stripe -->
+                    <rect x="30" y="115" width="40" height="12" fill="#ef4444" />
+                    <!-- Thrusters nozzle -->
+                    <rect x="42" y="170" width="16" height="15" rx="3" fill="#64748b" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Launch Alert Message -->
+        <div id="missionAccomplishedPanel" class="text-center z-10 hidden max-w-xl px-6">
+            <h2
+                class="text-4xl md:text-5xl font-black text-emerald-600 tracking-wider mb-2 leading-tight uppercase drop-shadow-[0_0_10px_rgba(16,185,129,0.3)] font-sans">
+                Mission Accomplished</h2>
+            <p class="text-slate-600 text-xs md:text-sm font-semibold uppercase tracking-[0.25em] mb-8">Target
+                14,000,000 Baht Energy Core Full</p>
+            <div
+                class="bg-emerald-500/5 border border-emerald-500/20 p-5 rounded-2xl mb-8 flex justify-between items-center text-left gap-4 backdrop-blur-md">
+                <div>
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">TOTAL FISCAL
+                        POWER</span>
+                    <span class="text-2xl font-black text-slate-800" id="missionTotalIncome">฿14,000,000</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">LAUNCH
+                        STATUS</span>
+                    <span
+                        class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 uppercase">Orbit
+                        Stabilized</span>
+                </div>
+            </div>
+            <button onclick="closeRocketCelebration()"
+                class="btn-space px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">Return
+                to Dashboard</button>
+        </div>
+    </div>
+    <!-- Data Entry Modal -->
+    <div id="dataEntryModal"
+        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300"
+            id="dataEntryModalContent">
+            <!-- Header -->
+            <div
+                class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    เพิ่มข้อมูลกิจกรรม/โครงการใหม่
+                </h3>
+                <button onclick="closeDataEntryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto custom-scroll">
+                <form id="dataEntryForm" class="space-y-4" onsubmit="submitDataEntryForm(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">วันที่เริ่ม <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date" id="frmStartDate" required
+                                class="exec-input border border-slate-200 px-3 w-full">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">วันที่สิ้นสุด <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date" id="frmEndDate" required
+                                class="exec-input border border-slate-200 px-3 w-full">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">ฝ่ายรับผิดชอบ <span
+                                    class="text-red-500">*</span></label>
+                            <select id="frmDept" required class="exec-input border border-slate-200"
+                                onchange="handleDeptChange()">
+                                <option value="">-- เลือกฝ่าย --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">ชื่อกิจกรรม / โครงการ <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="frmTitle" required class="exec-input border border-slate-200"
+                                placeholder="ชื่อกิจกรรม">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">รหัสโครงการ <span
+                                    class="text-red-500">*</span></label>
+                            <select id="frmProjectCode" required class="exec-input border border-slate-200">
+                                <option value="">-- เลือกรหัสโครงการ --</option>
+                                <option
+                                    value="69042 แผนงานเสริมสร้างความร่วมมือและยกระดับมาตรฐานองค์ความรู้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ">
+                                    69042
+                                    แผนงานเสริมสร้างความร่วมมือและยกระดับมาตรฐานองค์ความรู้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ
+                                </option>
+                                <option
+                                    value="69043 แผนงานส่งเสริมและสร้างความตระหนักเพื่อเพิ่มขีดความสามารถการแข่งขันด้าน Space & GI (STEM for Competitiveness)">
+                                    69043 แผนงานส่งเสริมและสร้างความตระหนักเพื่อเพิ่มขีดความสามารถการแข่งขันด้าน Space &
+                                    GI (STEM for Competitiveness)</option>
+                                <option value="69044 แผนงานการบริหารจัดการให้บริการ Space Inspirium">69044
+                                    แผนงานการบริหารจัดการให้บริการ Space Inspirium</option>
+                                <option
+                                    value="69045 แผนงานพัฒนาศักยภาพบุคลากรพร้อมใช้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ">
+                                    69045 แผนงานพัฒนาศักยภาพบุคลากรพร้อมใช้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ</option>
+                                <option value="69057 แผนงานบริหารจัดการสำนักบริการองค์ความรู้">69057
+                                    แผนงานบริหารจัดการสำนักบริการองค์ความรู้</option>
+                                <option value="69050 แผนงานขับเคลื่อนการสร้างคุณค่าและรายได้">69050
+                                    แผนงานขับเคลื่อนการสร้างคุณค่าและรายได้</option>
+                                <option
+                                    value="69144 โครงการการใช้เทคโนโลยีอวกาศเพื่อประเมินความยั่งยืน (SDGs) เชิงพื้นที่">
+                                    69144 โครงการการใช้เทคโนโลยีอวกาศเพื่อประเมินความยั่งยืน (SDGs) เชิงพื้นที่</option>
+                                <option
+                                    value="69143 โครงการเสริมสร้างศักยภาพครูด้านบูรณาการเทคโนโลยีอวกาศและภูมิสารสนเทศเพื่อการเรียนการสอน">
+                                    69143
+                                    โครงการเสริมสร้างศักยภาพครูด้านบูรณาการเทคโนโลยีอวกาศและภูมิสารสนเทศเพื่อการเรียนการสอน
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">จำนวนผู้รับการอบรม (คน) <span
+                                    class="text-red-500">*</span></label>
+                            <input type="number" id="frmPeople" required min="0"
+                                class="exec-input border border-slate-200" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">เครือข่ายงาน (หน่วยงาน)</label>
+                            <input type="number" id="frmOrgs" min="0" class="exec-input border border-slate-200"
+                                value="0">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">รายได้ (บาท) <span
+                                    class="text-red-500">*</span></label>
+                            <input type="number" id="frmIncome" required min="0" step="0.01"
+                                class="exec-input border border-slate-200" value="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">มูลค่าทางสังคม (บาท)</label>
+                            <input type="number" id="frmSocial" min="0" step="0.01"
+                                class="exec-input border border-slate-200" value="0">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">ประเภท <span
+                                    class="text-red-500">*</span></label>
+                            <select id="frmCategory" required class="exec-input border border-slate-200">
+                                <option value="">-- เลือกประเภท --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">ผู้รับผิดชอบ <span
+                                    class="text-red-500">*</span></label>
+                            <select id="frmResponsible" required class="exec-input border border-slate-200"
+                                onchange="handleResponsibleChange()">
+                                <option value="">-- เลือกผู้รับผิดชอบ --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">สิทธิ์สมนาคุณ จำนวนคน</label>
+                            <input type="number" id="frmPrivPeople" min="0" class="exec-input border border-slate-200"
+                                value="0">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">สิทธิ์สมนาคุณ มูลค่า
+                                (บาท)</label>
+                            <input type="number" id="frmPrivValue" min="0" step="0.01"
+                                class="exec-input border border-slate-200" value="0">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">KPI สำนัก</label>
+                        <select id="frmKpi" class="exec-input border border-slate-200">
+                            <option value="">-- เลือก KPI (ถ้ามี) --</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">หมายเหตุ</label>
+                        <input type="text" id="frmNote" class="exec-input border border-slate-200"
+                            placeholder="รายละเอียดเพิ่มเติม">
+                    </div>
+
+                    <!-- Hidden submit button to allow form validation via JS -->
+                    <button type="submit" id="frmSubmitBtn" class="hidden"></button>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
+                <button onclick="closeDataEntryModal()"
+                    class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">ยกเลิก</button>
+                <button onclick="document.getElementById('frmSubmitBtn').click()" id="frmSaveBtn"
+                    class="px-6 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-2 shadow-md">
+                    <span>บันทึกข้อมูล</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // สัญญาณความปลอดภัยของพอร์ทัล ChartDataLabels (Safety Registration Bridge)
+// สัญญาณความปลอดภัยของพอร์ทัล ChartDataLabels (Safety Registration Bridge)
         if (typeof ChartDataLabels !== 'undefined') {
             Chart.register(ChartDataLabels);
         }
@@ -2483,7 +2779,36 @@
             { name: "นายตรัยรัตน์ อ่อนเงิน (ทีม)", dept: "ฝถร.", position: "ผู้นำชมนิทรรศการฯ" }
         ];
 
-        // ข้อมูลเริ่มต้น KPI ใหม่ 8 ตัวชี้วัดตามโครงสร้างแบบประเมินจริง (FALLBACK DEFAULT)
+        // ════════════════════════════════════════════════════════════════════
+        // 🔍 CANONICAL STAFF NORMALIZATION HELPERS (ป้องกันชื่อซ้ำ & วรรควารสารคลาดเคลื่อน)
+        // ════════════════════════════════════════════════════════════════════
+        const normalizeStaffName = (name) => {
+            if (!name) return "";
+            return String(name).replace(/\s+/g, ' ').trim();
+        };
+
+        const getCanonicalStaffName = (rawName) => {
+            const norm = normalizeStaffName(rawName);
+            if (!norm || norm === "-") return null;
+
+            if (typeof MASTER_STAFF !== 'undefined') {
+                const matched = MASTER_STAFF.find(s => {
+                    const sNorm = normalizeStaffName(s.name);
+                    return sNorm === norm || 
+                           (sNorm.includes(norm) && norm.length > 6) || 
+                           (norm.includes(sNorm) && sNorm.length > 6);
+                });
+                if (matched) return normalizeStaffName(matched.name);
+            }
+            return norm;
+        };
+
+        const getStaffDept = (staffName) => {
+            const canonical = getCanonicalStaffName(staffName);
+            if (!canonical) return "-";
+            const found = MASTER_STAFF.find(s => normalizeStaffName(s.name) === canonical);
+            return found ? found.dept : "-";
+        };
         let kpiStudioData = [
             {
                 kpi: "อว. จำนวนผู้เข้ารับการถ่ายทอดความรู้และเรียนรู้ผ่านการเข้าร่วมกิจกรรม/ ฝึกอบรม/ แหล่งเรียนรู้ ตลอดจนการเข้าถึงสื่อในรูปแบบ Lifelong Learning",
@@ -2719,9 +3044,9 @@
             const normalized = {};
             const keys = Object.keys(row);
             keys.forEach((key, index) => {
-                const normKey = key.replace(/^\uFEFF/, '').trim().toLowerCase();
+                const normKey = (key.charCodeAt(0) === 0xFEFF ? key.slice(1) : key).trim().toLowerCase();
                 normalized[normKey] = row[key];
-                normalized[`_col_${index}`] = row[key];
+                normalized['_col_' + index] = row[key];
             });
             return normalized;
         }
@@ -2770,8 +3095,9 @@
             }
 
             // ตรวจจับตาม Index ของคอลัมน์มาตรฐานเพื่อความเสถียรในฐานข้อมูล
-            if (norm[`_col_${colIndex}`] !== undefined && norm[`_col_${colIndex}`] !== null) {
-                return String(norm[`_col_${colIndex}`]).trim();
+            const colKey = '_col_' + colIndex;
+            if (norm[colKey] !== undefined && norm[colKey] !== null) {
+                return String(norm[colKey]).trim();
             }
             return "";
         }
@@ -2787,6 +3113,10 @@
                 const kpi = (item.kpi || "").toLowerCase();
                 const desc = (item.description || "").toLowerCase();
 
+                if (dFilter === 'ฝบร.') {
+                    // ฝ่าย บร. ดูแลงานบริหารจัดการสำนัก, แผนงานรายได้, ประเมินความพึงพอใจ
+                    return desc.includes("69057") || desc.includes("69050") || kpi.includes("พึงพอใจ") || kpi.includes("รายได้");
+                }
                 if (dFilter === 'ฝมร.') {
                     // ฝ่าย มร. ดูแลหลักสูตร, นานาชาติ, ยุทธศาสตร์ สทอภ 1.2.4, 1.2.1 (กำลังคนพร้อมใช้)
                     return kpi.includes("1.2.4") || kpi.includes("1.2.1") && (desc.includes("69042") || desc.includes("69045")) || kpi.includes("สงป.2");
@@ -3391,6 +3721,7 @@
                 });
                 let eventsHtml = dayEvents.map(e => {
                     let colorClass = 'border-slate-300 text-slate-600 bg-slate-100';
+                    if (e["ฝ่าย"] === 'ฝบร.') colorClass = 'border-indigo-500 text-indigo-700 bg-indigo-50/70';
                     if (e["ฝ่าย"] === 'ฝมร.') colorClass = 'border-blue-500 text-blue-700 bg-blue-50/70';
                     if (e["ฝ่าย"] === 'ฝสร.') colorClass = 'border-emerald-500 text-emerald-700 bg-emerald-50/70';
                     if (e["ฝ่าย"] === 'ฝถร.') colorClass = 'border-purple-500 text-purple-700 bg-purple-50/70';
@@ -3449,9 +3780,10 @@
 
             // 1. เติมข้อมูลตั้งต้นด้วย "รายชื่อกำลังพลทั้งหมด" ในฐานข้อมูล MASTER_STAFF อิงตามฝ่ายที่กรอง
             MASTER_STAFF.forEach(staff => {
+                const normName = normalizeStaffName(staff.name);
                 if (dFilter === 'all' || staff.dept === dFilter) {
-                    workloadMap[staff.name] = {
-                        name: staff.name,
+                    workloadMap[normName] = {
+                        name: normName,
                         dept: staff.dept,
                         projectCount: 0,
                         totalHours: 0,
@@ -3462,33 +3794,45 @@
                 }
             });
 
-            // 2. ประมวลผลและบวกยอดผลิตภาพสะสมจากกิจกรรมที่มีการรายงาน (รวมทั้งเพิ่มรายชื่อพนักงานใหม่ในกรณีที่มีข้อมูลเข้ามาเพิ่มนอกทะเบียนหลัก)
+            // 2. ประมวลผลและบวกยอดผลิตภาพสะสมจากกิจกรรมที่มีการรายงาน (รองรับการแบ่งชื่อหลายคนด้วย comma หรือ slash)
             filteredData.forEach(d => {
-                const person = d.responsible ? d.responsible.trim() : "-";
-                if (person === "-" || person === "") return;
+                const rawResponsible = d.responsible ? String(d.responsible).trim() : "-";
+                if (rawResponsible === "-" || rawResponsible === "") return;
 
-                if (!workloadMap[person]) {
-                    const matchDept = (dFilter === 'all' || d["ฝ่าย"] === dFilter);
-                    if (matchDept) {
-                        workloadMap[person] = {
-                            name: person,
-                            dept: d["ฝ่าย"] || "-",
-                            projectCount: 0,
-                            totalHours: 0,
-                            totalIncome: 0,
-                            totalPeople: 0,
-                            projects: []
-                        };
-                    } else {
-                        return; // ข้ามกรณีฝ่ายงานไม่ตรงเงื่อนไขตัวกรอง
+                const staffTokens = rawResponsible.split(/[,/\n;]/).map(s => s.trim()).filter(s => s && s !== "-");
+                if (staffTokens.length === 0) return;
+
+                staffTokens.forEach(rawToken => {
+                    const canonical = getCanonicalStaffName(rawToken);
+                    if (!canonical) return;
+
+                    const personDept = getStaffDept(canonical) !== "-" ? getStaffDept(canonical) : (d["ฝ่าย"] || "-");
+
+                    if (!workloadMap[canonical]) {
+                        const matchDept = (dFilter === 'all' || personDept === dFilter);
+                        if (matchDept) {
+                            workloadMap[canonical] = {
+                                name: canonical,
+                                dept: personDept,
+                                projectCount: 0,
+                                totalHours: 0,
+                                totalIncome: 0,
+                                totalPeople: 0,
+                                projects: []
+                            };
+                        } else {
+                            return; // ข้ามกรณีฝ่ายงานไม่ตรงเงื่อนไขตัวกรอง
+                        }
                     }
-                }
 
-                workloadMap[person].projectCount += 1;
-                workloadMap[person].totalHours += d.estimatedHours || 0;
-                workloadMap[person].totalIncome += d.income || 0;
-                workloadMap[person].totalPeople += d.people || 0;
-                workloadMap[person].projects.push(d["ชื่อกิจกรรม"]);
+                    workloadMap[canonical].projectCount += 1;
+                    workloadMap[canonical].totalHours += (d.estimatedHours || 0);
+                    workloadMap[canonical].totalIncome += (d.income || 0);
+                    workloadMap[canonical].totalPeople += (d.people || 0);
+                    if (!workloadMap[canonical].projects.includes(d["ชื่อกิจกรรม"])) {
+                        workloadMap[canonical].projects.push(d["ชื่อกิจกรรม"]);
+                    }
+                });
             });
 
             let staffList = Object.values(workloadMap);
@@ -3535,7 +3879,10 @@
 
                 let deptColor = 'bg-slate-100 text-slate-600';
                 let avatarColor = 'bg-slate-200 text-slate-700';
-                if (staff.dept === 'ฝมร.') {
+                if (staff.dept === 'ฝบร.') {
+                    deptColor = 'bg-indigo-50 text-indigo-700 border border-indigo-100';
+                    avatarColor = 'bg-indigo-100 text-indigo-700';
+                } else if (staff.dept === 'ฝมร.') {
                     deptColor = 'bg-blue-50 text-blue-700 border border-blue-100';
                     avatarColor = 'bg-blue-100 text-blue-700';
                 } else if (staff.dept === 'ฝสร.') {
@@ -3837,11 +4184,18 @@
 
         // อัปเดตการแสดงผล UI ทั้งระบบ
         function updateUI() {
+            if (!masterData || masterData.length === 0) {
+                console.warn('updateUI called but masterData is empty — skipping.');
+                return;
+            }
+
             const selectedYearBE = parseInt(document.getElementById('filterYear').value);
             const dFilter = document.getElementById('filterDept').value;
             const mFilter = document.getElementById('filterMonth').value;
-            const searchVal = document.getElementById('tableSearch').value.trim().toLowerCase();
-            const statusFilter = document.getElementById('filterStatus').value;
+            const searchEl = document.getElementById('tableSearch');
+            const searchVal = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            const statusEl = document.getElementById('filterStatus');
+            const statusFilter = statusEl ? statusEl.value : 'all';
 
             const selectedCE_End = selectedYearBE - 543;
             const selectedCE_Start = selectedCE_End - 1;
@@ -4320,6 +4674,7 @@
 
             body.innerHTML = data.map((d, index) => {
                 let deptClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                if (d["ฝ่าย"] === 'ฝบร.') deptClass = 'bg-indigo-50 text-indigo-700 border-indigo-200/60';
                 if (d["ฝ่าย"] === 'ฝมร.') deptClass = 'bg-blue-50 text-blue-700 border-blue-200/60';
                 if (d["ฝ่าย"] === 'ฝสร.') deptClass = 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
                 if (d["ฝ่าย"] === 'ฝถร.') deptClass = 'bg-purple-50 text-purple-700 border-purple-200/60';
@@ -4725,6 +5080,7 @@ ${d["ชื่อกิจกรรม"] || '-'}
 
                     const bubbleData = data.map(d => {
                         let color = '#94a3b8';
+                        if (d["ฝ่าย"] === 'ฝบร.') color = '#6366f1';
                         if (d["ฝ่าย"] === 'ฝมร.') color = '#3b82f6';
                         if (d["ฝ่าย"] === 'ฝสร.') color = '#10b981';
                         if (d["ฝ่าย"] === 'ฝถร.') color = '#8b5cf6';
@@ -4742,7 +5098,7 @@ ${d["ชื่อกิจกรรม"] || '-'}
                         };
                     });
 
-                    const deptGroups = { 'ฝมร.': [], 'ฝสร.': [], 'ฝถร.': [], 'อื่นๆ': [] };
+                    const deptGroups = { 'ฝบร.': [], 'ฝมร.': [], 'ฝสร.': [], 'ฝถร.': [], 'อื่นๆ': [] };
                     bubbleData.forEach(item => {
                         if (deptGroups[item.dept]) {
                             deptGroups[item.dept].push(item);
@@ -4753,9 +5109,10 @@ ${d["ชื่อกิจกรรม"] || '-'}
 
                     const datasets = [];
                     const deptMeta = [
-                        { key: 'ฝมร.', label: 'ฝมร. (โครงสร้างพื้นฐาน)', color: 'rgba(59, 130, 246, 0.7)', border: '#2563eb' },
-                        { key: 'ฝสร.', label: 'ฝสร. (อุตสาหกรรม)', color: 'rgba(16, 185, 129, 0.7)', border: '#059669' },
-                        { key: 'ฝถร.', label: 'ฝถร. (ฐานข้อมูล)', color: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed' },
+                        { key: 'ฝบร.', label: 'ฝบร. (บริหารจัดการ)', color: 'rgba(99, 102, 241, 0.7)', border: '#4f46e5' },
+                        { key: 'ฝมร.', label: 'ฝมร. (ความร่วมมือและมาตรฐาน)', color: 'rgba(59, 130, 246, 0.7)', border: '#2563eb' },
+                        { key: 'ฝสร.', label: 'ฝสร. (ส่งเสริมองค์ความรู้)', color: 'rgba(16, 185, 129, 0.7)', border: '#059669' },
+                        { key: 'ฝถร.', label: 'ฝถร. (พัฒนาและถ่ายทอด)', color: 'rgba(139, 92, 246, 0.7)', border: '#7c3aed' },
                         { key: 'อื่นๆ', label: 'อื่นๆ', color: 'rgba(148, 163, 184, 0.7)', border: '#64748b' }
                     ];
 
@@ -4833,22 +5190,43 @@ ${d["ชื่อกิจกรรม"] || '-'}
 
 
         function exportTableToCSV() {
-            const rows = [];
-            const table = document.querySelector(".exec-table");
+            // Export from current filtered data to ensure completeness
+            const selectedYearBE = parseInt(document.getElementById('filterYear').value);
+            const dFilter = document.getElementById('filterDept').value;
+            const mFilter = document.getElementById('filterMonth').value;
+            const selectedCE_End = selectedYearBE - 543;
+            const selectedCE_Start = selectedCE_End - 1;
 
-            const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.innerText);
-            rows.push(headers.join(","));
+            const exportData = masterData.filter(d => {
+                const isInFiscalPeriod = (d.month >= 10 && d.year === selectedCE_Start) || (d.month <= 9 && d.year === selectedCE_End);
+                const matchDept = (dFilter === 'all' || d["ฝ่าย"] === dFilter);
+                const matchMonth = (mFilter === 'all' || d.month == mFilter);
+                return isInFiscalPeriod && matchDept && matchMonth;
+            });
 
-            const bodyRows = document.querySelectorAll("#tableBody tr");
-            bodyRows.forEach(tr => {
-                const cells = Array.from(tr.querySelectorAll("td")).map(td => {
-                    let text = td.innerText.replace(/"/g, '""');
-                    if (text.includes(",") || text.includes("\n")) {
-                        text = `"${text}"`;
-                    }
-                    return text;
-                });
-                rows.push(cells.join(","));
+            const headers = ['ลำดับ', 'วันที่', 'ชื่อกิจกรรม/โครงการ', 'รหัส', 'ฝ่าย', 'ผู้รับผิดชอบ', 'คน', 'เครือข่าย', 'รายได้จริง (บาท)', 'มูลค่าทางสังคม (บาท)', 'ประเภท', 'KPI สำนัก'];
+            const rows = [headers.join(",")];
+
+            exportData.forEach((d, i) => {
+                const escape = (v) => {
+                    let t = String(v || '-').replace(/"/g, '""');
+                    if (t.includes(',') || t.includes('\n') || t.includes('"')) t = `"${t}"`;
+                    return t;
+                };
+                rows.push([
+                    i + 1,
+                    escape(d.rawDateDisplay),
+                    escape(d["ชื่อกิจกรรม"]),
+                    escape(d.projectCode),
+                    escape(d["ฝ่าย"]),
+                    escape(d.responsible),
+                    d.people,
+                    d.orgs,
+                    d.income,
+                    d.social,
+                    escape(d.category),
+                    escape(d.KPI_สำนัก)
+                ].join(','));
             });
 
             const csvContent = "\uFEFF" + rows.join("\n");
@@ -4860,7 +5238,8 @@ ${d["ชื่อกิจกรรม"] || '-'}
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showToast("ส่งออกไฟล์สำเร็จ", "ระบบรายงานผลการดำเนินงานส่งออกเป็นไฟล์รายงาน CSV เรียบร้อยแล้ว");
+            URL.revokeObjectURL(url);
+            showToast("ส่งออกไฟล์สำเร็จ", `ส่งออก ${exportData.length} รายการ เป็นไฟล์ CSV เรียบร้อยแล้ว`);
         }
 
         function exportTableToExcel() {
@@ -4869,17 +5248,37 @@ ${d["ชื่อกิจกรรม"] || '-'}
                 return;
             }
 
-            const headers = ['ลำดับ', 'วันที่ปฏิบัติการ', 'ชื่อกิจกรรม / โครงการ', 'รหัส', 'ฝ่าย', 'คน', 'เครือข่าย', 'รายได้จริง (บาท)'];
-            const bodyRows = document.querySelectorAll("#tableBody tr");
+            const selectedYearBE = parseInt(document.getElementById('filterYear').value);
+            const dFilter = document.getElementById('filterDept').value;
+            const mFilter = document.getElementById('filterMonth').value;
+            const selectedCE_End = selectedYearBE - 543;
+            const selectedCE_Start = selectedCE_End - 1;
+
+            const exportData = masterData.filter(d => {
+                const isInFiscalPeriod = (d.month >= 10 && d.year === selectedCE_Start) || (d.month <= 9 && d.year === selectedCE_End);
+                const matchDept = (dFilter === 'all' || d["ฝ่าย"] === dFilter);
+                const matchMonth = (mFilter === 'all' || d.month == mFilter);
+                return isInFiscalPeriod && matchDept && matchMonth;
+            });
+
+            const headers = ['ลำดับ', 'วันที่', 'ชื่อกิจกรรม/โครงการ', 'รหัส', 'ฝ่าย', 'ผู้รับผิดชอบ', 'คน', 'เครือข่าย', 'รายได้จริง (บาท)', 'มูลค่าทางสังคม (บาท)', 'ประเภท', 'KPI สำนัก'];
             const data = [headers];
 
-            bodyRows.forEach(tr => {
-                const cells = Array.from(tr.querySelectorAll("td")).map(td => {
-                    const text = td.innerText.trim();
-                    const num = parseFloat(text.replace(/,/g, ''));
-                    return !isNaN(num) && text === num.toLocaleString() ? num : text;
-                });
-                if (cells.length > 0) data.push(cells);
+            exportData.forEach((d, i) => {
+                data.push([
+                    i + 1,
+                    d.rawDateDisplay || '-',
+                    d["ชื่อกิจกรรม"] || '-',
+                    d.projectCode || '-',
+                    d["ฝ่าย"] || '-',
+                    d.responsible || '-',
+                    d.people,
+                    d.orgs,
+                    d.income,
+                    d.social,
+                    d.category || '-',
+                    d.KPI_สำนัก || '-'
+                ]);
             });
 
             const ws = XLSX.utils.aoa_to_sheet(data);
@@ -4895,9 +5294,9 @@ ${d["ชื่อกิจกรรม"] || '-'}
                 return { wch: Math.min(maxLen + 4, 50) };
             });
 
-            const fileName = `SBR_Performance_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            const fileName = `SBR_Performance_Report_FY${selectedYearBE}_${new Date().toISOString().slice(0, 10)}.xlsx`;
             XLSX.writeFile(wb, fileName);
-            showToast("ส่งออก Excel สำเร็จ", `ข้อมูลถูกส่งออกเป็นไฟล์ ${fileName} เรียบร้อยแล้ว`);
+            showToast("ส่งออก Excel สำเร็จ", `ข้อมูล ${exportData.length} รายการ ถูกส่งออกเป็นไฟล์ ${fileName} เรียบร้อยแล้ว`);
         }
 
         function triggerCelebration() {
@@ -5747,6 +6146,22 @@ ${d["ชื่อกิจกรรม"] || '-'}
         }
 
         window.onload = () => {
+            // Auto-detect current fiscal year (ปีงบ = ต.ค.–ก.ย.)
+            const now = new Date();
+            const currentFY = (now.getMonth() >= 9) ? now.getFullYear() + 543 + 1 : now.getFullYear() + 543;
+            const sel = document.getElementById('filterYear');
+            if (sel) {
+                let found = false;
+                for (let i = 0; i < sel.options.length; i++) {
+                    if (parseInt(sel.options[i].value) === currentFY) {
+                        sel.selectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found && sel.options.length > 0) sel.selectedIndex = sel.options.length - 1;
+            }
+
             handleYearChange();
             reloadData();
 
@@ -5823,306 +6238,11 @@ ${d["ชื่อกิจกรรม"] || '-'}
                 }
             }, 45);
         };
-    </script>
 
-    <!-- 🚀 SPACE ROCKET LAUNCH CELEBRATION OVERLAY -->
-    <div id="rocketLaunchOverlay"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-500"
-        style="background: radial-gradient(circle, #f0f9ff 0%, #bae6fd 100%);">
-        <canvas id="rocketLaunchCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
-
-        <!-- Telemetry HUD Left Panel -->
-        <div id="hudLeftPanel" class="hud-telemetry hud-left hidden">
-            <div class="hud-title">Navigation Status</div>
-            <div class="hud-metric-row">
-                <span>SYSTEM</span>
-                <span class="text-emerald-400 font-bold">ONLINE</span>
-            </div>
-            <div class="hud-metric-row">
-                <span>STABILITY</span>
-                <span class="text-emerald-400 font-bold">99.8%</span>
-            </div>
-            <div class="hud-metric-row mt-4 text-[10px] text-slate-400 font-bold">ALTITUDE INDICATOR</div>
-            <div class="hud-value mt-1" id="hudAltitude">0 m</div>
-            <div class="hud-progress-mini">
-                <div class="hud-progress-fill" id="hudAltitudeProgress" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <!-- Telemetry HUD Right Panel -->
-        <div id="hudRightPanel" class="hud-telemetry hud-right hidden">
-            <div class="hud-title">Engine Telemetry</div>
-            <div class="hud-metric-row">
-                <span>THRUST</span>
-                <span class="text-sky-300 font-bold" id="hudThrust">0%</span>
-            </div>
-            <div class="hud-metric-row">
-                <span>REACTOR TEMP</span>
-                <span class="text-amber-400 font-bold" id="hudTemp">28°C</span>
-            </div>
-            <div class="hud-metric-row mt-4 text-[10px] text-slate-400 font-bold">VELOCITY RATE</div>
-            <div class="hud-value mt-1" id="hudVelocity">Mach 0.00</div>
-            <div class="hud-progress-mini">
-                <div class="hud-progress-fill" id="hudVelocityProgress" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <button onclick="closeRocketCelebration()"
-            class="absolute top-6 right-6 z-50 bg-slate-800/10 hover:bg-slate-800/20 border border-slate-800/20 text-slate-800 px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-md tracking-wide uppercase cursor-pointer">Close
-            Command Center [X]</button>
-
-        <!-- Countdown Screen -->
-        <div id="rocketCountdownPanel" class="text-center z-10 select-none">
-            <h2 class="text-xs font-bold text-sky-700 tracking-[0.3em] uppercase mb-4 animate-pulse">System
-                Initialization</h2>
-            <div id="rocketCountdownNumber"
-                class="text-8xl md:text-9xl font-black text-slate-800 font-mono tracking-widest leading-none drop-shadow-[0_0_15px_rgba(2,132,199,0.2)]">
-                10</div>
-            <p class="text-sm font-semibold text-slate-600 mt-6 tracking-widest uppercase">Pre-Launch Fuel
-                Pressurization</p>
-        </div>
-
-        <!-- SVG Rocket Ship -->
-        <div id="spaceRocket"
-            class="absolute bottom-[-350px] left-1/2 transform -translate-x-1/2 z-20 pointer-events-none"
-            style="width: 140px; height: 350px;">
-            <div class="relative w-full h-full flex flex-col justify-end">
-                <div id="rocketFlame"
-                    class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-24 bg-gradient-to-t from-transparent via-orange-500 to-yellow-300 opacity-0 rounded-b-full blur-[2px] transition-all duration-300">
-                </div>
-                <svg viewBox="0 0 100 250" class="w-full h-full drop-shadow-[0_0_15px_rgba(2,132,199,0.3)]">
-                    <!-- Thruster fire flame layers -->
-                    <path class="rocket-thruster-fire" d="M35 185 L50 240 L65 185 Z" fill="#ff5500" opacity="0.9" />
-                    <path class="rocket-thruster-fire-inner" d="M42 185 L50 220 L58 185 Z" fill="#ffdd00"
-                        opacity="0.95" />
-                    <!-- Wings -->
-                    <path d="M15 150 L30 180 L35 150 Z" fill="#1e293b" stroke="rgba(2,132,199,0.3)" stroke-width="1" />
-                    <path d="M85 150 L70 180 L65 150 Z" fill="#1e293b" stroke="rgba(2,132,199,0.3)" stroke-width="1" />
-                    <!-- Main Body Hull -->
-                    <path d="M30 60 C30 20, 70 20, 70 60 L70 170 L30 170 Z" fill="#f8fafc" />
-                    <path d="M50 10 C65 30, 70 50, 70 60 L30 60 C30 50, 35 30, 50 10 Z" fill="#0284c7" />
-                    <!-- Window viewport -->
-                    <circle cx="50" cy="85" r="14" fill="#0f172a" stroke="#cbd5e1" stroke-width="2" />
-                    <circle cx="50" cy="85" r="11" fill="#0ea5e9" opacity="0.8" />
-                    <path d="M42 77 A11 11 0 0 1 58 77 Z" fill="#ffffff" opacity="0.4" />
-                    <!-- Stripe -->
-                    <rect x="30" y="115" width="40" height="12" fill="#ef4444" />
-                    <!-- Thrusters nozzle -->
-                    <rect x="42" y="170" width="16" height="15" rx="3" fill="#64748b" />
-                </svg>
-            </div>
-        </div>
-
-        <!-- Launch Alert Message -->
-        <div id="missionAccomplishedPanel" class="text-center z-10 hidden max-w-xl px-6">
-            <h2
-                class="text-4xl md:text-5xl font-black text-emerald-600 tracking-wider mb-2 leading-tight uppercase drop-shadow-[0_0_10px_rgba(16,185,129,0.3)] font-sans">
-                Mission Accomplished</h2>
-            <p class="text-slate-600 text-xs md:text-sm font-semibold uppercase tracking-[0.25em] mb-8">Target
-                14,000,000 Baht Energy Core Full</p>
-            <div
-                class="bg-emerald-500/5 border border-emerald-500/20 p-5 rounded-2xl mb-8 flex justify-between items-center text-left gap-4 backdrop-blur-md">
-                <div>
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">TOTAL FISCAL
-                        POWER</span>
-                    <span class="text-2xl font-black text-slate-800" id="missionTotalIncome">฿14,000,000</span>
-                </div>
-                <div class="text-right">
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block mb-1">LAUNCH
-                        STATUS</span>
-                    <span
-                        class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 uppercase">Orbit
-                        Stabilized</span>
-                </div>
-            </div>
-            <button onclick="closeRocketCelebration()"
-                class="btn-space px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">Return
-                to Dashboard</button>
-        </div>
-    </div>
-    <!-- Data Entry Modal -->
-    <div id="dataEntryModal"
-        class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-        <div class="bg-white rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300"
-            id="dataEntryModalContent">
-            <!-- Header -->
-            <div
-                class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 rounded-t-2xl">
-                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    เพิ่มข้อมูลกิจกรรม/โครงการใหม่
-                </h3>
-                <button onclick="closeDataEntryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
-                        </path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Body -->
-            <div class="p-6 overflow-y-auto custom-scroll">
-                <form id="dataEntryForm" class="space-y-4" onsubmit="submitDataEntryForm(event)">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">วันที่เริ่ม <span
-                                    class="text-red-500">*</span></label>
-                            <input type="date" id="frmStartDate" required
-                                class="exec-input border border-slate-200 px-3 w-full">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">วันที่สิ้นสุด <span
-                                    class="text-red-500">*</span></label>
-                            <input type="date" id="frmEndDate" required
-                                class="exec-input border border-slate-200 px-3 w-full">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">ฝ่ายรับผิดชอบ <span
-                                    class="text-red-500">*</span></label>
-                            <select id="frmDept" required class="exec-input border border-slate-200"
-                                onchange="handleDeptChange()">
-                                <option value="">-- เลือกฝ่าย --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">ชื่อกิจกรรม / โครงการ <span
-                                    class="text-red-500">*</span></label>
-                            <input type="text" id="frmTitle" required class="exec-input border border-slate-200"
-                                placeholder="ชื่อกิจกรรม">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">รหัสโครงการ <span
-                                    class="text-red-500">*</span></label>
-                            <select id="frmProjectCode" required class="exec-input border border-slate-200">
-                                <option value="">-- เลือกรหัสโครงการ --</option>
-                                <option
-                                    value="69042 แผนงานเสริมสร้างความร่วมมือและยกระดับมาตรฐานองค์ความรู้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ">
-                                    69042
-                                    แผนงานเสริมสร้างความร่วมมือและยกระดับมาตรฐานองค์ความรู้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ
-                                </option>
-                                <option
-                                    value="69043 แผนงานส่งเสริมและสร้างความตระหนักเพื่อเพิ่มขีดความสามารถการแข่งขันด้าน Space & GI (STEM for Competitiveness)">
-                                    69043 แผนงานส่งเสริมและสร้างความตระหนักเพื่อเพิ่มขีดความสามารถการแข่งขันด้าน Space &
-                                    GI (STEM for Competitiveness)</option>
-                                <option value="69044 แผนงานการบริหารจัดการให้บริการ Space Inspirium">69044
-                                    แผนงานการบริหารจัดการให้บริการ Space Inspirium</option>
-                                <option
-                                    value="69045 แผนงานพัฒนาศักยภาพบุคลากรพร้อมใช้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ">
-                                    69045 แผนงานพัฒนาศักยภาพบุคลากรพร้อมใช้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ</option>
-                                <option value="69057 แผนงานบริหารจัดการสำนักบริการองค์ความรู้">69057
-                                    แผนงานบริหารจัดการสำนักบริการองค์ความรู้</option>
-                                <option value="69050 แผนงานขับเคลื่อนการสร้างคุณค่าและรายได้">69050
-                                    แผนงานขับเคลื่อนการสร้างคุณค่าและรายได้</option>
-                                <option
-                                    value="69144 โครงการการใช้เทคโนโลยีอวกาศเพื่อประเมินความยั่งยืน (SDGs) เชิงพื้นที่">
-                                    69144 โครงการการใช้เทคโนโลยีอวกาศเพื่อประเมินความยั่งยืน (SDGs) เชิงพื้นที่</option>
-                                <option
-                                    value="69143 โครงการเสริมสร้างศักยภาพครูด้านบูรณาการเทคโนโลยีอวกาศและภูมิสารสนเทศเพื่อการเรียนการสอน">
-                                    69143
-                                    โครงการเสริมสร้างศักยภาพครูด้านบูรณาการเทคโนโลยีอวกาศและภูมิสารสนเทศเพื่อการเรียนการสอน
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">จำนวนผู้รับการอบรม (คน) <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" id="frmPeople" required min="0"
-                                class="exec-input border border-slate-200" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">เครือข่ายงาน (หน่วยงาน)</label>
-                            <input type="number" id="frmOrgs" min="0" class="exec-input border border-slate-200"
-                                value="0">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">รายได้ (บาท) <span
-                                    class="text-red-500">*</span></label>
-                            <input type="number" id="frmIncome" required min="0" step="0.01"
-                                class="exec-input border border-slate-200" value="0">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">มูลค่าทางสังคม (บาท)</label>
-                            <input type="number" id="frmSocial" min="0" step="0.01"
-                                class="exec-input border border-slate-200" value="0">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">ประเภท <span
-                                    class="text-red-500">*</span></label>
-                            <select id="frmCategory" required class="exec-input border border-slate-200">
-                                <option value="">-- เลือกประเภท --</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">ผู้รับผิดชอบ <span
-                                    class="text-red-500">*</span></label>
-                            <select id="frmResponsible" required class="exec-input border border-slate-200"
-                                onchange="handleResponsibleChange()">
-                                <option value="">-- เลือกผู้รับผิดชอบ --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">สิทธิ์สมนาคุณ จำนวนคน</label>
-                            <input type="number" id="frmPrivPeople" min="0" class="exec-input border border-slate-200"
-                                value="0">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">สิทธิ์สมนาคุณ มูลค่า
-                                (บาท)</label>
-                            <input type="number" id="frmPrivValue" min="0" step="0.01"
-                                class="exec-input border border-slate-200" value="0">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">KPI สำนัก</label>
-                        <select id="frmKpi" class="exec-input border border-slate-200">
-                            <option value="">-- เลือก KPI (ถ้ามี) --</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">หมายเหตุ</label>
-                        <input type="text" id="frmNote" class="exec-input border border-slate-200"
-                            placeholder="รายละเอียดเพิ่มเติม">
-                    </div>
-
-                    <!-- Hidden submit button to allow form validation via JS -->
-                    <button type="submit" id="frmSubmitBtn" class="hidden"></button>
-                </form>
-            </div>
-
-            <!-- Footer -->
-            <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50 rounded-b-2xl">
-                <button onclick="closeDataEntryModal()"
-                    class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">ยกเลิก</button>
-                <button onclick="document.getElementById('frmSubmitBtn').click()" id="frmSaveBtn"
-                    class="px-6 py-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-2 shadow-md">
-                    <span>บันทึกข้อมูล</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts for Modal -->
-    <script>
-        let allStaffList = [];
+        // ════════════════════════════════════════════════════════════════════
+        // 📝 MODAL & DATA ENTRY FORM CONTROLLERS
+        // ════════════════════════════════════════════════════════════════════
+let allStaffList = [];
 
         function openDataEntryModal() {
             const modal = document.getElementById('dataEntryModal');
@@ -6324,17 +6444,59 @@ ${d["ชื่อกิจกรรม"] || '-'}
         function submitDataEntryForm(e) {
             e.preventDefault();
             const saveBtn = document.getElementById('frmSaveBtn');
-            saveBtn.innerHTML = '<span class="animate-pulse">กำลังบันทึก...</span>';
-            saveBtn.disabled = true;
 
             const startStr = document.getElementById('frmStartDate').value;
             const endStr = document.getElementById('frmEndDate').value;
+            const deptVal = document.getElementById('frmDept').value;
+            const titleVal = document.getElementById('frmTitle').value.trim();
+            const projectCodeVal = document.getElementById('frmProjectCode').value;
+            const responsibleVal = document.getElementById('frmResponsible').value;
+
+            // Form validation checks
+            if (!startStr) {
+                showToast('กรุณากรอกข้อมูล', 'โปรดระบุวันที่เริ่มต้นกิจกรรม', 'error');
+                document.getElementById('frmStartDate').focus();
+                return;
+            }
+            if (!endStr) {
+                showToast('กรุณากรอกข้อมูล', 'โปรดระบุวันที่สิ้นสุดกิจกรรม', 'error');
+                document.getElementById('frmEndDate').focus();
+                return;
+            }
+            if (endStr < startStr) {
+                showToast('ข้อมูลวันที่ไม่ถูกต้อง', 'วันที่สิ้นสุดต้องไม่เกิดขึ้นก่อนวันที่เริ่มต้น', 'error');
+                document.getElementById('frmEndDate').focus();
+                return;
+            }
+            if (!deptVal) {
+                showToast('กรุณากรอกข้อมูล', 'โปรดเลือกฝ่ายรับผิดชอบ', 'error');
+                document.getElementById('frmDept').focus();
+                return;
+            }
+            if (!titleVal) {
+                showToast('กรุณากรอกข้อมูล', 'โปรดระบุชื่อกิจกรรมหรือโครงการ', 'error');
+                document.getElementById('frmTitle').focus();
+                return;
+            }
+            if (!projectCodeVal) {
+                showToast('กรุณากรอกข้อมูล', 'โปรดเลือกรหัสโครงการ', 'error');
+                document.getElementById('frmProjectCode').focus();
+                return;
+            }
+            if (!responsibleVal) {
+                showToast('กรุณากรอกข้อมูล', 'โปรดเลือกผู้รับผิดชอบงาน', 'error');
+                document.getElementById('frmResponsible').focus();
+                return;
+            }
+
+            saveBtn.innerHTML = '<span class="animate-pulse">กำลังบันทึก...</span>';
+            saveBtn.disabled = true;
 
             function formatThaiDate(dStr) {
                 if (!dStr) return "";
                 const p = dStr.split('-');
                 if (p.length !== 3) return dStr;
-                return `${p[2]}/${p[1]}/${parseInt(p[0], 10) + 543}`;
+                return `${parseInt(p[2], 10)}/${parseInt(p[1], 10)}/${parseInt(p[0], 10) + 543}`;
             }
 
             const startFmt = formatThaiDate(startStr);
@@ -6346,15 +6508,15 @@ ${d["ชื่อกิจกรรม"] || '-'}
 
             const formData = {
                 date: finalDateStr,
-                dept: document.getElementById('frmDept').value,
-                title: document.getElementById('frmTitle').value,
-                projectCode: document.getElementById('frmProjectCode').value,
+                dept: deptVal,
+                title: titleVal,
+                projectCode: projectCodeVal,
                 people: document.getElementById('frmPeople').value,
                 orgs: document.getElementById('frmOrgs').value,
                 income: document.getElementById('frmIncome').value,
                 social: document.getElementById('frmSocial').value,
                 category: document.getElementById('frmCategory').value,
-                responsible: document.getElementById('frmResponsible').value,
+                responsible: responsibleVal,
                 kpi: document.getElementById('frmKpi').value,
                 note: document.getElementById('frmNote').value,
                 privPeople: document.getElementById('frmPrivPeople').value,
@@ -6366,15 +6528,14 @@ ${d["ชื่อกิจกรรม"] || '-'}
                     .withSuccessHandler(function (response) {
                         saveBtn.innerHTML = 'บันทึกข้อมูล';
                         saveBtn.disabled = false;
-                        if (response.status === 'success') {
+                        if (response && response.status === 'success') {
                             closeDataEntryModal();
                             showToast('บันทึกสำเร็จ', 'ข้อมูลถูกเพิ่มลงในระบบเรียบร้อยแล้ว');
-                            // Refresh data
                             setTimeout(() => {
                                 reloadData();
                             }, 1000);
                         } else {
-                            alert('เกิดข้อผิดพลาด: ' + (response.message || 'Unknown error'));
+                            alert('เกิดข้อผิดพลาด: ' + (response && response.message ? response.message : 'Unknown error'));
                         }
                     })
                     .withFailureHandler(function (err) {
