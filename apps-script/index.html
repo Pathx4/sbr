@@ -1108,7 +1108,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1);
+            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.15);
         }
 
@@ -1137,7 +1137,7 @@
         #spaceshipBootLoader.loaded {
             pointer-events: none;
             visibility: hidden;
-            transition: visibility 0s 1.2s;
+            transition: visibility 0s 1.5s;
         }
 
         .boot-terminal-panel {
@@ -1584,7 +1584,8 @@
                 class="px-6 py-6 md:px-10 md:py-7 flex flex-col sm:flex-row sm:justify-between sm:items-center z-10 border-b border-white/50 bg-white/60 backdrop-blur-xl gap-4 sticky top-0">
                 <div class="text-left">
                     <h1 class="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-800">
-                        Management <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">สบร.</span>
+                        Management <span
+                            class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">สบร.</span>
                     </h1>
                 </div>
                 <div class="text-left sm:text-right flex flex-col justify-center">
@@ -5684,7 +5685,7 @@ ${d["ชื่อกิจกรรม"] || '-'}
             spaceSatellites.push(new OrbitingSatellite(theos2Svg, 70, 380, 160, 0.0035, -0.2, "ดาวเทียมสำรวจทรัพยากรธรรมชาติ THEOS-2 (ของจริง)"));
             spaceSatellites.push(new OrbitingSatellite(theos1Svg, 65, 480, 220, -0.0025, 0.15, "ดาวเทียมไทยโชต THEOS-1 (ของจริง)"));
 
-            function loop() {}
+            function loop() { }
         }
 
         // Spaceship Boot Sound synthesizer (optional on user gesture)
@@ -5723,42 +5724,76 @@ ${d["ชื่อกิจกรรม"] || '-'}
 
             const progress = document.getElementById('bootLoaderProgress');
             const percent = document.getElementById('bootPercent');
+            const terminal = document.getElementById('bootTerminalOutput');
             const loader = document.getElementById('spaceshipBootLoader');
 
-            // Quick smooth transition for boot loader
-            if (progress) progress.style.width = '100%';
-            if (percent) percent.innerText = '100%';
+            const logMessages = [
+                "[ OK ] COMMUNICATING WITH GOOGLE SHEETS API...",
+                "[ OK ] FETCHING DATABASE RECTORS...",
+                "[ OK ] CALCULATING FISCAL CORE YIELDS...",
+                "[ OK ] VERIFYING STAFF WORKLOAD ASSIGNMENTS...",
+                "[ OK ] SYNCHRONIZING SPACE INSPIRIUM METRICS...",
+                "[ OK ] ALL ENGINE DIAGNOSTICS: COMPLETE",
+                "[ INIT ] OPENING HANGAR BAY DOORS..."
+            ];
 
-            setTimeout(() => {
-                if (loader) {
-                    loader.classList.add('loaded');
+            let currentProgress = 0;
+            let logIndex = 0;
+
+            const bootInterval = setInterval(() => {
+                currentProgress += Math.floor(Math.random() * 8) + 4;
+                if (currentProgress > 100) currentProgress = 100;
+
+                if (progress) progress.style.width = currentProgress + '%';
+                if (percent) percent.innerText = currentProgress + '%';
+
+                if (currentProgress >= (logIndex + 1) * 14 && logIndex < logMessages.length) {
+                    if (terminal) {
+                        const line = document.createElement('div');
+                        line.innerText = logMessages[logIndex];
+                        terminal.appendChild(line);
+                        terminal.scrollTop = terminal.scrollHeight;
+                    }
+                    logIndex++;
+                }
+
+                if (currentProgress >= 100) {
+                    clearInterval(bootInterval);
+                    playBootChime();
+
                     setTimeout(() => {
-                        loader.style.display = 'none';
-                    }, 400);
-                }
+                        if (loader) {
+                            loader.classList.add('loaded');
+                            // รอให้ประตูเลื่อนเปิดจนสุด (1.5 วินาที) ก่อนซ่อน
+                            setTimeout(() => {
+                                loader.style.display = 'none';
+                            }, 1600);
+                        }
 
-                // Initialize Vanta.js Spaceship Network Background
-                if (typeof VANTA !== 'undefined') {
-                    VANTA.NET({
-                        el: ".dashboard-shell",
-                        mouseControls: false,
-                        touchControls: false,
-                        gyroControls: false,
-                        minHeight: 200.00,
-                        minWidth: 200.00,
-                        scale: 1.00,
-                        scaleMobile: 1.00,
-                        color: 0x60a5fa,
-                        backgroundColor: 0xf4f8fd,
-                        points: 14.00,
-                        maxDistance: 21.00,
-                        spacing: 18.00
-                    });
-                }
+                        // Initialize Vanta.js Spaceship Network Background
+                        if (typeof VANTA !== 'undefined') {
+                            VANTA.NET({
+                                el: ".dashboard-shell",
+                                mouseControls: false,
+                                touchControls: false,
+                                gyroControls: false,
+                                minHeight: 200.00,
+                                minWidth: 200.00,
+                                scale: 1.00,
+                                scaleMobile: 1.00,
+                                color: 0x60a5fa,
+                                backgroundColor: 0xf4f8fd,
+                                points: 14.00,
+                                maxDistance: 21.00,
+                                spacing: 18.00
+                            });
+                        }
 
-                // Initialize Tippy.js tooltips smoothly
-                setTimeout(() => refreshTippy(), 200);
-            }, 300);
+                        // Initialize Tippy.js tooltips smoothly
+                        setTimeout(() => refreshTippy(), 600);
+                    }, 350);
+                }
+            }, 45);
         };
     </script>
 
