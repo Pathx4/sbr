@@ -3464,38 +3464,31 @@
 
             // 2. ประมวลผลและบวกยอดผลิตภาพสะสมจากกิจกรรมที่มีการรายงาน (รวมทั้งเพิ่มรายชื่อพนักงานใหม่ในกรณีที่มีข้อมูลเข้ามาเพิ่มนอกทะเบียนหลัก)
             filteredData.forEach(d => {
-                const rawPerson = d.responsible ? d.responsible.trim() : "-";
-                if (rawPerson === "-" || rawPerson === "") return;
+                const person = d.responsible ? d.responsible.trim() : "-";
+                if (person === "-" || person === "") return;
 
-                const persons = String(rawPerson).split(/[,/]/).map(p => p.trim()).filter(p => p && p !== "-");
-                persons.forEach(person => {
-                    if (!workloadMap[person]) {
-                        const known = (typeof MASTER_STAFF !== 'undefined') 
-                            ? MASTER_STAFF.find(s => s.name === person || s.name.includes(person) || person.includes(s.name))
-                            : null;
-                        const personDept = known ? known.dept : (d["ฝ่าย"] || "-");
-                        const matchDept = (dFilter === 'all' || personDept === dFilter);
-                        if (matchDept) {
-                            workloadMap[person] = {
-                                name: person,
-                                dept: personDept,
-                                projectCount: 0,
-                                totalHours: 0,
-                                totalIncome: 0,
-                                totalPeople: 0,
-                                projects: []
-                            };
-                        } else {
-                            return;
-                        }
+                if (!workloadMap[person]) {
+                    const matchDept = (dFilter === 'all' || d["ฝ่าย"] === dFilter);
+                    if (matchDept) {
+                        workloadMap[person] = {
+                            name: person,
+                            dept: d["ฝ่าย"] || "-",
+                            projectCount: 0,
+                            totalHours: 0,
+                            totalIncome: 0,
+                            totalPeople: 0,
+                            projects: []
+                        };
+                    } else {
+                        return; // ข้ามกรณีฝ่ายงานไม่ตรงเงื่อนไขตัวกรอง
                     }
+                }
 
-                    workloadMap[person].projectCount += 1;
-                    workloadMap[person].totalHours += d.estimatedHours || 0;
-                    workloadMap[person].totalIncome += (d.income || 0) / (persons.length || 1);
-                    workloadMap[person].totalPeople += Math.round((d.people || 0) / (persons.length || 1));
-                    workloadMap[person].projects.push(d["ชื่อกิจกรรม"]);
-                });
+                workloadMap[person].projectCount += 1;
+                workloadMap[person].totalHours += d.estimatedHours || 0;
+                workloadMap[person].totalIncome += d.income || 0;
+                workloadMap[person].totalPeople += d.people || 0;
+                workloadMap[person].projects.push(d["ชื่อกิจกรรม"]);
             });
 
             let staffList = Object.values(workloadMap);
@@ -6141,7 +6134,7 @@ ${d["ชื่อกิจกรรม"] || '-'}
             while (deptSelect.options.length > 1) {
                 deptSelect.remove(1);
             }
-            const extraDepts = (typeof masterData !== 'undefined') 
+            const extraDepts = (typeof masterData !== 'undefined')
                 ? masterData.map(item => item['ฝ่าย']).filter(d => d && d !== "-" && String(d).trim() !== "")
                 : [];
             const uniqueDepts = [...new Set([...defaultDepts, ...extraDepts])];
@@ -6152,44 +6145,68 @@ ${d["ชื่อกิจกรรม"] || '-'}
                 deptSelect.appendChild(opt);
             });
 
-            // 2. สร้างแผนที่บุคลากร-ฝ่าย จาก MASTER_STAFF และ masterData
+            // 2. สร้างแผนที่บุคลากร-ฝ่าย จาก MASTER_STAFF และ masterData โดยแปลงชื่อให้เป็นมาตรฐานเดียวกัน (Canonical Normalization)
             window.staffDeptMap = {};
             window.deptStaffMap = {};
 
-            // เติมจากฐานข้อมูลหลัก 34 ท่าน
+            const normalizeStaffName = (name) => {
+                if (!name) return "";
+                return String(name).replace(/\s+/g, ' ').trim();
+            };
+
+            const getCanonicalStaffName = (rawName) => {
+                const norm = normalizeStaffName(rawName);
+                if (!norm || norm === "-") return null;
+
+                // ตรวจสอบเทียบกับทะเบียนหลัก MASTER_STAFF
+                if (typeof MASTER_STAFF !== 'undefined') {
+                    const matched = MASTER_STAFF.find(s => {
+                        const sNorm = normalizeStaffName(s.name);
+                        return sNorm === norm || 
+                               (sNorm.includes(norm) && norm.length > 6) || 
+                               (norm.includes(sNorm) && sNorm.length > 6);
+                    });
+                    if (matched) return normalizeStaffName(matched.name);
+                }
+                return norm;
+            };
+
+            // เติมจากฐานข้อมูลหลัก 34 ท่าน (Normalize ชื่อทุกท่านเพื่อไม่ให้มีเว้นวรรคซ้ำซ้อน)
             if (typeof MASTER_STAFF !== 'undefined') {
                 MASTER_STAFF.forEach(s => {
-                    if (s.name && s.dept) {
-                        window.staffDeptMap[s.name] = s.dept;
-                        if (!window.deptStaffMap[s.dept]) window.deptStaffMap[s.dept] = new Set();
-                        window.deptStaffMap[s.dept].add(s.name);
+                    const cleanName = normalizeStaffName(s.name);
+                    const cleanDept = normalizeStaffName(s.dept);
+                    if (cleanName && cleanDept) {
+                        window.staffDeptMap[cleanName] = cleanDept;
+                        if (!window.deptStaffMap[cleanDept]) window.deptStaffMap[cleanDept] = new Set();
+                        window.deptStaffMap[cleanDept].add(cleanName);
                     }
                 });
             }
 
-            // เติมเสริมจากข้อมูลชีทที่ดึงมาจริง (ถ้ามีรายชื่อใหม่)
+            // เติมเสริมจากข้อมูลชีทที่ดึงมาจริง (แปลงชื่อผ่าน getCanonicalStaffName ป้องกันชื่อซ้ำ)
             if (typeof masterData !== 'undefined' && masterData.length > 0) {
                 masterData.forEach(item => {
-                    const dept = item['ฝ่าย'];
+                    const dept = normalizeStaffName(item['ฝ่าย']);
                     const rawStaff = item.responsible;
                     if (rawStaff && rawStaff !== "-" && String(rawStaff).trim() !== "") {
-                        // รองรับกรณีมีหลายชื่อคั่นด้วยจุลภาคหรือ slash
-                        const staffNames = String(rawStaff).split(/[,/]/).map(n => n.trim()).filter(n => n && n !== "-");
+                        const staffNames = String(rawStaff).split(/[,/]/).map(n => getCanonicalStaffName(n)).filter(n => n && n !== "-");
                         staffNames.forEach(staff => {
                             if (dept && dept !== "-") {
                                 if (!window.staffDeptMap[staff]) window.staffDeptMap[staff] = dept;
-                                if (!window.deptStaffMap[dept]) window.deptStaffMap[dept] = new Set();
-                                window.deptStaffMap[dept].add(staff);
+                                const assignedDept = window.staffDeptMap[staff] || dept;
+                                if (!window.deptStaffMap[assignedDept]) window.deptStaffMap[assignedDept] = new Set();
+                                window.deptStaffMap[assignedDept].add(staff);
                             }
                         });
                     }
                 });
             }
 
-            // รวบรวมรายชื่อบุคลากรทั้งหมด
-            allStaffList = Object.keys(window.staffDeptMap).sort();
+            // รวบรวมรายชื่อบุคลากรทั้งหมดแบบไม่ซ้ำ (Unique List เรียงตามพยัญชนะไทย)
+            allStaffList = [...new Set(Object.keys(window.staffDeptMap))].sort((a, b) => a.localeCompare(b, 'th'));
             if (allStaffList.length === 0 && typeof MASTER_STAFF !== 'undefined') {
-                allStaffList = MASTER_STAFF.map(s => s.name).sort();
+                allStaffList = [...new Set(MASTER_STAFF.map(s => normalizeStaffName(s.name)))].sort((a, b) => a.localeCompare(b, 'th'));
             }
 
             // 3. เติมตัวเลือกประเภทกิจกรรม (Category)
@@ -6251,20 +6268,23 @@ ${d["ชื่อกิจกรรม"] || '-'}
         }
 
         function handleDeptChange() {
-            const dept = document.getElementById('frmDept').value;
+            const dept = document.getElementById('frmDept').value ? document.getElementById('frmDept').value.trim() : "";
             const responsibleSelect = document.getElementById('frmResponsible');
-            const currentStaff = responsibleSelect.value;
+            const currentStaff = responsibleSelect.value ? responsibleSelect.value.replace(/\s+/g, ' ').trim() : "";
 
             while (responsibleSelect.options.length > 1) {
                 responsibleSelect.remove(1);
             }
 
-            let staffToShow = allStaffList;
+            let rawList = allStaffList;
             if (dept && window.deptStaffMap && window.deptStaffMap[dept] && window.deptStaffMap[dept].size > 0) {
-                staffToShow = [...window.deptStaffMap[dept]].sort();
+                rawList = [...window.deptStaffMap[dept]];
             } else if (dept && typeof MASTER_STAFF !== 'undefined') {
-                staffToShow = MASTER_STAFF.filter(s => s.dept === dept).map(s => s.name).sort();
+                rawList = MASTER_STAFF.filter(s => s.dept === dept).map(s => s.name.replace(/\s+/g, ' ').trim());
             }
+
+            // Deduplicate cleanly
+            const staffToShow = [...new Set(rawList.map(s => s.replace(/\s+/g, ' ').trim()))].sort((a, b) => a.localeCompare(b, 'th'));
 
             staffToShow.forEach(staff => {
                 const option = document.createElement('option');
