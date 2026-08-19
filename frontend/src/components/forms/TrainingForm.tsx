@@ -593,28 +593,30 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
               </div>
             </div>
             
-            <div className="max-h-56 overflow-y-auto border border-border/60 bg-background rounded-lg p-2 space-y-1 shadow-inner">
-              {filteredPersonnel.map((p, i) => (
-                <label key={i} className={`flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors ${formData.executiveNames.includes(p.name) ? 'bg-primary/5 border border-primary/20' : 'hover:bg-muted border border-transparent'}`}>
-                  <div className="relative flex items-center justify-center mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={formData.executiveNames.includes(p.name)}
-                      onChange={() => handleExecutiveToggle(p.name)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
-                      {formData.executiveNames.includes(p.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+            <div className="max-h-64 overflow-y-auto border border-border/60 bg-background rounded-xl p-3 shadow-inner">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {filteredPersonnel.map((p, i) => (
+                  <label key={i} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${formData.executiveNames.includes(p.name) ? 'bg-primary/5 border border-primary/20 shadow-xs' : 'hover:bg-muted/60 border border-border/40'}`}>
+                    <div className="relative flex items-center justify-center mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={formData.executiveNames.includes(p.name)}
+                        onChange={() => handleExecutiveToggle(p.name)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                        {formData.executiveNames.includes(p.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className={`text-sm font-medium ${formData.executiveNames.includes(p.name) ? 'text-primary' : 'text-foreground'}`}>
-                      {p.name}
+                    <div className="min-w-0 flex-1">
+                      <div className={`text-sm font-medium leading-snug ${formData.executiveNames.includes(p.name) ? 'text-primary' : 'text-foreground'}`}>
+                        {p.name}
+                      </div>
+                      {p.title && <div className="text-xs text-muted-foreground mt-0.5 truncate">{p.title}</div>}
                     </div>
-                    {p.title && <div className="text-xs text-muted-foreground mt-0.5">{p.title}</div>}
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </div>
               {filteredPersonnel.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">ไม่พบข้อมูลผู้บริหาร</div>}
             </div>
           </div>
@@ -651,28 +653,30 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
               </label>
             </div>
             
-            <div className="max-h-56 overflow-y-auto border border-border/60 bg-background rounded-lg p-2 space-y-1 shadow-inner">
-              {filteredDirectors.map((d, i) => (
-                <label key={i} className={`flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors ${formData.directorNames.includes(d.name) ? 'bg-primary/5 border border-primary/20' : 'hover:bg-muted border border-transparent'}`}>
-                  <div className="relative flex items-center justify-center mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={formData.directorNames.includes(d.name)}
-                      onChange={() => handleDirectorToggle(d.name)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
-                      {formData.directorNames.includes(d.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+            <div className="max-h-64 overflow-y-auto border border-border/60 bg-background rounded-xl p-3 shadow-inner">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {filteredDirectors.map((d, i) => (
+                  <label key={i} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${formData.directorNames.includes(d.name) ? 'bg-primary/5 border border-primary/20 shadow-xs' : 'hover:bg-muted/60 border border-border/40'}`}>
+                    <div className="relative flex items-center justify-center mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={formData.directorNames.includes(d.name)}
+                        onChange={() => handleDirectorToggle(d.name)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                        {formData.directorNames.includes(d.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className={`text-sm font-medium ${formData.directorNames.includes(d.name) ? 'text-primary' : 'text-foreground'}`}>
-                      {d.name} <span className="text-muted-foreground/50 text-xs ml-1">({d.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                    <div className="min-w-0 flex-1">
+                      <div className={`text-sm font-medium leading-snug ${formData.directorNames.includes(d.name) ? 'text-primary' : 'text-foreground'}`}>
+                        {d.name} <span className="text-muted-foreground/50 text-xs ml-1">({d.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                      </div>
+                      {d.title && <div className="text-xs text-muted-foreground mt-0.5 truncate">{d.title} (สำนัก {d.sheet})</div>}
                     </div>
-                    {d.title && <div className="text-xs text-muted-foreground mt-0.5">{d.title} (สำนัก {d.sheet})</div>}
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </div>
               {filteredDirectors.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">ไม่พบข้อมูลผู้อำนวยการ</div>}
             </div>
           </div>
@@ -709,28 +713,30 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
               </label>
             </div>
             
-            <div className="max-h-56 overflow-y-auto border border-border/60 bg-background rounded-lg p-2 space-y-1 shadow-inner">
-              {filteredStaff.map((s, i) => (
-                <label key={i} className={`flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors ${formData.staffNames.includes(s.name) ? 'bg-primary/5 border border-primary/20' : 'hover:bg-muted border border-transparent'}`}>
-                  <div className="relative flex items-center justify-center mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={formData.staffNames.includes(s.name)}
-                      onChange={() => handleStaffToggle(s.name)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
-                      {formData.staffNames.includes(s.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+            <div className="max-h-72 overflow-y-auto border border-border/60 bg-background rounded-xl p-3 shadow-inner">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {filteredStaff.map((s, i) => (
+                  <label key={i} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${formData.staffNames.includes(s.name) ? 'bg-primary/5 border border-primary/20 shadow-xs' : 'hover:bg-muted/60 border border-border/40'}`}>
+                    <div className="relative flex items-center justify-center mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={formData.staffNames.includes(s.name)}
+                        onChange={() => handleStaffToggle(s.name)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                        {formData.staffNames.includes(s.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className={`text-sm font-medium ${formData.staffNames.includes(s.name) ? 'text-primary' : 'text-foreground'}`}>
-                      {s.name} <span className="text-muted-foreground/50 text-xs ml-1">({s.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                    <div className="min-w-0 flex-1">
+                      <div className={`text-sm font-medium leading-snug ${formData.staffNames.includes(s.name) ? 'text-primary' : 'text-foreground'}`}>
+                        {s.name} <span className="text-muted-foreground/50 text-xs ml-1">({s.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                      </div>
+                      {s.title && <div className="text-xs text-muted-foreground mt-0.5 truncate">{s.title}</div>}
                     </div>
-                    {s.title && <div className="text-xs text-muted-foreground mt-0.5">{s.title}</div>}
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </div>
               {filteredStaff.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">ไม่พบข้อมูลเจ้าหน้าที่</div>}
             </div>
           </div>
@@ -752,7 +758,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                 <select 
                   value={selectedSection} 
                   onChange={(e) => setSelectedSection(e.target.value)}
-                  className="w-full text-sm border border-slate-200/10 rounded-xl px-3 py-2.5 bg-background shadow-neumorph-inset focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] transition-all"
+                  className="w-full text-sm border border-slate-200/10 rounded-xl px-3.5 py-2.5 bg-background shadow-neumorph-inset focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] transition-all"
                 >
                   <option value="all">🏢 ทุกสำนัก (GISTDA)</option>
                   {bureauList.map((sec, idx) => (
@@ -770,7 +776,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                 />
               </div>
               <div className="sm:col-span-3 flex items-center">
-                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap bg-background border border-border rounded-lg px-3 py-2.5 hover:bg-muted/50 transition-colors w-full justify-center">
+                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap bg-background border border-border rounded-xl px-3 py-2.5 hover:bg-muted/50 transition-colors w-full justify-center">
                   <input 
                     type="checkbox" 
                     className="rounded border-border/60 text-primary focus:ring-primary/20 w-4 h-4 cursor-pointer"
@@ -782,35 +788,37 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
               </div>
             </div>
             
-            <div className="max-h-56 overflow-y-auto border border-border/60 bg-background rounded-lg p-2 space-y-1 shadow-inner">
-              {filteredOtherStaff.map((s, i) => (
-                <label key={i} className={`flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors ${(formData.otherStaffNames || []).includes(s.name) ? 'bg-primary/5 border border-primary/20' : 'hover:bg-muted border border-transparent'}`}>
-                  <div className="relative flex items-center justify-center mt-0.5">
-                    <input
-                      type="checkbox"
-                      checked={(formData.otherStaffNames || []).includes(s.name)}
-                      onChange={() => handleOtherStaffToggle(s.name)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
-                      {(formData.otherStaffNames || []).includes(s.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+            <div className="max-h-80 overflow-y-auto border border-border/60 bg-background rounded-xl p-3 shadow-inner">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                {filteredOtherStaff.map((s, i) => (
+                  <label key={i} className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${(formData.otherStaffNames || []).includes(s.name) ? 'bg-primary/5 border border-primary/20 shadow-xs' : 'hover:bg-muted/60 border border-border/40'}`}>
+                    <div className="relative flex items-center justify-center mt-0.5 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={(formData.otherStaffNames || []).includes(s.name)}
+                        onChange={() => handleOtherStaffToggle(s.name)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                        {(formData.otherStaffNames || []).includes(s.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`text-sm font-medium ${(formData.otherStaffNames || []).includes(s.name) ? 'text-primary' : 'text-foreground'}`}>
-                      {s.name} <span className="text-muted-foreground/50 text-xs ml-1">({s.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-medium leading-snug ${(formData.otherStaffNames || []).includes(s.name) ? 'text-primary' : 'text-foreground'}`}>
+                        {s.name} <span className="text-muted-foreground/50 text-xs ml-1">({s.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5">
+                        <span className="truncate max-w-[140px]">{s.position || 'เจ้าหน้าที่'}</span>
+                        {s.section && (
+                          <span className="bg-muted px-1.5 py-0.5 rounded text-[11px] font-medium text-muted-foreground shrink-0">
+                            {s.section}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2">
-                      <span>{s.position || 'เจ้าหน้าที่'}</span>
-                      {s.section && (
-                        <span className="bg-muted px-1.5 py-0.5 rounded text-[11px] font-medium text-muted-foreground">
-                          {s.section}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </div>
               {filteredOtherStaff.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">ไม่พบข้อมูลเจ้าหน้าที่ในสำนักที่เลือก</div>}
             </div>
           </div>

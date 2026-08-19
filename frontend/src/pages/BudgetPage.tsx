@@ -444,37 +444,41 @@ function BudgetPage() {
       <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-accent/[0.04] blur-[100px] pointer-events-none" />
       <div className="absolute top-[20%] right-[-10%] w-[30vw] h-[30vw] rounded-full bg-accent-secondary/[0.03] blur-[120px] pointer-events-none" />
 
-      <main className="relative z-10 mx-auto max-w-6xl px-6 py-12 md:py-16">
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Hero Section */}
         <motion.div
           initial="hidden"
           animate="visible"
           variants={stagger}
-          className="mb-12 max-w-3xl"
+          className="mb-10 max-w-4xl"
         >
-          <motion.div variants={fadeInUp} className="mb-8">
+          <motion.div variants={fadeInUp} className="mb-6">
             <Badge pulse>Budget Allocation System v2.0</Badge>
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-bold tracking-tight text-foreground leading-[1.1] mb-6">
+          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.15] mb-4">
             ระบบประมาณค่าใช้จ่าย<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-secondary">
               กิจกรรม
             </span>
           </motion.h1>
-          <motion.p variants={fadeInUp} className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
+          <motion.p variants={fadeInUp} className="text-base sm:text-lg text-muted-foreground max-w-3xl leading-relaxed">
             รองรับการคำนวณแยกตามประเภทกิจกรรม: อบรม ประชุม และลงพื้นที่ภาคสนาม พร้อมระบบจับคู่นอนและดึงข้อมูลผู้บริหารอัตโนมัติ
           </motion.p>
         </motion.div>
 
         {/* Main Content Grid */}
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] items-start">
+        <div className={`grid gap-8 items-start transition-all duration-500 ${
+          showResult && calculationResult 
+            ? 'grid-cols-1 xl:grid-cols-12' 
+            : 'grid-cols-1 max-w-5xl mx-auto'
+        }`}>
 
           {/* Form Section */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="space-y-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className={`space-y-8 ${showResult && calculationResult ? 'xl:col-span-8' : 'w-full'}`}
           >
             {/* Step 1: Regulation */}
             <Card className="border-border/50 shadow-sm">
@@ -579,11 +583,11 @@ function BudgetPage() {
                       {formData.activityType === 'field_trip' && <FieldTripForm formData={formData} setFormData={setFormData} />}
 
                       <motion.div
-                        whileHover={{ scale: isFormValid() ? 1.02 : 1, y: isFormValid() ? -2 : 0 }}
+                        whileHover={{ scale: isFormValid() ? 1.01 : 1, y: isFormValid() ? -2 : 0 }}
                         whileTap={{ scale: isFormValid() ? 0.98 : 1 }}
                       >
                         <Button
-                          className={`w-full mt-8 h-14 text-lg rounded-2xl transition-all duration-500 border-0 ${isFormValid() ? 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-xl shadow-primary/30 text-white' : 'bg-accent/20 text-accent/50 shadow-none'}`}
+                          className={`w-full mt-8 h-14 text-lg rounded-2xl transition-all duration-500 border-0 ${isFormValid() ? 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-xl shadow-primary/30 text-white cursor-pointer' : 'bg-accent/20 text-accent/50 shadow-none'}`}
                           onClick={handleCalculate}
                           disabled={!isFormValid()}
                         >
@@ -600,55 +604,47 @@ function BudgetPage() {
           </motion.div>
 
           {/* Result Section */}
-          <div ref={resultRef} className="lg:sticky lg:top-8">
-            <AnimatePresence>
-              {showResult && calculationResult && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                >
-                  <Card variant="featured" className="h-full">
-                    <CardHeader>
-                      <Badge className="w-fit mb-4">Results Computed</Badge>
-                      <CardTitle className="text-3xl font-bold">สรุปงบประมาณ</CardTitle>
-                      <CardDescription>อ้างอิงจาก {formData.regulation}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="space-y-4">
-                        {calculationResult.breakdown.map((item: any, idx: number) => (
-                          <div key={idx} className="flex justify-between items-center border-b pb-4">
-                            <div>
-                              <span className="text-muted-foreground block">{item.label}</span>
-                              <span className="text-xs text-muted-foreground/60">{item.detail}</span>
-                            </div>
-                            <span className="font-mono text-lg font-medium text-foreground">
-                              ฿ {item.amount.toLocaleString()}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="pt-4 border-t-2 border-border/50">
-                        <div className="flex justify-between items-end">
-                          <span className="text-lg font-semibold">ยอดรวมทั้งสิ้น</span>
-                          <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-secondary">
-                            ฿ {calculationResult.totalCost.toLocaleString()}
-                          </span>
+          {showResult && calculationResult && (
+            <div ref={resultRef} className="xl:col-span-4 xl:sticky xl:top-8 animate-in fade-in slide-in-from-right-4 duration-500">
+              <Card variant="featured" className="h-full shadow-lg border-primary/20">
+                <CardHeader>
+                  <Badge className="w-fit mb-4">Results Computed</Badge>
+                  <CardTitle className="text-2xl sm:text-3xl font-bold">สรุปงบประมาณ</CardTitle>
+                  <CardDescription>อ้างอิงจาก {formData.regulation}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    {calculationResult.breakdown.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center border-b pb-3 gap-3">
+                        <div className="min-w-0">
+                          <span className="text-muted-foreground block text-sm font-medium">{item.label}</span>
+                          <span className="text-xs text-muted-foreground/70 line-clamp-2">{item.detail}</span>
                         </div>
+                        <span className="font-mono text-base sm:text-lg font-semibold text-foreground shrink-0">
+                          ฿ {item.amount.toLocaleString()}
+                        </span>
                       </div>
+                    ))}
+                  </div>
 
-                      <div className="flex gap-4 mt-8">
-                        <Button variant="outline" className="w-full bg-transparent border-primary/50 hover:bg-primary/5 text-primary" onClick={handleExportExcel}>
-                          Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  <div className="pt-4 border-t-2 border-border/50">
+                    <div className="flex justify-between items-end gap-2">
+                      <span className="text-base sm:text-lg font-bold">ยอดรวมทั้งสิ้น</span>
+                      <span className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-secondary">
+                        ฿ {calculationResult.totalCost.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 mt-8">
+                    <Button variant="outline" className="w-full bg-transparent border-primary/50 hover:bg-primary/5 text-primary py-6 text-sm font-bold" onClick={handleExportExcel}>
+                      📥 Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
         </div>
       </main>
