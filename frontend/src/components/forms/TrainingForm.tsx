@@ -312,9 +312,11 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
            (p?.title ? p.title.toLowerCase().includes(query) : false);
   });
 
-  // Filter SBR Staff
+  // Filter SBR Staff (ระดับ จนท. - ยกเว้น ผอ.)
   const [searchStaffTerm, setSearchStaffTerm] = React.useState('');
   const filteredStaff = staffData.filter(s => {
+    const isDirector = s?.title && (s.title.includes('ผู้อำนวยการ') || s.title.includes('ผอ.'));
+    if (isDirector) return false;
     const query = searchStaffTerm.toLowerCase();
     const staffTitle = (s as any)?.title || (s as any)?.position || '';
     return (s?.name ? s.name.toLowerCase().includes(query) : false) || 
@@ -329,13 +331,28 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     (d?.sheet ? d.sheet.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false)
   );
 
-  // Filter Other Bureaus Staff
+  // Filter Other Bureaus Staff (เฉพาะระดับ จนท. - ไม่รวม ผอ. และ ผู้บริหาร)
   const [selectedSection, setSelectedSection] = React.useState('all');
   const [searchOtherStaffTerm, setSearchOtherStaffTerm] = React.useState('');
   
-  const bureauList = Array.from(new Set(contactsData.map(c => c.section).filter(Boolean)));
+  const bureauList = Array.from(new Set(contactsData.map(c => c.section).filter(s => s && !s.includes('สบร'))));
   
   const filteredOtherStaff = contactsData.filter(c => {
+    // 1. Exclude SBR staff (handled in section 3)
+    if (staffData.some(s => s.name === c.name) || (c.section && c.section.includes('สบร'))) {
+      return false;
+    }
+
+    // 2. Exclude Executives (handled in section 1)
+    if (personnelData.some(p => p.name === c.name) || (c.position && (c.position.includes('ผสทอภ') || c.position.includes('ผู้บริหาร') || c.position.includes('ที่ปรึกษา')))) {
+      return false;
+    }
+
+    // 3. Exclude Directors (handled in section 2)
+    if (directorsData.some(d => d.name === c.name) || (c.position && (c.position.includes('ผู้อำนวยการ') || c.position.startsWith('ผอ.')) && !c.position.includes('ผู้ช่วย') && !c.position.includes('ผช.'))) {
+      return false;
+    }
+
     // Filter by selected bureau
     if (selectedSection !== 'all' && c.section !== selectedSection) return false;
     
