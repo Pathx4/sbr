@@ -24,22 +24,40 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     }
   };
 
+  const parseGender = (name: string): 'M' | 'F' => {
+    if (!name) return 'M';
+    const clean = name.trim();
+    if (clean.startsWith('นางสาว') || clean.startsWith('นาง') || clean.startsWith('น.ส.') || clean.includes('น.ส.') || clean.includes('นางสาว') || clean.includes('นาง ')) {
+      return 'F';
+    }
+    return 'M';
+  };
+
   const getStaffInfo = (name: string) => {
     const s = staffData.find(x => x.name === name);
-    if (s) return s;
+    if (s) return { ...s, gender: (s.gender || parseGender(s.name)) as 'M' | 'F' };
     const c = contactsData.find(x => x.name === name);
     if (c) {
       return {
         name: c.name,
         title: c.position || 'เจ้าหน้าที่',
-        gender: (c.name.startsWith('นาย') ? 'M' : 'F') as 'M' | 'F',
+        gender: (c.gender || parseGender(c.name)) as 'M' | 'F',
         sheet: c.section
+      };
+    }
+    const d = directorsData.find(x => x.name === name);
+    if (d) {
+      return {
+        name: d.name,
+        title: d.title || 'ผู้อำนวยการสำนัก',
+        gender: (d.gender || parseGender(d.name)) as 'M' | 'F',
+        sheet: d.sheet
       };
     }
     return {
       name,
       title: 'เจ้าหน้าที่',
-      gender: (name.startsWith('นาย') ? 'M' : 'F') as 'M' | 'F'
+      gender: parseGender(name)
     };
   };
 
@@ -289,25 +307,25 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
   // Filter Personnel / Executives
   const [searchTerm, setSearchTerm] = React.useState('');
   const filteredPersonnel = personnelData.filter(p => {
-    const isSecretary = p?.title && p.title.includes('เลขานุการ');
-    const matchesSearch = p?.name ? p.name.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-    return !isSecretary && matchesSearch;
+    const query = searchTerm.toLowerCase();
+    return (p?.name ? p.name.toLowerCase().includes(query) : false) ||
+           (p?.title ? p.title.toLowerCase().includes(query) : false);
   });
 
   // Filter SBR Staff
   const [searchStaffTerm, setSearchStaffTerm] = React.useState('');
   const filteredStaff = staffData.filter(s => {
-    const isDirector = s?.title && s.title.includes('ผู้อำนวยการ');
-    const matchesSearch = (s?.name ? s.name.toLowerCase().includes(searchStaffTerm.toLowerCase()) : false) || 
-      (s?.title ? s.title.toLowerCase().includes(searchStaffTerm.toLowerCase()) : false);
-    return !isDirector && matchesSearch;
+    const query = searchStaffTerm.toLowerCase();
+    return (s?.name ? s.name.toLowerCase().includes(query) : false) || 
+           (s?.title ? s.title.toLowerCase().includes(query) : false);
   });
 
   // Filter Directors
   const [searchDirectorTerm, setSearchDirectorTerm] = React.useState('');
   const filteredDirectors = directorsData.filter(d => 
     (d?.name ? d.name.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false) || 
-    (d?.title ? d.title.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false)
+    (d?.title ? d.title.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false) ||
+    (d?.sheet ? d.sheet.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false)
   );
 
   // Filter Other Bureaus Staff
@@ -317,10 +335,6 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
   const bureauList = Array.from(new Set(contactsData.map(c => c.section).filter(Boolean)));
   
   const filteredOtherStaff = contactsData.filter(c => {
-    // Exclude executives/directors if already categorized
-    const isExec = personnelData.some(p => p.name === c.name);
-    if (isExec) return false;
-    
     // Filter by selected bureau
     if (selectedSection !== 'all' && c.section !== selectedSection) return false;
     
@@ -334,7 +348,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     name: c.name,
     position: c.position,
     section: c.section,
-    gender: (c.name.startsWith('นาย') ? 'M' : 'F') as 'M' | 'F'
+    gender: (c.gender || parseGender(c.name)) as 'M' | 'F'
   }));
 
   const inputClass = "w-full px-4 py-3 rounded-2xl border border-slate-200/10 bg-slate-100/40 shadow-neumorph-inset focus:outline-none focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] transition-all duration-300 text-sm";

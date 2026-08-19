@@ -12,6 +12,8 @@ import { FieldTripForm } from '../components/forms/FieldTripForm';
 import { exportToExcel } from '../utils/exportExcel';
 import personnel from '../data/personnel.json';
 import staffSbr from '../data/staff_sbr.json';
+import contacts from '../data/contacts.json';
+import directors from '../data/directors.json';
 const stagger = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -65,12 +67,12 @@ function BudgetPage() {
           return 800;
         }
         return 600; // Default executive rate (ผอ.สำนัก)
-      } else if (isDirector) {
+      } else if (isDirector || directors.some(d => d.name === name)) {
         return 600; // Directors get 600
       } else {
-        const staff = staffSbr.find(s => s.name === name);
-        const title = staff ? staff.title : '';
-        if (title.includes('ผู้อำนวยการสำนัก') || title.includes('ผู้อำนวยการ')) {
+        const staff = staffSbr.find(s => s.name === name) || contacts.find(c => c.name === name);
+        const title = staff ? (staff as any).title || (staff as any).position || '' : '';
+        if (title.includes('ผู้อำนวยการสำนัก') || title.includes('ผู้อำนวยการ') || title.includes('ผอ.')) {
           return 600;
         }
         return 400; // Default staff rate

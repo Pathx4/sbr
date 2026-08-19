@@ -3,4080 +3,5030 @@
     "name": "นายปกรณ์ อาภาพันธุ์ (เดียว)",
     "position": "ผสทอภ.",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "M",
     "mobile": "089 595 9999",
-    "email": "ceo@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4450",
+    "email": "ceo@gistda.or.th"
   },
   {
     "name": "นายพีร์ ชูศรี",
     "position": "รอง ผสทอภ.",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "M",
     "mobile": "081 808 0221",
-    "email": "phee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4457",
+    "email": "phee@gistda.or.th"
   },
   {
     "name": "นางกานดาศรี ลิมปาคม (แพะ)",
     "position": "รอง ผสทอภ.",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "081 751 1928",
-    "email": "kandasri@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4659",
+    "email": "kandasri@gistda.or.th"
   },
   {
-    "name": "นางศิริลักษณ์  พฤกษ์ปิติกุล (นก)",
+    "name": "นางศิริลักษณ์ พฤกษ์ปิติกุล (นก)",
     "position": "รอง ผสทอภ.",
     "section": "1. กลุ่มอำนวยการ",
-    "mobile": "089-111-6356",
-    "email": "siriluk@gistda.or.th",
-    "is_head": false
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
+    "mobile": "",
+    "desk": "089-111-6356",
+    "email": "siriluk@gistda.or.th"
   },
   {
-    "name": "นายดำรงค์ฤทธิ์  เนียมหมวด (หนึ่ง)",
+    "name": "นายดำรงค์ฤทธิ์ เนียมหมวด (หนึ่ง)",
     "position": "รอง ผสทอภ.",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "M",
     "mobile": "083 988 4264",
-    "email": "d.niammuad@eoc.gistda.or.th \ndamrongrit@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 309",
+    "email": "d.niammuad@eoc.gistda.or.th damrongrit@gistda.or.th"
   },
   {
-    "name": "นางเวียรเธียร  คชบุตรธาดา (ปิ๊ก)",
+    "name": "นางเวียรเธียร คชบุตรธาดา (ปิ๊ก)",
     "position": "รอง ผสทอภ.",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "091 926 6929",
-    "email": "wientian@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4599",
+    "email": "wientian@gistda.or.th"
   },
   {
     "name": "น.ส.นิธิวดี แสงสุวรรณ (ซอซาย)",
     "position": "เลขานุการชำนาญการ (ผสทอภ.)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "081 554 1614",
-    "email": "nitiwadee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4450",
+    "email": "nitiwadee@gistda.or.th"
   },
   {
     "name": "น.ส.สุริยพร แซ่ตั้ง (นิ)",
     "position": "เลขานุการ รอง ผสทอภ. (พีร์)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "098 289 0980",
-    "email": "suriyaporn.sae@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4664",
+    "email": "suriyaporn.sae@gistda.or.th"
   },
   {
     "name": "น.ส.ปารมี พึ่งแย้ม (แปว)",
     "position": "เลขานุการ รอง ผสทอภ. (ศิริลักษณ์)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "087 795 3482",
-    "email": "paramee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4665",
+    "email": "paramee@gistda.or.th"
   },
   {
     "name": "น.ส.วิชดา มูลศรี (เอ๋)",
-    "position": "เลขานุการ  รอง ผสทอภ. (กานดาศรี)",
+    "position": "เลขานุการ รอง ผสทอภ. (กานดาศรี)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "081 371 3176",
-    "email": "sureerat@gistda.or.th  \nwitchada@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4639",
+    "email": "sureerat@gistda.or.th witchada@gistda.or.th"
   },
   {
-    "name": "นายชนะศักดิ์  สินมา (แอม)",
+    "name": "นายชนะศักดิ์ สินมา (แอม)",
     "position": "เลขานุการ รอง ผสทอภ. (เวียรเธียร)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "M",
     "mobile": "089 177 0942",
-    "email": "chanasak@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4655",
+    "email": "chanasak@gistda.or.th"
   },
   {
     "name": "น.ส.ทิพวัลย์ ช้างโรจน์ (อิ๋ว)",
     "position": "เลขานุการ รอง ผสทอภ. (ดำรงค์ฤทธิ์)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "084 674 4679",
-    "email": "tippawan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tippawan@gistda.or.th"
   },
   {
     "name": "น.ส.กันยาวีร์ เชื้อบุญ (ดาว)",
     "position": "เลขานุการ (ผสทอภ.)",
     "section": "1. กลุ่มอำนวยการ",
+    "division": "กลุ่มอำนวยการ",
+    "gender": "F",
     "mobile": "092 764 5411",
-    "email": "kanyawee.chu@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4577",
+    "email": "kanyawee.chu@gistda.or.th"
   },
   {
     "name": "นายเชรษฐา สุวรรณิน (เอ)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "M",
     "mobile": "081 779 9380",
-    "email": "chadtha@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4643",
+    "email": "chadtha@gistda.or.th"
   },
   {
-    "name": "น.ส.ศิญาภัสร์  คันธกัลยาพงศ์ (นุ่น)",
+    "name": "น.ส.ศิญาภัสร์ คันธกัลยาพงศ์ (นุ่น)",
     "position": "เจ้าหน้าที่ตรวจสอบภายในชำนาญการพิเศษ",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "F",
     "mobile": "089 036 8380",
-    "email": "siyapas@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4646",
+    "email": "siyapas@gistda.or.th"
   },
   {
-    "name": "น.ส.โสภี  ศรีประสิทธิ์ (ปุ๊)",
+    "name": "น.ส.โสภี ศรีประสิทธิ์ (ปุ๊)",
     "position": "เจ้าหน้าที่ตรวจสอบภายใน",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "F",
     "mobile": "086 364 0359",
-    "email": "sopee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4676",
+    "email": "sopee@gistda.or.th"
   },
   {
-    "name": "นายกมล  ธูปสมุทร (กบ)",
+    "name": "นายกมล ธูปสมุทร (กบ)",
     "position": "เจ้าหน้าที่ตรวจสอบภายใน",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "M",
     "mobile": "086 052 2947",
-    "email": "kamol@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4514",
+    "email": "kamol@gistda.or.th"
   },
   {
-    "name": "น.ส.อัญชลี  อินไชย (เจ)",
+    "name": "น.ส.อัญชลี อินไชย (เจ)",
     "position": "เจ้าหน้าที่ตรวจสอบภายใน",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "F",
     "mobile": "083 060 8983",
-    "email": "anchalee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4662",
+    "email": "anchalee@gistda.or.th"
   },
   {
-    "name": "นายอิทธิพล  เชยอ่ำ (อาร์ท)",
+    "name": "นายอิทธิพล เชยอ่ำ (อาร์ท)",
     "position": "เจ้าหน้าที่ตรวจสอบภายใน",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "M",
     "mobile": "062 302 3013",
-    "email": "itthipon.che@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4647",
+    "email": "itthipon.che@gistda.or.th"
   },
   {
-    "name": "นายศุภชัย สาแย้ม  (นอร์ท)",
+    "name": "นายศุภชัย สาแย้ม (นอร์ท)",
     "position": "เจ้าหน้าที่ตรวจสอบภายใน",
     "section": "2. สตส.",
+    "division": "สำนักตรวจสอบภายใน - สตส. (Internal Audit Office)",
+    "gender": "M",
     "mobile": "094 402 3724",
-    "email": "supachai.say@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4642",
+    "email": "supachai.say@gistda.or.th"
   },
   {
     "name": "นางสาวระวีวรรณ นุชประมูล (นก)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "3. สผอ.",
+    "division": "สำนักงานผู้อำนวยการ - สผอ. (Office of Executive Director)",
+    "gender": "F",
     "mobile": "089 444 0238",
-    "email": "raweewan@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4503",
+    "email": "raweewan@gistda.or.th"
   },
   {
-    "name": "น.ส.ณัฐนันท์ เนตรายน  (ปอ)",
+    "name": "น.ส.ณัฐนันท์ เนตรายน (ปอ)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์เชี่ยวชาญ / ผช.ผสทอภ.",
     "section": "3. สผอ.",
+    "division": "สำนักงานผู้อำนวยการ - สผอ. (Office of Executive Director)",
+    "gender": "F",
     "mobile": "081 750 8896",
-    "email": "nattanan@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4504",
+    "email": "nattanan@gistda.or.th"
   },
   {
     "name": "นางสาวมยุรา ซังแก้ว (มด)",
     "position": "หัวหน้าฝ่าย",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "F",
     "mobile": "087 922 4292",
-    "email": "mayura@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4510",
+    "email": "mayura@gistda.or.th"
   },
   {
     "name": "นายอมรพันธ์ พุ่มฉัตร (แพท)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการพิเศษ",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "M",
     "mobile": "091 479 5550",
-    "email": "amonpan@gistda.or.th",
-    "is_head": false
+    "desk": "02-141-4502",
+    "email": "amonpan@gistda.or.th"
   },
   {
-    "name": "นายภัสพร  อรุณเจริญสุข (เป้)",
+    "name": "นายภัสพร อรุณเจริญสุข (เป้)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "M",
     "mobile": "081 815 7154",
-    "email": "phasaporn.aro@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4641",
+    "email": "phasaporn.aro@gistda.or.th"
   },
   {
     "name": "น.ส.วิภาดา บุญเลิศ (พลอย)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "F",
     "mobile": "094 546 1199",
-    "email": "viphada.boo@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "viphada.boo@gistda.or.th"
   },
   {
-    "name": "นายณรงค์  สังข์ทอง (บอลลี่)",
+    "name": "นายณรงค์ สังข์ทอง (บอลลี่)",
     "position": "นักภูมิสารสนเทศ",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "M",
     "mobile": "091 697 6865",
-    "email": "narong.s@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4645",
+    "email": "narong.s@gistda.or.th"
   },
   {
     "name": "นางสาวพิชญพร กลิ่นขจร (พิม)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "F",
     "mobile": "063 997 2424",
-    "email": "pitchayaporn.kli@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4645",
+    "email": "pitchayaporn.kli@gistda.or.th"
   },
   {
     "name": "นายวีรภัทร ธันยาภิรักษ์ (บอล)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ (ลูกจ้างโครงการ)",
     "section": "3. สผอ.",
-    "mobile": "093 5254 850",
-    "email": "wiraphat.tha@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายกิจการผู้อำนวยการ (Foresight and Project Management Division) - ฝผอ.",
+    "gender": "M",
+    "mobile": "",
+    "desk": "093 5254 850",
+    "email": "wiraphat.tha@gistda.or.th"
   },
   {
     "name": "นายพีรภัทร อัครคุปต์ (นิก)",
     "position": "หัวหน้าฝ่าย",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการระหว่างประเทศ (International Affairs Division) - ฝกท.",
+    "gender": "M",
     "mobile": "086 993 0332",
-    "email": "peerapat@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4625",
+    "email": "peerapat@gistda.or.th"
   },
   {
-    "name": "น.ส.รักษิณา เล็กธนู  (ไผ่)",
+    "name": "น.ส.รักษิณา เล็กธนู (ไผ่)",
     "position": "เจ้าหน้าที่วิเทศสัมพันธ์ชำนาญการพิเศษ",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการระหว่างประเทศ (International Affairs Division) - ฝกท.",
+    "gender": "F",
     "mobile": "099 295 2846",
-    "email": "raksina@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4559",
+    "email": "raksina@gistda.or.th"
   },
   {
     "name": "นายปรเมศวร์ ธุวะคำ (เจมส์)",
     "position": "เจ้าหน้าที่วิเทศสัมพันธ์",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการระหว่างประเทศ (International Affairs Division) - ฝกท.",
+    "gender": "M",
     "mobile": "086 658 6040",
-    "email": "poramet@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4511",
+    "email": "poramet@gistda.or.th"
   },
   {
     "name": "น.ส.ศุทธินี สี่หิรัญวงศ์ (ส้ม)",
     "position": "เจ้าหน้าที่วิเทศสัมพันธ์",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการระหว่างประเทศ (International Affairs Division) - ฝกท.",
+    "gender": "F",
     "mobile": "094 669 1422",
-    "email": "sutinee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4608",
+    "email": "sutinee@gistda.or.th"
   },
   {
     "name": "นางสาวอติกานต์ วิบูลย์จันทร์ (พลอย)",
     "position": "เจ้าหน้าที่วิเทศสัมพันธ์",
     "section": "3. สผอ.",
+    "division": "ฝ่ายกิจการระหว่างประเทศ (International Affairs Division) - ฝกท.",
+    "gender": "F",
     "mobile": "081 855 6019",
-    "email": "atikan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "atikan@gistda.or.th"
   },
   {
     "name": "น.ส.สุกันยา อินทร์สวาท (ตุ้ย)",
     "position": "หัวหน้าฝ่าย",
     "section": "3. สผอ.",
+    "division": "ฝ่ายเลขานุการคณะกรรมการ สทอภ. (Secretariat of the Committee Division) - ฝลค.",
+    "gender": "F",
     "mobile": "081 586 3974",
-    "email": "sukanya@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4459",
+    "email": "sukanya@gistda.or.th"
   },
   {
-    "name": "น.ส.อรชร  เนตรสืบสาย (ส้ม)",
+    "name": "น.ส.อรชร เนตรสืบสาย (ส้ม)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ชำนาญการ",
     "section": "3. สผอ.",
+    "division": "ฝ่ายเลขานุการคณะกรรมการ สทอภ. (Secretariat of the Committee Division) - ฝลค.",
+    "gender": "F",
     "mobile": "062 647 9644",
-    "email": "orrachon@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4506",
+    "email": "orrachon@gistda.or.th"
   },
   {
-    "name": "น.ส.วัจนี  ศรีพวงผกาพันธุ์ (เปิ้ล)",
+    "name": "น.ส.วัจนี ศรีพวงผกาพันธุ์ (เปิ้ล)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "3. สผอ.",
+    "division": "ฝ่ายเลขานุการคณะกรรมการ สทอภ. (Secretariat of the Committee Division) - ฝลค.",
+    "gender": "F",
     "mobile": "080 408 9724",
-    "email": "watjanee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4505",
+    "email": "watjanee@gistda.or.th"
   },
   {
-    "name": "นางกัลยาณี  เพ็งแจ่ม  (กัล)",
+    "name": "นางกัลยาณี เพ็งแจ่ม (กัล)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "3. สผอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "087 023 9880",
-    "email": "kanp@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4674",
+    "email": "kanp@gistda.or.th"
   },
   {
-    "name": "น.ส.ณภษร  บุญหงษ์ทอง (ทราย)",
+    "name": "น.ส.ณภษร บุญหงษ์ทอง (ทราย)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "3. สผอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "098 289 1453",
-    "email": "napat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4606",
+    "email": "napat@gistda.or.th"
   },
   {
     "name": "นายชาคริต ประสงค์สุข (อาร์ต)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "4. สยศ.",
+    "division": "สำนักยุทธศาสตร์ - สยศ. (Strategy Office)",
+    "gender": "M",
     "mobile": "094 295 9545",
-    "email": "chakrit@gistda.or.th",
-    "is_head": true
-  },
-  {
-    "name": "- ว่าง -",
-    "position": "หัวหน้าฝ่าย",
-    "section": "4. สยศ.",
-    "mobile": "",
-    "email": "",
-    "is_head": true
+    "desk": "02 141 4495",
+    "email": "chakrit@gistda.or.th"
   },
   {
     "name": "นายธนพัฒน์ ไพบูลย์ศิริจิต (เทอร์โบ)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ / รก.หัวหน้าฝ่าย",
     "section": "4. สยศ.",
+    "division": "ฝ่ายบริหารยุทธศาสตร์ (Corporate Strategy Division) - ฝบย.",
+    "gender": "M",
     "mobile": "081 426 6918",
-    "email": "tanapat.pai@gistda.or.th",
-    "is_head": true
-  },
-  {
-    "name": "- ว่าง -",
-    "position": "เจ้าหน้าที่ยุทธศาสตร์",
-    "section": "4. สยศ.",
-    "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "02 141 4496",
+    "email": "tanapat.pai@gistda.or.th"
   },
   {
     "name": "น.ส.อัจฉราภรณ์ บำรุงกิจ (อัจ)",
     "position": "วิศวกร",
     "section": "4. สยศ.",
+    "division": "ฝ่ายบริหารยุทธศาสตร์ (Corporate Strategy Division) - ฝบย.",
+    "gender": "F",
     "mobile": "086 453 6179",
-    "email": "acharaporn.bum@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "acharaporn.bum@gistda.or.th"
   },
   {
-    "name": "นายชัยธวัช ประสิทธิ์ศุภกุล  (เล็ก)",
+    "name": "นายชัยธวัช ประสิทธิ์ศุภกุล (เล็ก)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ (ลูกจ้างโครงการ)",
     "section": "4. สยศ.",
+    "division": "ฝ่ายบริหารยุทธศาสตร์ (Corporate Strategy Division) - ฝบย.",
+    "gender": "M",
     "mobile": "094 945 1113",
-    "email": "chaitawat.pas@gistda.or.th",
-    "is_head": false
-  },
-  {
-    "name": "- ว่าง -",
-    "position": "หัวหน้าฝ่าย",
-    "section": "4. สยศ.",
-    "mobile": "",
-    "email": "",
-    "is_head": true
+    "desk": "",
+    "email": "chaitawat.pas@gistda.or.th"
   },
   {
     "name": "นายบัณฑิตรัฐ เรควัฒน์ (แบงค์)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ / รก.หัวหน้าฝ่าย",
     "section": "4. สยศ.",
+    "division": "ฝ่ายแผนและประเมินผล (Planning and Evaluation Division) - ฝผป.",
+    "gender": "M",
     "mobile": "063 416 8391",
-    "email": "banditrat@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4497",
+    "email": "banditrat@gistda.or.th"
   },
   {
     "name": "นางสาวสุกัญญา บุญอิ่ม (เอ็ม)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "4. สยศ.",
+    "division": "ฝ่ายแผนและประเมินผล (Planning and Evaluation Division) - ฝผป.",
+    "gender": "F",
     "mobile": "082 486 4431",
-    "email": "sukanya.boo@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4497",
+    "email": "sukanya.boo@gistda.or.th"
   },
   {
     "name": "นางสาวธัญจิรา บุญมา (ยีนส์)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "4. สยศ.",
+    "division": "ฝ่ายแผนและประเมินผล (Planning and Evaluation Division) - ฝผป.",
+    "gender": "F",
     "mobile": "084 610 5522",
-    "email": "thunjira@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4497",
+    "email": "thunjira@gistda.or.th"
   },
   {
     "name": "นางสาววรินทร์ลดา กมลวิภา (แอปเปิ้ล)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "4. สยศ.",
+    "division": "ฝ่ายแผนและประเมินผล (Planning and Evaluation Division) - ฝผป.",
+    "gender": "F",
     "mobile": "096 292 8942",
-    "email": "warinlada.kam@gistda.or.th",
-    "is_head": false
-  },
-  {
-    "name": "- ว่าง -",
-    "position": "เจ้าหน้าที่ยุทธศาสตร์",
-    "section": "4. สยศ.",
-    "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "02 141 4497",
+    "email": "warinlada.kam@gistda.or.th"
   },
   {
     "name": "นางสาวสุรีรัตน์ คนเพียร (บี)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ (ลูกจ้างโครงการ)",
     "section": "4. สยศ.",
+    "division": "ฝ่ายแผนและประเมินผล (Planning and Evaluation Division) - ฝผป.",
+    "gender": "F",
     "mobile": "094 542 5974",
-    "email": "sureerat.kon@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4497",
+    "email": "sureerat.kon@gistda.or.th"
   },
   {
     "name": "นางสาวนพวรรณ คำปัน (มิ้น)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ (ลูกจ้างโครงการ)",
     "section": "4. สยศ.",
+    "division": "ฝ่ายแผนและประเมินผล (Planning and Evaluation Division) - ฝผป.",
+    "gender": "F",
     "mobile": "061 635 0585",
-    "email": "noppawan.kha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4497",
+    "email": "noppawan.kha@gistda.or.th"
   },
   {
     "name": "นางวรณัฐ ถิระวัฒน์ (เก๋)",
     "position": "หัวหน้าฝ่าย",
     "section": "4. สยศ.",
+    "division": "ฝ่ายทรัพยากรบุคคล (Human Resources Division) - ฝทบ.",
+    "gender": "F",
     "mobile": "086 896 0159",
-    "email": "kae@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4418",
+    "email": "kae@gistda.or.th"
   },
   {
-    "name": "น.ส.วิลาสินี พันธ์สิน  (บาส)",
+    "name": "น.ส.วิลาสินี พันธ์สิน (บาส)",
     "position": "เจ้าหน้าที่ทรัพยากรบุคคลชำนาญการพิเศษ",
     "section": "4. สยศ.",
+    "division": "ฝ่ายทรัพยากรบุคคล (Human Resources Division) - ฝทบ.",
+    "gender": "F",
     "mobile": "092 246 4777",
-    "email": "wilasinee.pun@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4421",
+    "email": "wilasinee.pun@gistda.or.th"
   },
   {
     "name": "น.ส.อิสรีย์ จุลกัณห์ (หนู)",
     "position": "เลขานุการ",
     "section": "4. สยศ.",
+    "division": "ฝ่ายทรัพยากรบุคคล (Human Resources Division) - ฝทบ.",
+    "gender": "F",
     "mobile": "091 446 6493",
-    "email": "isaree@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4509",
+    "email": "isaree@gistda.or.th"
   },
   {
     "name": "นางสาวสินีภา บัวสรวง (ตาล)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "4. สยศ.",
+    "division": "ฝ่ายทรัพยากรบุคคล (Human Resources Division) - ฝทบ.",
+    "gender": "F",
     "mobile": "064 429 1449",
-    "email": "sineepa@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4507",
+    "email": "sineepa@gistda.or.th"
   },
   {
     "name": "นางสาวสุจิตา นุ่มสุวรรณ (เหน่ง)",
     "position": "หัวหน้าฝ่าย",
     "section": "4. สยศ.",
+    "division": "ฝ่ายพัฒนาศักยภาพองค์กร (Corporate Competency Development Division) - ฝศอ.",
+    "gender": "F",
     "mobile": "086 136 7190",
-    "email": "sujita@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4508",
+    "email": "sujita@gistda.or.th"
   },
   {
     "name": "นายดิศพัฒน์ สวัสดิ์สุขิตกุล (ติ๊ก)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์ชำนาญการพิเศษ",
     "section": "4. สยศ.",
+    "division": "ฝ่ายพัฒนาศักยภาพองค์กร (Corporate Competency Development Division) - ฝศอ.",
+    "gender": "M",
     "mobile": "065 559 2045",
-    "email": "disapat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4509",
+    "email": "disapat@gistda.or.th"
   },
   {
     "name": "นายปัญจาวุธ วิวิธชัย (โอ๊ต)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "4. สยศ.",
+    "division": "ฝ่ายพัฒนาศักยภาพองค์กร (Corporate Competency Development Division) - ฝศอ.",
+    "gender": "M",
     "mobile": "065 398 9249",
-    "email": "punjawut@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4500",
+    "email": "punjawut@gistda.or.th"
   },
   {
     "name": "นางสาวลักขิกา เที่ยงพร้อม (อึ่ง)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "4. สยศ.",
+    "division": "ฝ่ายพัฒนาศักยภาพองค์กร (Corporate Competency Development Division) - ฝศอ.",
+    "gender": "F",
     "mobile": "083 687 0156",
-    "email": "luckyka@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4508",
+    "email": "luckyka@gistda.or.th"
   },
   {
     "name": "นางสาวเบญญทิพย์ นุตยางกูล (ปายฟ้า)",
     "position": "เจ้าหน้าที่ทรัพยากรบุคคล",
     "section": "4. สยศ.",
-    "mobile": "987504043.0",
-    "email": "Benyathip.nut@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายพัฒนาศักยภาพองค์กร (Corporate Competency Development Division) - ฝศอ.",
+    "gender": "F",
+    "mobile": "02 141 4508",
+    "desk": "9.87504043E8",
+    "email": "Benyathip.nut@gistda.or.th"
   },
   {
     "name": "นางสาวเกษสุดา ยุวรรชนะ (เกษ)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร (ลูกจ้างโครงการ)",
     "section": "4. สยศ.",
+    "division": "ฝ่ายพัฒนาศักยภาพองค์กร (Corporate Competency Development Division) - ฝศอ.",
+    "gender": "F",
     "mobile": "061 648 9564",
-    "email": "katesuda.yuw@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4508",
+    "email": "katesuda.yuw@gistda.or.th"
   },
   {
-    "name": "น.ส.ธจรรยวรรณ  ลือสวัสดิ์ (ทิพย์)",
+    "name": "น.ส.ธจรรยวรรณ ลือสวัสดิ์ (ทิพย์)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "4. สยศ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "098 536 6144",
-    "email": "thajanwan@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4576",
+    "email": "thajanwan@gistda.or.th"
   },
   {
-    "name": "น.ส.วัชรี  หาญทองคำ (วัช)",
+    "name": "น.ส.วัชรี หาญทองคำ (วัช)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "4. สยศ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "062 880 7700",
-    "email": "watchare@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4493",
+    "email": "watchare@gistda.or.th"
   },
   {
-    "name": "นายณัฐวัฒน์  หงส์กาญจนกุล  (ซิง)",
+    "name": "นายณัฐวัฒน์ หงส์กาญจนกุล (ซิง)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "5. สศอ.",
+    "division": "สำนักส่งเสริมเศรษฐกิจอวกาศ - สศอ. (Office of Space Economy Promotion)",
+    "gender": "M",
     "mobile": "095 6953596",
-    "email": "natthawat@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "natthawat@gistda.or.th"
   },
   {
     "name": "นางสาววิลาวัณย์ พิพัฒน์จิรัฐิติกาล (ซิ่ว)",
     "position": "หัวหน้าฝ่าย",
     "section": "5. สศอ.",
+    "division": "ฝ่ายนโยบายเศรษฐกิจอวกาศ (Space Economy Policy Division) - ฝนศ.",
+    "gender": "F",
     "mobile": "099 496 6974",
-    "email": "wilawan@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4543",
+    "email": "wilawan@gistda.or.th"
   },
   {
     "name": "นายจตุรงค์ ทองพันธุ์ (ต๋อง)",
     "position": "วิศวกรชำนาญการพิเศษ",
     "section": "5. สศอ.",
+    "division": "ฝ่ายนโยบายเศรษฐกิจอวกาศ (Space Economy Policy Division) - ฝนศ.",
+    "gender": "M",
     "mobile": "089 287 3996",
-    "email": "jaturong.t@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jaturong.t@gistda.or.th"
   },
   {
     "name": "นายชินทัตต์ เขียวแก้ว (โจ)",
     "position": "นักพัฒนานวัตกรรมชำนาญการ",
     "section": "5. สศอ.",
+    "division": "ฝ่ายนโยบายเศรษฐกิจอวกาศ (Space Economy Policy Division) - ฝนศ.",
+    "gender": "M",
     "mobile": "094 696 7007",
-    "email": "keawkaew@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "keawkaew@gistda.or.th"
   },
   {
     "name": "นางสาวจุฑามาศ ปานกลิ่น (ยุ้ย)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "5. สศอ.",
+    "division": "ฝ่ายนโยบายเศรษฐกิจอวกาศ (Space Economy Policy Division) - ฝนศ.",
+    "gender": "F",
     "mobile": "061 164 5466",
-    "email": "chuthamart@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4653",
+    "email": "chuthamart@gistda.or.th"
   },
   {
-    "name": "น.ส.กรุณา  พิมพ์ประสานต์ (โป๊ง)",
+    "name": "น.ส.กรุณา พิมพ์ประสานต์ (โป๊ง)",
     "position": "นักภูมิสารสนเทศ",
     "section": "5. สศอ.",
+    "division": "ฝ่ายนโยบายเศรษฐกิจอวกาศ (Space Economy Policy Division) - ฝนศ.",
+    "gender": "F",
     "mobile": "089 519 8137",
-    "email": "karuna@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "karuna@gistda.or.th"
   },
   {
-    "name": "นายต่อวงศ์  อยู่ยอด (ต่อ)",
+    "name": "นายต่อวงศ์ อยู่ยอด (ต่อ)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "5. สศอ.",
+    "division": "ฝ่ายนโยบายเศรษฐกิจอวกาศ (Space Economy Policy Division) - ฝนศ.",
+    "gender": "M",
     "mobile": "084 209 9551",
-    "email": "tawwong@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tawwong@gistda.or.th"
   },
   {
     "name": "น.ส.เสาวณีย์ ศรีชาย (ปั้น)",
     "position": "หัวหน้าฝ่าย",
     "section": "5. สศอ.",
+    "division": "ฝ่ายส่งเสริมอุตสาหกรรมอวกาศ (Space Industry Promotion Division) - ฝสอ.",
+    "gender": "F",
     "mobile": "081 907 4092",
-    "email": "saowanee@gistda.or.th",
-    "is_head": true
-  },
-  {
-    "name": "- ว่าง -",
-    "position": "วิศวกร",
-    "section": "5. สศอ.",
-    "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": "saowanee@gistda.or.th"
   },
   {
     "name": "นายจิรภัทร เทียนขวัญ (คิด)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "5. สศอ.",
+    "division": "ฝ่ายส่งเสริมอุตสาหกรรมอวกาศ (Space Industry Promotion Division) - ฝสอ.",
+    "gender": "M",
     "mobile": "085 968 8733",
-    "email": "jirawat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jirawat@gistda.or.th"
   },
   {
     "name": "นายกฤชกร เกตุทองมงคล (แซม)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "5. สศอ.",
+    "division": "ฝ่ายส่งเสริมอุตสาหกรรมอวกาศ (Space Industry Promotion Division) - ฝสอ.",
+    "gender": "M",
     "mobile": "088 664 9232",
-    "email": "kritchakorn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kritchakorn@gistda.or.th"
   },
   {
     "name": "นายทศวรรษ ฟูเกียรติสุทธิ์ (ต้น)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "5. สศอ.",
+    "division": "ฝ่ายส่งเสริมอุตสาหกรรมอวกาศ (Space Industry Promotion Division) - ฝสอ.",
+    "gender": "M",
     "mobile": "099 049 0009",
-    "email": "thotsawat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thotsawat@gistda.or.th"
   },
   {
-    "name": "นายธีรพัฒน์  บวรกิจวัฒนะ",
+    "name": "นายธีรพัฒน์ บวรกิจวัฒนะ",
     "position": "นักพัฒนานวัตกรรม",
     "section": "5. สศอ.",
+    "division": "ฝ่ายส่งเสริมอุตสาหกรรมอวกาศ (Space Industry Promotion Division) - ฝสอ.",
+    "gender": "M",
     "mobile": "097 447 8745",
-    "email": "theerapat.b@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "theerapat.b@gistda.or.th"
   },
   {
     "name": "นายอธิภัทร วรรธอนันตชัย (กิต)",
     "position": "หัวหน้าฝ่าย",
     "section": "5. สศอ.",
+    "division": "ฝ่ายพัฒนาเศรษฐกิจอวกาศ (Space Economy Development Division) - ฝพศ.",
+    "gender": "M",
     "mobile": "062 691 2223",
-    "email": "atipat@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "atipat@gistda.or.th"
   },
   {
     "name": "นางสาวหทัยชนก คำกัมพล (อาย)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "5. สศอ.",
+    "division": "ฝ่ายพัฒนาเศรษฐกิจอวกาศ (Space Economy Development Division) - ฝพศ.",
+    "gender": "F",
     "mobile": "062 515 2668",
-    "email": "hathaichanok.kum@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4661",
+    "email": "hathaichanok.kum@gistda.or.th"
   },
   {
     "name": "น.ส.นภสร จงจิตตานนท์ (น้ำ)",
     "position": "เจ้าหน้าที่วิเทศสัมพันธ์",
     "section": "5. สศอ.",
+    "division": "ฝ่ายพัฒนาเศรษฐกิจอวกาศ (Space Economy Development Division) - ฝพศ.",
+    "gender": "F",
     "mobile": "091 026 8187",
-    "email": "napasorn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "napasorn@gistda.or.th"
   },
   {
     "name": "น.ส.ธันย์ชนก คล่องแคล่ว (ไอซ์)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "5. สศอ.",
+    "division": "ฝ่ายพัฒนาเศรษฐกิจอวกาศ (Space Economy Development Division) - ฝพศ.",
+    "gender": "F",
     "mobile": "096 874 4848",
-    "email": "thanchanok@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanchanok@gistda.or.th"
   },
   {
     "name": "นายธีรัช จิรเมธ (ปอ)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "5. สศอ.",
+    "division": "ฝ่ายพัฒนาเศรษฐกิจอวกาศ (Space Economy Development Division) - ฝพศ.",
+    "gender": "M",
     "mobile": "081 445 6915",
-    "email": "theerat.jir@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "theerat.jir@gistda.or.th"
   },
   {
-    "name": "นางสาวอุปนันทน์  เชาวน์ฤทธิ์ (แก้ว)",
+    "name": "นางสาวอุปนันทน์ เชาวน์ฤทธิ์ (แก้ว)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "084 996 3629",
-    "email": "oupanun@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4416",
+    "email": "oupanun@gistda.or.th"
   },
   {
-    "name": "น.ส.พรณฐรัศม์  ฉายสุริยะ (โอ๋)",
+    "name": "น.ส.พรณฐรัศม์ ฉายสุริยะ (โอ๋)",
     "position": "พนักงานธุรการ",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "095 246 9796",
-    "email": "phornnatharat.cha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4406",
+    "email": "phornnatharat.cha@gistda.or.th"
+  },
+  {
+    "name": "ลูกจ้าง สทอภ.",
+    "position": "",
+    "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
+    "mobile": "",
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายณัฐพงษ์ สว่างแข (โก๋)",
     "position": "นักพัฒนานวัตกรรม (ฝสอ.)",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "084 156 9940",
-    "email": "nattapong.saw@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "nattapong.saw@gistda.or.th"
   },
   {
     "name": "นายธรรม์ ธรรมสวยดี (ธรรม์)",
     "position": "นักพัฒนานวัตกรรม (ฝนศ.)",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "087 356 1685",
-    "email": "than@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "than@gistda.or.th"
   },
   {
     "name": "นายธนวัฒน์ ปรีชาโชติ (พีท)",
     "position": "นักพัฒนานวัตกรรม (ฝนศ.)",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "064 983 8041",
-    "email": "thanawat.pre@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanawat.pre@gistda.or.th"
   },
   {
-    "name": "นายนิธิพันธุ์  ภู่ทอง (นนท์)",
+    "name": "นายนิธิพันธุ์ ภู่ทอง (นนท์)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ (ฝนศ.)",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "097 919 9695",
-    "email": "nithiphun.poo@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "nithiphun.poo@gistda.or.th"
   },
   {
     "name": "นายพฤฒินันท์ อินทรานุกูล (แต้ม)",
     "position": "นักพัฒนานวัตกรรม (ฝนศ.)",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "088 920 4473",
-    "email": "Puettinun.int@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Puettinun.int@gistda.or.th"
   },
   {
     "name": "นายกนกเทพ พงษ์เพ็ง (โจม)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ (ฝพศ.)",
     "section": "5. สศอ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "080 452 0870",
-    "email": "kanokthep.pho@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kanokthep.pho@gistda.or.th"
   },
   {
-    "name": "น.ส.ฐนิตา  เสือป่า  (เจี๊ยบ)",
+    "name": "น.ส.ฐนิตา เสือป่า (เจี๊ยบ)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "6. สสพ.",
+    "division": "สำนักสร้างเสริมพันธมิตรและพัฒนาธุรกิจ - สสพ. (Office of Strategic Alliance and Business Development)",
+    "gender": "F",
     "mobile": "086 417 9882",
-    "email": "tanita@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4560",
+    "email": "tanita@gistda.or.th"
   },
   {
     "name": "น.ส.กมลมาศ ทองแก้ว (เจี๊ยบ)",
     "position": "หัวหน้าฝ่าย",
     "section": "6. สสพ.",
+    "division": "ฝ่ายกลยุทธ์ทางธุรกิจ (Business Strategy Division) - ฝยธ.",
+    "gender": "F",
     "mobile": "061 541 9546",
-    "email": "kamolmas@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4561",
+    "email": "kamolmas@gistda.or.th"
   },
   {
     "name": "น.ส.อุดมลักษณ์ มั่นคง (ฟ้า)",
     "position": "นักภูมิสารสนเทศ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายกลยุทธ์ทางธุรกิจ (Business Strategy Division) - ฝยธ.",
+    "gender": "F",
     "mobile": "081 283 7194",
-    "email": "udomlak@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4585",
+    "email": "udomlak@gistda.or.th"
   },
   {
     "name": "น.ส. วสพรรณ แซ่ตั้น (บิว)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจชำนาญการ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายกลยุทธ์ทางธุรกิจ (Business Strategy Division) - ฝยธ.",
+    "gender": "F",
     "mobile": "062 654 1695",
-    "email": "wasapan@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4584",
+    "email": "wasapan@gistda.or.th"
   },
   {
     "name": "นางรัชนก ศรีผึ้ง (ยุ้ย)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายกลยุทธ์ทางธุรกิจ (Business Strategy Division) - ฝยธ.",
+    "gender": "F",
     "mobile": "085 319 3659",
-    "email": "ratchanok@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4651",
+    "email": "ratchanok@gistda.or.th"
   },
   {
     "name": "นางสาวฌญาริน เจียวรากุล (มิริน)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายกลยุทธ์ทางธุรกิจ (Business Strategy Division) - ฝยธ.",
+    "gender": "F",
     "mobile": "098 101 9358",
-    "email": "chayarine.jia@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4591",
+    "email": "chayarine.jia@gistda.or.th"
   },
   {
     "name": "น.ส. ณัทพร ภูจำนงค์ (หนิง)",
     "position": "หัวหน้าฝ่าย",
     "section": "6. สสพ.",
+    "division": "ฝ่ายพัฒนาธุรกิจและบริการ (Business and Service Development Division) - ฝธบ.",
+    "gender": "F",
     "mobile": "099 441 5614",
-    "email": "nattaporn@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4562",
+    "email": "nattaporn@gistda.or.th"
   },
   {
     "name": "น.ส. วิภาณี เนินคีรี (กิ๊ฟ)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจชำนาญการ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายพัฒนาธุรกิจและบริการ (Business and Service Development Division) - ฝธบ.",
+    "gender": "F",
     "mobile": "064 962 4178",
-    "email": "vipanee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4652",
+    "email": "vipanee@gistda.or.th"
   },
   {
     "name": "นายธานี คามเขต (แต้)",
     "position": "นักพัฒนานวัตกรรมชำนาญการ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายพัฒนาธุรกิจและบริการ (Business and Service Development Division) - ฝธบ.",
+    "gender": "M",
     "mobile": "080 790 7757",
-    "email": "tanee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4638",
+    "email": "tanee@gistda.or.th"
   },
   {
     "name": "น.ส. พรพิมล แก้วพฤกษ์ (น้ำ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายพัฒนาธุรกิจและบริการ (Business and Service Development Division) - ฝธบ.",
+    "gender": "F",
     "mobile": "084 026 2616",
-    "email": "pawnpimon@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4918",
+    "email": "pawnpimon@gistda.or.th"
   },
   {
     "name": "น.ส.ชลธิชา จิตรไพบูลย์ (เก๋)",
     "position": "นักภูมิสารสนเทศ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายพัฒนาธุรกิจและบริการ (Business and Service Development Division) - ฝธบ.",
+    "gender": "F",
     "mobile": "083 558 2705",
-    "email": "chonthicha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4918",
+    "email": "chonthicha@gistda.or.th"
   },
   {
     "name": "น.ส.แสงระวี วงษ์กาไชย (แจง)",
     "position": "หัวหน้าฝ่าย",
     "section": "6. สสพ.",
+    "division": "ฝ่ายบริการข้อมูล (Data Service Division) - ฝบม.",
+    "gender": "F",
     "mobile": "094 478 2691",
-    "email": "sangrawee@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4584",
+    "email": "sangrawee@gistda.or.th"
   },
   {
     "name": "นายชลธิป เนินคีรี (เต้)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจชำนาญการพิเศษ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายบริการข้อมูล (Data Service Division) - ฝบม.",
+    "gender": "M",
     "mobile": "097 939 5858",
-    "email": "chonlatip@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4589",
+    "email": "chonlatip@gistda.or.th"
   },
   {
     "name": "น.ส.ศิริพร อภินันทนากุล (เจี๊ยบ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายบริการข้อมูล (Data Service Division) - ฝบม.",
+    "gender": "F",
     "mobile": "081 585 5396",
-    "email": "siriporn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4569",
+    "email": "siriporn@gistda.or.th"
   },
   {
     "name": "นายอภิเดช จินดาอุดมศักดิ์ (นิว)",
     "position": "นักภูมิสารสนเทศ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายบริการข้อมูล (Data Service Division) - ฝบม.",
+    "gender": "M",
     "mobile": "083 416 5088",
-    "email": "aphidet@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4564",
+    "email": "aphidet@gistda.or.th"
   },
   {
     "name": "นางจีรนัย อินทรมณี (จี)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "ฝ่ายบริการข้อมูล (Data Service Division) - ฝบม.",
+    "gender": "F",
     "mobile": "084 651 8927",
-    "email": "jeeranai@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4565",
+    "email": "jeeranai@gistda.or.th"
   },
   {
-    "name": "นายสรทัศน์  หลวงจอก",
+    "name": "นายสรทัศน์ หลวงจอก",
     "position": "หัวหน้าฝ่าย",
     "section": "6. สสพ.",
+    "division": "ฝ่ายสื่อสารและภาพลักษณ์องค์กร (Corporate Communications and Brand Management Division) - ฝสภ.",
+    "gender": "M",
     "mobile": "087 499 5601",
-    "email": "sorathus@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4610",
+    "email": "sorathus@gistda.or.th"
   },
   {
     "name": "นายจักรี พรหมบริสุทธิ์ (โอม)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "6. สสพ.",
+    "division": "ฝ่ายสื่อสารและภาพลักษณ์องค์กร (Corporate Communications and Brand Management Division) - ฝสภ.",
+    "gender": "M",
     "mobile": "094 587 8697",
-    "email": "jugree@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4657",
+    "email": "jugree@gistda.or.th"
   },
   {
     "name": "นายภาคภูมิ เหล่าตระกูล (กอล์ฟ)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "6. สสพ.",
+    "division": "ฝ่ายสื่อสารและภาพลักษณ์องค์กร (Corporate Communications and Brand Management Division) - ฝสภ.",
+    "gender": "M",
     "mobile": "088 956 1694",
-    "email": "Phakpoom@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4654",
+    "email": "Phakpoom@gistda.or.th"
   },
   {
     "name": "นายพศพงศ์ ธรรมาภิรัชต์ (เก้)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "6. สสพ.",
+    "division": "ฝ่ายสื่อสารและภาพลักษณ์องค์กร (Corporate Communications and Brand Management Division) - ฝสภ.",
+    "gender": "M",
     "mobile": "094 694 1639",
-    "email": "phasaphong@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4501",
+    "email": "phasaphong@gistda.or.th"
   },
   {
     "name": "นายอมร เพ็ชรสว่าง (หนู)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "6. สสพ.",
+    "division": "ฝ่ายสื่อสารและภาพลักษณ์องค์กร (Corporate Communications and Brand Management Division) - ฝสภ.",
+    "gender": "M",
     "mobile": "081 584 9081",
-    "email": "amorn.pet@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4916",
+    "email": "amorn.pet@gistda.or.th"
   },
   {
     "name": "น.ส.ณัฏฐกานต์ ศิริรัตน์ (นัธ)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "6. สสพ.",
+    "division": "ฝ่ายสื่อสารและภาพลักษณ์องค์กร (Corporate Communications and Brand Management Division) - ฝสภ.",
+    "gender": "F",
     "mobile": "097 124 6301",
-    "email": "nattakarn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4638",
+    "email": "nattakarn@gistda.or.th"
   },
   {
     "name": "น.ส.สุพิศชยา สุขก้อน (เจ)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "6. สสพ.",
-    "mobile": "065-6417499",
-    "email": "supitchaya@gistda.or.th",
-    "is_head": false
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
+    "mobile": "",
+    "desk": "065-6417499",
+    "email": "supitchaya@gistda.or.th"
   },
   {
-    "name": "น.ส.ลดาภรณ์  ศรีชะอุ้ม (บี)",
+    "name": "น.ส.ลดาภรณ์ ศรีชะอุ้ม (บี)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "091 883 7526",
-    "email": "ladaporn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4579",
+    "email": "ladaporn@gistda.or.th"
   },
   {
     "name": "น.ส.ภัทราวดี เสาวโค (แป๋ม)",
-    "position": "นักภูมิสารสนเทศ\nลูกจ้างโครงการ",
+    "position": "นักภูมิสารสนเทศ ลูกจ้างโครงการ",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "083 735 4660",
-    "email": "phattarawadee.sao@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4566",
+    "email": "phattarawadee.sao@gistda.or.th"
   },
   {
     "name": "น.ส.ศรัญยา เสงี่ยมพันธ์ (กู้)",
-    "position": "นักภูมิสารสนเทศ\nลูกจ้างโครงการ Open Platform",
+    "position": "นักภูมิสารสนเทศ ลูกจ้างโครงการ Open Platform",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "062 182 2614",
-    "email": "saranya.san@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "saranya.san@gistda.or.th"
   },
   {
-    "name": "น.ส.อรพรรณ  ปล้องสอง (เพ็ญ)",
+    "name": "น.ส.อรพรรณ ปล้องสอง (เพ็ญ)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "098 289 8514",
-    "email": "oraphan@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4589",
+    "email": "oraphan@gistda.or.th"
   },
   {
-    "name": "น.ส.อภิษฎา  วัฒนะเสวี (ไข่มุก)",
+    "name": "น.ส.อภิษฎา วัฒนะเสวี (ไข่มุก)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "089 210 8669",
-    "email": "apisada.wat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4919",
+    "email": "apisada.wat@gistda.or.th"
   },
   {
     "name": "นายสรร บัวทอง (ซัน)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "084 974 2541",
-    "email": "sun.bau@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "sun.bau@gistda.or.th"
   },
   {
-    "name": "นางสาวรพีต์ญา ชิณมาต (มีน)",
+    "name": "นางสาวรพีต์ญา ชิณมาต (มีน)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "",
-    "email": "rapeeya.chi@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "rapeeya.chi@gistda.or.th"
   },
   {
     "name": "นางสาววาสนา พระเทพ (นุช)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "082 419 9249",
-    "email": "wassana.phr@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4565",
+    "email": "wassana.phr@gistda.or.th"
   },
   {
     "name": "น.ส.จิตรทิวา เครือแสง (เค้ก)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ (ฝยธ.)",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "095 192 4166",
-    "email": "jittiwa.khr@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jittiwa.khr@gistda.or.th"
   },
   {
     "name": "นางสาวสุวพัชร สุขสำราญ (น้อยโหน่ง)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "094 729 8169",
-    "email": "suwaphat.suk@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "suwaphat.suk@gistda.or.th"
   },
   {
     "name": "นายชัยวัฒน์ เกิดโพธิ์ชา (เบซ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายนฤพล ศรีเพียชัย (ฮาร์ท)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร (ลูกจ้างโครงการ)",
     "section": "6. สสพ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "น.ส.ปราณปริยา  วงค์ษา (นก)",
+    "name": "น.ส.ปราณปริยา วงค์ษา (นก)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "7. สบร.",
-    "mobile": "061 417 8697 (สนง.)\n084 424 5588",
-    "email": "pran@gistda.or.th",
-    "is_head": true
+    "division": "สำนักบริการองค์ความรู้ - สบร. (Office of Capacity Building)",
+    "gender": "F",
+    "mobile": "061 417 8697 (สนง.) 084 424 5588",
+    "desk": "033 005 834 เบอร์ภายใน 1028",
+    "email": "pran@gistda.or.th"
   },
   {
     "name": "น.ส.ศิริพักตร์ เสมียนคิด (ปูปู้)",
     "position": "นักวิชาการฝึกอบรมชำนาญการ",
     "section": "7. สบร.",
+    "division": "ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้ (Academic Collaboration Division) - ฝมร.",
+    "gender": "F",
     "mobile": "081 920 7683",
-    "email": "siripak@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 831 เบอร์ภายใน 1024",
+    "email": "siripak@gistda.or.th"
   },
   {
     "name": "นายวิศวะ เจนจบ (วิศ)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
-    "mobile": "087 111 7208\n088 668 8900",
-    "email": "wissawa@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้ (Academic Collaboration Division) - ฝมร.",
+    "gender": "M",
+    "mobile": "087 111 7208 088 668 8900",
+    "desk": "033 005 831 เบอร์ภายใน 1024",
+    "email": "wissawa@gistda.or.th"
   },
   {
-    "name": "นายชาคริส  พิทักษ์รัตนสกุล (เอ็กซ์)",
+    "name": "นายชาคริส พิทักษ์รัตนสกุล (เอ็กซ์)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้ (Academic Collaboration Division) - ฝมร.",
+    "gender": "M",
     "mobile": "061 617 9617",
-    "email": "chakris@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 831 เบอร์ภายใน 1024",
+    "email": "chakris@gistda.or.th"
   },
   {
     "name": "นายภัทรพล ศรีธิตั๋น (มีน)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ",
     "section": "7. สบร.",
+    "division": "ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้ (Academic Collaboration Division) - ฝมร.",
+    "gender": "M",
     "mobile": "094 795 4747",
-    "email": "pattarapon.sri@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 831 เบอร์ภายใน 1024",
+    "email": "pattarapon.sri@gistda.or.th"
   },
   {
     "name": "นายยุทธภูมิ โพธิราชา (ต้น)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้ (Academic Collaboration Division) - ฝมร.",
+    "gender": "M",
     "mobile": "081 846 4882",
-    "email": "ypoti@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 831 เบอร์ภายใน 1024",
+    "email": "ypoti@gistda.or.th"
   },
   {
-    "name": "นายวิชพงศ์  จิรพงศ์ภิญโญ (วิช)",
-    "position": "เจ้าหน้าที่ประสานงานวิชาการ \n(ลูกจ้างโครงการ)",
+    "name": "นายวิชพงศ์ จิรพงศ์ภิญโญ (วิช)",
+    "position": "เจ้าหน้าที่ประสานงานวิชาการ (ลูกจ้างโครงการ)",
     "section": "7. สบร.",
+    "division": "ฝ่ายความร่วมมือและมาตรฐานองค์ความรู้ (Academic Collaboration Division) - ฝมร.",
+    "gender": "M",
     "mobile": "091 408 9432",
-    "email": "wichapong.jir@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 831 เบอร์ภายใน 1024",
+    "email": "wichapong.jir@gistda.or.th"
   },
   {
     "name": "น.ส.จันทิมา อัศวโชคชัย (จิ๊ป)",
     "position": "หัวหน้าฝ่าย",
     "section": "7. สบร.",
+    "division": "ฝ่ายส่งเสริมองค์ความรู้ (Knowledge Division) - ฝสร.",
+    "gender": "F",
     "mobile": "063 892 1999",
-    "email": "jantima@gistda.or.th",
-    "is_head": true
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "jantima@gistda.or.th"
   },
   {
     "name": "นายณัฐดนัย ธรรมสิทธิ์ (ดล)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายส่งเสริมองค์ความรู้ (Knowledge Division) - ฝสร.",
+    "gender": "M",
     "mobile": "093 555 8924",
-    "email": "nutdanai@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "nutdanai@gistda.or.th"
   },
   {
     "name": "น.ส.เบญจวรรณ ตรีพัฒนาสุวรรณ (ยีนส์)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายส่งเสริมองค์ความรู้ (Knowledge Division) - ฝสร.",
+    "gender": "F",
     "mobile": "094 361 6562",
-    "email": "benjawan.tre@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "benjawan.tre@gistda.or.th"
   },
   {
     "name": "นายสิงหา มีหัวโทน (ชาย)",
     "position": "วิศวกร",
     "section": "7. สบร.",
+    "division": "ฝ่ายส่งเสริมองค์ความรู้ (Knowledge Division) - ฝสร.",
+    "gender": "M",
     "mobile": "088 252 2387",
-    "email": "singha@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "singha@gistda.or.th"
   },
   {
     "name": "นายศิริวัฒน์ นิราพาธ (หนุ่ม)",
     "position": "เจ้าหน้าที่สื่อสารองค์กร",
     "section": "7. สบร.",
+    "division": "ฝ่ายส่งเสริมองค์ความรู้ (Knowledge Division) - ฝสร.",
+    "gender": "M",
     "mobile": "062 335 4343",
-    "email": "nsiriwat@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "nsiriwat@gistda.or.th"
   },
   {
     "name": "น.ส.ศิริภาวรรณ สาธร (สีฟ้า)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "7. สบร.",
+    "division": "ฝ่ายส่งเสริมองค์ความรู้ (Knowledge Division) - ฝสร.",
+    "gender": "F",
     "mobile": "082 535 5491",
-    "email": "siripawan@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "siripawan@gistda.or.th"
   },
   {
     "name": "นายอลงกต ปากาศ (เฟิร์ส)",
     "position": "หัวหน้าฝ่าย",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "M",
     "mobile": "084 367 7036",
-    "email": "alongkot@gistda.or.th",
-    "is_head": true
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "alongkot@gistda.or.th"
   },
   {
     "name": "นายณัฐพงษ์ แข่งขัน (นาม)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "M",
     "mobile": "082 889 3877",
-    "email": "natthaphong@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "natthaphong@gistda.or.th"
   },
   {
     "name": "นายวีรวัฒน์ จันทวงษ์ (ต้น)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "M",
     "mobile": "086 259 4605",
-    "email": "weerawat@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "weerawat@gistda.or.th"
   },
   {
-    "name": "น.ส.ฐานิต  นุกูลราษฎร์  (ปอ)",
+    "name": "น.ส.ฐานิต นุกูลราษฎร์ (ปอ)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "F",
     "mobile": "092 464 4067",
-    "email": "thanit.nuk@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "thanit.nuk@gistda.or.th"
   },
   {
-    "name": "น.ส.เพชรจรัส  เตชเกรียงไกรกุล (หยก)",
+    "name": "น.ส.เพชรจรัส เตชเกรียงไกรกุล (หยก)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "F",
     "mobile": "098 251 8502",
-    "email": "petjaraj@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "petjaraj@gistda.or.th"
   },
   {
     "name": "น.ส.มยุรา ทุ่มแก้ว (ปูเป้)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการชำนาญการ",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "F",
     "mobile": "086 609 9801",
-    "email": "mayura.t@gistda.or.th",
-    "is_head": false
+    "desk": "033 048 091 เบอร์ภายใน 1027",
+    "email": "mayura.t@gistda.or.th"
   },
   {
     "name": "น.ส.วัชรี นพศรี (หนิง)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "F",
     "mobile": "086 167 2248",
-    "email": "watcharee@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "watcharee@gistda.or.th"
   },
   {
     "name": "นายกรภพ พลนิกร (อาร์ม)",
     "position": "เจ้าหน้าที่พัฒนาธุรกิจ (ลูกจ้างโครงการ)",
     "section": "7. สบร.",
+    "division": "ฝ่ายพัฒนาและถ่ายทอดองค์ความรู้ (Development and Knowledge Transfer Division) - ฝถร.",
+    "gender": "M",
     "mobile": "092 851 9156",
-    "email": "kornpop.pol@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 833 เบอร์ภายใน 1026",
+    "email": "kornpop.pol@gistda.or.th"
   },
   {
     "name": "น.ส.วจีภรณ์ แจ่มไว (โฟล์ค)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "081 404 3658",
-    "email": "wageeporn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "wageeporn@gistda.or.th"
   },
   {
     "name": "น.ส.ธัญญ์ธิยา พิชชาชัยอนันต์ (เลิฟ)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "081 764 7157",
-    "email": "thanthiya@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanthiya@gistda.or.th"
   },
   {
     "name": "น.ส.ราวดี วงค์ษา (นุ่น)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "084 739 7331",
-    "email": "rawadee.won@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "rawadee.won@gistda.or.th"
   },
   {
     "name": "นายญาณวิทย์ ธรรมสูตร (นิว)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "061 031 8219",
-    "email": "yannawit.tha@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "yannawit.tha@gistda.or.th"
   },
   {
-    "name": "นายอมรเทพ  กอบการดี (ม่อน)",
+    "name": "นายอมรเทพ กอบการดี (ม่อน)",
     "position": "นักวิชาการฝึกอบรม",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "099 207 0375",
-    "email": "amornthep.kob@gisdtda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "amornthep.kob@gisdtda.or.th"
   },
   {
-    "name": "น.ส.สุดารัตน์  โสมสุข (แคท)",
+    "name": "น.ส.สุดารัตน์ โสมสุข (แคท)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "098 647 2530",
-    "email": "sudarat.som@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 832 เบอร์ภายใน 1025",
+    "email": "sudarat.som@gistda.or.th"
   },
   {
-    "name": "น.ส.จิณณ์ปณตดา  เจริญศรี (หมิว)",
+    "name": "น.ส.จิณณ์ปณตดา เจริญศรี (หมิว)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "097 172 0150",
-    "email": "chinpanotda.cha@gistda.or.th",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "chinpanotda.cha@gistda.or.th"
   },
   {
-    "name": "น.ส.จิรัฏฐ์ธยาน์  วงศ์ปาน (ไออ้อน)",
+    "name": "น.ส.จิรัฏฐ์ธยาน์ วงศ์ปาน (ไออ้อน)",
     "position": "ผู้นำชมนิทรรศการฯ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "090 956 1545",
-    "email": "space_inspirium@gistda.or.th\njirattayawork@gmail.com",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "space_inspirium@gistda.or.th jirattayawork@gmail.com"
   },
   {
-    "name": "น.ส.ศรัลต์ยา  ตันติวิศานต์ภพ (ดาว)",
+    "name": "น.ส.ศรัลต์ยา ตันติวิศานต์ภพ (ดาว)",
     "position": "ผู้นำชมนิทรรศการฯ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "088 065 1124",
-    "email": "space_inspirium@gistda.or.th\nsranya.tonti@gmail.com",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "space_inspirium@gistda.or.th sranya.tonti@gmail.com"
   },
   {
-    "name": "น.ส.กนกวรรณ  วิลัยลักษณ์ (บีม)",
+    "name": "น.ส.กนกวรรณ วิลัยลักษณ์ (บีม)",
     "position": "ผู้นำชมนิทรรศการฯ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "097 151 5577",
-    "email": "space_inspirium@gistda.or.th\nkanok23.w@gmail.com",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "space_inspirium@gistda.or.th kanok23.w@gmail.com"
   },
   {
-    "name": "น.ส.วรันต์พร  กาวีวล (แบม)",
+    "name": "น.ส.วรันต์พร กาวีวล (แบม)",
     "position": "เจ้าหน้าที่บริการลูกค้าฯ",
     "section": "7. สบร.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "088 864 2471",
-    "email": "space_inspirium@gistda.or.th\n warunporn123@gmail.com",
-    "is_head": false
+    "desk": "033 005 835 เบอร์ภายใน 1029",
+    "email": "space_inspirium@gistda.or.th warunporn123@gmail.com"
   },
   {
-    "name": "โทรศัพท์เคลื่อนที่ อาคาร สภ.",
-    "position": "ส่วนกลาง/สบร.",
-    "section": "7. สบร.",
-    "mobile": "084 751 8253",
-    "email": "",
-    "is_head": false
-  },
-  {
-    "name": "อาคาร Space Inspirium (SI)",
-    "position": "Counter SI",
-    "section": "7. สบร.",
-    "mobile": "",
-    "email": "",
-    "is_head": false
-  },
-  {
-    "name": "นายพรเทพ  นวกิจกนก (บอย)",
+    "name": "นายพรเทพ นวกิจกนก (บอย)",
     "position": "ผู้อำนวยการศูนย์",
     "section": "8. ศดช.",
-    "mobile": "086 700 9133 \n065 525 1919",
-    "email": "pornthep@gistda.or.th",
-    "is_head": true
+    "division": "ศูนย์ผลิตดาวเทียมแห่งชาติ - ศดช. (National Satellite Manufacturing Center)",
+    "gender": "M",
+    "mobile": "086 700 9133 065 525 1919",
+    "desk": "02 141 4499",
+    "email": "pornthep@gistda.or.th"
   },
   {
-    "name": "นายจักรพันธ์   ปรียานุพันธ์ (ตุ้ย)",
+    "name": "นายจักรพันธ์ ปรียานุพันธ์ (ตุ้ย)",
     "position": "วิศวกรเชี่ยวชาญ / ผช.ผสทอภ.",
     "section": "8. ศดช.",
+    "division": "ศูนย์ผลิตดาวเทียมแห่งชาติ - ศดช. (National Satellite Manufacturing Center)",
+    "gender": "M",
     "mobile": "087 932 7206",
-    "email": "chakapanth@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4605",
+    "email": "chakapanth@gistda.or.th"
   },
   {
     "name": "นายยสวินท์ สมบัติพานิช (อะตอม)",
     "position": "วิศวกรเชี่ยวชาญ / ผช.ผสทอภ.",
     "section": "8. ศดช.",
+    "division": "ศูนย์ผลิตดาวเทียมแห่งชาติ - ศดช. (National Satellite Manufacturing Center)",
+    "gender": "M",
     "mobile": "064 464 9288",
-    "email": "yossavin@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "yossavin@gistda.or.th"
   },
   {
     "name": "นายลิขิต วรานนท์ (บ๊วย)",
     "position": "หัวหน้าฝ่าย",
     "section": "8. ศดช.",
+    "division": "ฝ่ายออกแบบและพัฒนาดาวเทียม (Mission Design and Development Division) - ฝพท.",
+    "gender": "M",
     "mobile": "081 900 2902",
-    "email": "likhit@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "likhit@gistda.or.th"
   },
   {
     "name": "นางสาวปริพรรษ ไพรัตน์ (เปอร์)",
     "position": "วิศวกรดาวเทียม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายออกแบบและพัฒนาดาวเทียม (Mission Design and Development Division) - ฝพท.",
+    "gender": "F",
     "mobile": "087 544 5429",
-    "email": "paripat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "paripat@gistda.or.th"
   },
   {
     "name": "นางสาวทักษพร เรืองหิรัญวงษ์ (หมี)",
     "position": "วิศวกร",
     "section": "8. ศดช.",
+    "division": "ฝ่ายออกแบบและพัฒนาดาวเทียม (Mission Design and Development Division) - ฝพท.",
+    "gender": "F",
     "mobile": "098 034 6548",
-    "email": "tucksaporn.rua@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tucksaporn.rua@gistda.or.th"
   },
   {
     "name": "นายสุธี ชูศรี (เตี๋ยว)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายออกแบบและพัฒนาดาวเทียม (Mission Design and Development Division) - ฝพท.",
+    "gender": "M",
     "mobile": "086 959 0336",
-    "email": "sutee.c@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "sutee.c@gistda.or.th"
   },
   {
-    "name": "นายธีระภัทร เจริญปรุ (อาร์ม)   - ลาออก 16 มิ.ย. 69 -",
+    "name": "นายธีระภัทร เจริญปรุ (อาร์ม) - ลาออก 16 มิ.ย. 69 -",
     "position": "วิศวกรดาวเทียม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายออกแบบและพัฒนาดาวเทียม (Mission Design and Development Division) - ฝพท.",
+    "gender": "M",
     "mobile": "063 189 8887",
-    "email": "teerapat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "teerapat@gistda.or.th"
   },
   {
     "name": "นายจีรศักดิ์ ร่วมนาพะยา (เจมส์)",
     "position": "วิศวกร",
     "section": "8. ศดช.",
+    "division": "ฝ่ายออกแบบและพัฒนาดาวเทียม (Mission Design and Development Division) - ฝพท.",
+    "gender": "M",
     "mobile": "093 949 3958",
-    "email": "jeerasak.rua@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jeerasak.rua@gistda.or.th"
   },
   {
-    "name": "น.ส.ชิดชนก  ชัยชื่นชอบ (หนู)",
+    "name": "น.ส.ชิดชนก ชัยชื่นชอบ (หนู)",
     "position": "หัวหน้าฝ่าย",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "F",
     "mobile": "083 295 1554",
-    "email": "chidchanok.cha@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "chidchanok.cha@gistda.or.th"
   },
   {
     "name": "นายปณชัย สันทนานุการ (เบส)",
     "position": "วิศวกรดาวเทียม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "M",
     "mobile": "095 120 4448",
-    "email": "panachai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "panachai@gistda.or.th"
   },
   {
     "name": "นายดำรงฤทธิ์ ขันธ์ทอง (บิ๊ก)",
     "position": "วิศวกร",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "M",
     "mobile": "083 096 5901",
-    "email": "damrongrit.kha@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "damrongrit.kha@gistda.or.th"
   },
   {
     "name": "นายธีรศักดิ์ ผลมาตร (ทิว)",
     "position": "วิศวกร",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "M",
     "mobile": "091 409 8999",
-    "email": "thirasak.pho@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thirasak.pho@gistda.or.th"
   },
   {
     "name": "นายยศชนินทร์ ศศิวรรธน์ (โอ๊ต)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "M",
     "mobile": "096 868 1070",
-    "email": "yoschanin.sas@gistd\nYoschanin Sasiwat",
-    "is_head": false
+    "desk": "",
+    "email": "yoschanin.sas@gistd Yoschanin Sasiwat"
   },
   {
     "name": "นายนราวิชญ์ สร้อยผาบ (คอป)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "M",
     "mobile": "090 586 3085",
-    "email": "narawit@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "narawit@gistda.or.th"
   },
   {
     "name": "นายขวัญชัย ชินวิชานา (เอ็กซ์)",
     "position": "วิศวกร",
     "section": "8. ศดช.",
+    "division": "ฝ่ายประกอบ ทดสอบและนำส่งดาวเทียม (Satellite Integration, Testing and Launch Preparation Division) - ฝปส.",
+    "gender": "M",
     "mobile": "097 182 0483",
-    "email": "kwanchai.chi@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kwanchai.chi@gistda.or.th"
   },
   {
     "name": "นายธนานิติ พรหมวงศา (กก)",
     "position": "หัวหน้าฝ่าย",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาระบบปฏิบัติการดาวเทียม (Satellite Operations System Development Division) - ฝพร.",
+    "gender": "M",
     "mobile": "080 723 8559",
-    "email": "tananitip@gistda.or.th",
-    "is_head": true
-  },
-  {
-    "name": "- ว่าง -",
-    "position": "วิศวกร",
-    "section": "8. ศดช.",
-    "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": "tananitip@gistda.or.th"
   },
   {
     "name": "นายธงชัย ตรีอินทอง (นุ๊ก)",
     "position": "วิศวกรดาวเทียม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาระบบปฏิบัติการดาวเทียม (Satellite Operations System Development Division) - ฝพร.",
+    "gender": "M",
     "mobile": "080 986 0491",
-    "email": "thongchai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thongchai@gistda.or.th"
   },
   {
     "name": "นางสาวจิราพักตร์ ซื่อสัตย์ (เจล)",
     "position": "วิศวกรดาวเทียม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาระบบปฏิบัติการดาวเทียม (Satellite Operations System Development Division) - ฝพร.",
+    "gender": "F",
     "mobile": "063 891 7270",
-    "email": "chiraphak@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "chiraphak@gistda.or.th"
   },
   {
-    "name": "น.ส.ปนัดดา  เกียรติเลิศเสรี (ตอง)",
+    "name": "น.ส.ปนัดดา เกียรติเลิศเสรี (ตอง)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาระบบปฏิบัติการดาวเทียม (Satellite Operations System Development Division) - ฝพร.",
+    "gender": "F",
     "mobile": "089 444 3127",
-    "email": "panatda@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "panatda@gistda.or.th"
   },
   {
-    "name": "น.ส.ณัฐมน  ตังแก (ขวัญ)",
+    "name": "น.ส.ณัฐมน ตังแก (ขวัญ)",
     "position": "วิศวกร",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาระบบปฏิบัติการดาวเทียม (Satellite Operations System Development Division) - ฝพร.",
+    "gender": "F",
     "mobile": "095 687 9626",
-    "email": "nuttamon.thu@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "nuttamon.thu@gistda.or.th"
   },
   {
-    "name": "นายจักรพันธ์   ปรียานุพันธ์ (ตุ้ย)",
+    "name": "นายจักรพันธ์ ปรียานุพันธ์ (ตุ้ย)",
     "position": "รก. หัวหน้าฝ่าย (อีกตำแหน่ง)",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": true
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส. อิศริยา ทิพยวัฒน์ (ออย)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการพิเศษ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "F",
     "mobile": "092 432 8778",
-    "email": "isariyat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4614",
+    "email": "isariyat@gistda.or.th"
   },
   {
     "name": "น.ส. ฐปนรรฆ์ สิ่งที่สุข (อ้อ)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "F",
     "mobile": "086 566 4294",
-    "email": "tapanan@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4671",
+    "email": "tapanan@gistda.or.th"
   },
   {
     "name": "นางสุรัสวฎี อัคนิพัชร (อ้อ)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "F",
     "mobile": "086 995 1552",
-    "email": "suratsawadee.a@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4411",
+    "email": "suratsawadee.a@gistda.or.th"
   },
   {
     "name": "นายอภิชัย เชียรเตชากุล (แมค)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "M",
     "mobile": "089 014 8181",
-    "email": "apichai.chi@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "apichai.chi@gistda.or.th"
   },
   {
     "name": "นายพีรภัทร์ มานะกิจ (ภัทร์)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "M",
     "mobile": "090 894 9999",
-    "email": "peerapat.man@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "peerapat.man@gistda.or.th"
   },
   {
     "name": "นายคนึงชาติ แสนยศ (เบียร์)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "M",
     "mobile": "097 045 1666",
-    "email": "khanuengchat.sae.gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายประนัฐพล ไทยเจริญ (ปฏิบัติงาน ณ ศรีราชา  1 มี.ค.- 30 ก.ย. 69)",
+    "name": "นายประนัฐพล ไทยเจริญ (ปฏิบัติงาน ณ ศรีราชา 1 มี.ค.- 30 ก.ย. 69)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "8. ศดช.",
+    "division": "ฝ่ายพัฒนาและประสานงานกิจการดาวเทียม (Satellite Development and Coordination Affairs Division) - ฝพก.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส. อรอนงค์ อยู่คงศักดิ์ (อร)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "8. ศดช.",
-    "mobile": "089-881-9414",
-    "email": "onanong@gistda.or.th",
-    "is_head": false
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
+    "mobile": "",
+    "desk": "089-881-9414",
+    "email": "onanong@gistda.or.th"
   },
   {
-    "name": "น.ส.บัวหลวง  ไทยแท้  (บัว)",
+    "name": "น.ส.บัวหลวง ไทยแท้ (บัว)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "8. ศดช.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "065 991 4638",
-    "email": "bualuang@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4458",
+    "email": "bualuang@gistda.or.th"
   },
   {
     "name": "นายสิทธิพร ชาญนำสิน (คิม)",
     "position": "หัวหน้าฝ่าย",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "064 339 6973",
-    "email": "sittiporn@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "sittiporn@gistda.or.th"
   },
   {
     "name": "นายสุวัฒน์ ศรีเศวต (เอ็กซ์)",
     "position": "วิศวกรชำนาญการ",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "098 279 7107",
-    "email": "suwat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "suwat@gistda.or.th"
   },
   {
     "name": "นายอัศนัย นิธิโรจนานนท์ (เต้)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "081 991 7758",
-    "email": "Ussanai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Ussanai@gistda.or.th"
   },
   {
     "name": "น.ส.รุ่งนภา แก้วทองราช (ปิ๊ก)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
     "mobile": "084 414 1625",
-    "email": "rungnapa.kae@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "rungnapa.kae@gistda.or.th"
   },
   {
     "name": "ว่าที่ร้อยตรี เสฎฐนันท์ ทองสุวรรณ์ (ภพ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "094 251 6914",
-    "email": "setthanun.tho@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "setthanun.tho@gistda.or.th"
   },
   {
     "name": "นายพศวีร์ เสียงเย็น (พี)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "097 081 4578",
-    "email": "phasawee@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "phasawee@gistda.or.th"
   },
   {
-    "name": "น.ส.วนิดา  ปานอูป (กิ๊ฟ)",
+    "name": "น.ส.วนิดา ปานอูป (กิ๊ฟ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
     "mobile": "088 436 5416",
-    "email": "wanida.pan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "wanida.pan@gistda.or.th"
   },
   {
     "name": "นายกีรติ พุทธสุวรรณ (แบงค์)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "084 966 1055",
-    "email": "keerati.p@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "keerati.p@gistda.or.th"
   },
   {
     "name": "นายภูรินทร์ ธานีรัตน์ (คิง)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "087 361 6367",
-    "email": "purin.tan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "purin.tan@gistda.or.th"
   },
   {
     "name": "น.ส.ชวิศา สอนสกุล (นาย)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
-    "mobile": "934495466.0",
-    "email": "chavisa.sor@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
+    "mobile": "",
+    "desk": "9.34495466E8",
+    "email": "chavisa.sor@gistda.or.th"
   },
   {
     "name": "นายชยพล อินอาน (โย)",
     "position": "วิศวกรชำนาญการ",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "095 961 3923",
-    "email": "chayapol@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "chayapol@gistda.or.th"
   },
   {
     "name": "น.ส.ศรีลักษณ์ พัฒนานุรักษ์สกุล (มิ้ว)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ (ลูกจ้าง สทอภ.)",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
     "mobile": "085 140 5662",
-    "email": "srilak@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "srilak@gistda.or.th"
   },
   {
     "name": "น.ส.มณีรัตน์ ชัยวัชนันท์ (ทราย)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้าง สทอภ.)",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
     "mobile": "084 082 4615",
-    "email": "maneerat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "maneerat@gistda.or.th"
   },
   {
     "name": "นางสาวปัฐมภัทร โอสถ (สปาย)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
     "mobile": "082 469 1161",
-    "email": "pattamapat.oso@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "pattamapat.oso@gistda.or.th"
   },
   {
     "name": "นางสาวจารุวรรณ สุทธนะ (เกรซ)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
     "mobile": "086 521 4953",
-    "email": "Jaruwan.sut@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Jaruwan.sut@gistda.or.th"
   },
   {
     "name": "นายสิรภพ เนื่องพุกก์ (ภพ)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "061 415 4997",
-    "email": "sirapop.nua@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "sirapop.nua@gistda.or.th"
   },
   {
     "name": "นายธนัทสันต์ ขันทา (มิก)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "085 546 4524",
-    "email": "tanatsan.kha@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tanatsan.kha@gistda.or.th"
   },
   {
     "name": "นายกนกพล สีเหลือง (เซฟ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "095 759 0049",
-    "email": "kanokpon.see@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kanokpon.see@gistda.or.th"
   },
   {
     "name": "นายภานุพล ภักดีผล (ภูร์)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "096 391 3878",
-    "email": "phanuphon.pha@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "phanuphon.pha@gistda.or.th"
   },
   {
     "name": "นายอัฐวุฒิ ติรกิจพานิชกร (เอ)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
     "mobile": "093 542 2012",
-    "email": "atthawut.tir@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "atthawut.tir@gistda.or.th"
   },
   {
     "name": "นายศุภณัฐ สารดี (เดย์)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
-    "mobile": "095-431-6921",
-    "email": "suphanat.sar@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
+    "mobile": "",
+    "desk": "095-431-6921",
+    "email": "suphanat.sar@gistda.or.th"
   },
   {
     "name": "นางสาวเกวลี ศรีทองแท้ (เดียร์)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
-    "mobile": "096-835-1272",
-    "email": "kewalee.sri@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
+    "mobile": "",
+    "desk": "096-835-1272",
+    "email": "kewalee.sri@gistda.or.th"
   },
   {
-    "name": "นางสาวปภาวี ดีป้อง  (ไดโน)",
+    "name": "นางสาวปภาวี ดีป้อง (ไดโน)",
     "position": "วิศวกร",
     "section": "9. ฝวอ.",
-    "mobile": "061-268-4185",
-    "email": "papawee.dee@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
+    "mobile": "",
+    "desk": "061-268-4185",
+    "email": "papawee.dee@gistda.or.th"
   },
   {
     "name": "นายจงภณ จันทรังษี (เก้า)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
-    "mobile": "092-626-5544",
-    "email": "jongphon.cha@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "M",
+    "mobile": "",
+    "desk": "092-626-5544",
+    "email": "jongphon.cha@gistda.or.th"
   },
   {
     "name": "นางสาวอัจฉราภรณ์ ผักหวาน (อิงค์)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
-    "mobile": "086-188-1191",
-    "email": "audcharapon.pag@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
+    "mobile": "",
+    "desk": "086-188-1191",
+    "email": "audcharapon.pag@gistda.or.th"
   },
   {
     "name": "นางสาวญาติกา โพธิ์ศรีเจริญ (เจน)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "9. ฝวอ.",
-    "mobile": "082-580-0275",
-    "email": "yatika.pho@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายวิจัยเทคโนโลยีอวกาศ - ฝวอ. (Space Technology Research Division)",
+    "gender": "F",
+    "mobile": "",
+    "desk": "082-580-0275",
+    "email": "yatika.pho@gistda.or.th"
   },
   {
-    "name": "นายบุญชุบ บุ้งทอง  (ชุบ)",
+    "name": "นายบุญชุบ บุ้งทอง (ชุบ)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "10. สปท.",
+    "division": "สำนักปฏิบัติการดาวเทียม - สปท. (Mission Operation Center)",
+    "gender": "M",
     "mobile": "081 732 6748",
-    "email": "boonchoob@gistda.or.th",
-    "is_head": true
+    "desk": "03 304 6300 ต่อ 1001",
+    "email": "boonchoob@gistda.or.th"
   },
   {
     "name": "ว่าที่ ร.ต. วรธันย์ วิชาคุณ (แจ็ค)",
     "position": "หัวหน้าฝ่าย",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "M",
     "mobile": "064 539 1546",
-    "email": "worathun@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "worathun@gistda.or.th"
   },
   {
     "name": "นายประสิทธิ์ มากสิน (ม่อน)",
     "position": "นักเทคโนโลยีอวกาศชำนาญการ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "M",
     "mobile": "085 909 4071",
-    "email": "prasit@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "prasit@gistda.or.th"
   },
   {
     "name": "นายประวุฒิ ดิษาภิรมย์ (วุฒิ)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "M",
     "mobile": "094 519 2287",
-    "email": "prawut@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "prawut@gistda.or.th"
   },
   {
     "name": "น.ส. เข็มทราย ปีกสันเทียะ",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "F",
     "mobile": "097 942 9556",
-    "email": "khemsai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "khemsai@gistda.or.th"
   },
   {
     "name": "น.ส.กนกวรรณ กัณหะกิติ (เป้ง)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "F",
     "mobile": "081 741 3553",
-    "email": "ganokwan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "ganokwan@gistda.or.th"
   },
   {
     "name": "น.ส. ศิรินทรา อินทร์ถนอม (ส้ม)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "F",
     "mobile": "080 989 2428",
-    "email": "sirintha@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "sirintha@gistda.or.th"
   },
   {
     "name": "นายวิชญ์ภาส ดรบัณฑิต (ท๊อป)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "M",
     "mobile": "091 415 5194",
-    "email": "witchapat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "witchapat@gistda.or.th"
   },
   {
     "name": "นายประโยชน์ ปวงจักร์ทา (เบส)",
     "position": "นักเทคโนโลยีอวกาศชำนาญการ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "M",
     "mobile": "089 855 9903",
-    "email": "prayot@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "prayot@gistda.or.th"
   },
   {
     "name": "น.ส. ภาวรินทร์ คูหา",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการข้อมูลจากดาวเทียม (Product Management Division) - ฝปด.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายเสกสรร จตุรัส (ตั้ม)",
     "position": "หัวหน้าฝ่าย",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "M",
     "mobile": "090 976 1733",
-    "email": "seksan@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "seksan@gistda.or.th"
   },
   {
     "name": "นายอัฐราวุฒิ เดชผล (อัฐ)",
     "position": "วิศวกรชำนาญการ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "M",
     "mobile": "061 614 9878",
-    "email": "auttarawut@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "auttarawut@gistda.or.th"
   },
   {
     "name": "น.ส. จารุณี ขุนจันทร์ (อ้อม)",
     "position": "วิศวกรชำนาญการ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "F",
     "mobile": "086 600 9182",
-    "email": "Jarunee.k@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Jarunee.k@gistda.or.th"
   },
   {
     "name": "น.ส. พันทิพย์ภา บุญสมพงษ์ (ขวัญ)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "F",
     "mobile": "094 9895419",
-    "email": "pantippa@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "pantippa@gistda.or.th"
   },
   {
     "name": "นายอาทิตย์ ศิริขันธ์ (มิก)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "M",
     "mobile": "098 249 4440",
-    "email": "athit@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "athit@gistda.or.th"
   },
   {
     "name": "นายประกาศิต อุดมธนะธีระ (หญ้า)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "M",
     "mobile": "097 059 7492",
-    "email": "Prakasit.u@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Prakasit.u@gistda.or.th"
   },
   {
     "name": "นายโกวิทย์ พุ่มก๋ง (โน)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "M",
     "mobile": "086 820 0956",
-    "email": "Kovit@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Kovit@gistda.or.th"
   },
   {
     "name": "น.ส. รพิรัตน์ ฤทธิ์รณศักดิ์ (ปุ๊ก)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "F",
     "mobile": "089 982 5935",
-    "email": "rapirat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "rapirat@gistda.or.th"
   },
   {
     "name": "น.ส.จินวะรา สุรัตนกุล (จูน)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายปฏิบัติการควบคุมดาวเทียม (Ground Control Division) - ฝปค.",
+    "gender": "F",
     "mobile": "082 480 2280",
-    "email": "jinwara@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jinwara@gistda.or.th"
   },
   {
     "name": "นายนวัตกรณ์ ไก่แก้ว (กร)",
     "position": "หัวหน้าฝ่าย",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "083 529 3836",
-    "email": "Nawattakorn@gistda.or.th",
-    "is_head": true
+    "desk": "033 046 315",
+    "email": "Nawattakorn@gistda.or.th"
   },
   {
     "name": "นายทศพล ชินนิวัฒน์",
     "position": "วิศวกรชำนาญการ",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "081 513 7854",
-    "email": "tossaphon@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tossaphon@gistda.or.th"
   },
   {
     "name": "นายนรัตว์ ศรีสวัสดิ์พงษ์ (อู๋)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "086 361 4399",
-    "email": "narat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "narat@gistda.or.th"
   },
   {
     "name": "นายประมินทร์ พิชิตการค้า (ป้อง)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "081 135 1599",
-    "email": "pramin@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "pramin@gistda.or.th"
   },
   {
     "name": "นายธนกาญจน์ ไตรปิฎก",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "062 463 5544",
-    "email": "thanakarn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanakarn@gistda.or.th"
   },
   {
     "name": "นายชุติพงษ์ ลาวงศ์เกิด (เหน่ง)",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "062 463 5588",
-    "email": "chutipong@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "chutipong@gistda.or.th"
   },
   {
     "name": "นายประนัฐพล ไทยเจริญ",
     "position": "นักเทคโนโลยีอวกาศ",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.พิชชาภรณ์ อัมพรายน์ (ตูน)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายวิศวกรรมระบบปฏิบัติการดาวเทียม (Ground System Engineering Division) - ฝวด.",
+    "gender": "F",
     "mobile": "094 7899054",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวบุษยมาศ เพชรทอง (วา)",
     "position": "หัวหน้าฝ่าย",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "F",
     "mobile": "099 951 6424",
-    "email": "Busayamas@gistda.or.th",
-    "is_head": true
+    "desk": "0818312362 (เบอร์ส่วนการให้บริการทดสอบของฝ่าย)",
+    "email": "Busayamas@gistda.or.th"
   },
   {
-    "name": "นายจิโรจ ทองตา  (นุ้ย)",
+    "name": "นายจิโรจ ทองตา (นุ้ย)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "M",
     "mobile": "094 823 9379",
-    "email": "jirote@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jirote@gistda.or.th"
   },
   {
     "name": "นายศรัณย์ นันทะชมภู (นิค)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "M",
     "mobile": "066 126 6928",
-    "email": "saran@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "saran@gistda.or.th"
   },
   {
     "name": "นายปิยภัทร เขียวเจริญ (ต้อง)",
     "position": "วิศวกร",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "M",
     "mobile": "095 501 2210",
-    "email": "Piyapat.kea@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Piyapat.kea@gistda.or.th"
   },
   {
     "name": "น.ส.อโณทัย นิ่มน้อย (ปอ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "F",
     "mobile": "094 493 5596",
-    "email": "anothai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "anothai@gistda.or.th"
   },
   {
     "name": "นายธีรธัช นาครักษ์ (อะตอม)",
     "position": "วิศวกร (ลูกจ้างสทอภ.)",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "M",
     "mobile": "095 759 6060",
-    "email": "teeratat.nak@gistda.or.th",
-    "is_head": false
-  },
-  {
-    "name": "(ว่าง) รอสรรหา",
-    "position": "วิศวกร (ลูกจ้างสทอภ.)",
-    "section": "10. สปท.",
-    "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": "teeratat.nak@gistda.or.th"
   },
   {
     "name": "น.ส.ธัญชนก ปริวัตรพันธ์ (ผักบุ้ง)",
     "position": "วิศวกร (ลูกจ้างโครงการ)",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "F",
     "mobile": "087 028 6184",
-    "email": "tanchanok.par@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tanchanok.par@gistda.or.th"
   },
   {
     "name": "นางสาวธัญชนก หมั่นอุตส่าห์ (ตอง)",
     "position": "วิศวกร (ลูกจ้างโครงการ)",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "F",
     "mobile": "062 505 4152",
-    "email": "thunchanok.mun@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thunchanok.mun@gistda.or.th"
   },
   {
     "name": "นายธีรพงษ์ กลิ่นหอม (ดั้มพ์)",
     "position": "วิศวกร (ลูกจ้างโครงการ)",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "M",
     "mobile": "084 323 9056",
-    "email": "teerapong.kli@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "teerapong.kli@gistda.or.th"
   },
   {
     "name": "นางสาวกุลภัช ศุภนันท์กุล (ข้าวฟ่าง)",
     "position": "วิศวกร (ลูกจ้างโครงการ)",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "F",
     "mobile": "097 134 5620",
-    "email": "kulpat.sup@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kulpat.sup@gistda.or.th"
   },
   {
     "name": "น.ส.พัณณ์ชัญญศร ฉายสุริยะ (นีน)",
     "position": "นักพัฒนานวัตกรรม (ลูกจ้างโครงการ)",
     "section": "10. สปท.",
+    "division": "ฝ่ายบริการการทดสอบและประกอบดาวเทียม (Satellite Integration and Testing Services Division) - ฝบท.",
+    "gender": "F",
     "mobile": "064 703 0813",
-    "email": "phanchanyasorn.cha@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "phanchanyasorn.cha@gistda.or.th"
   },
   {
     "name": "น.ส. รมิดา คชะเทศ",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "10. สปท.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "062 463 5544",
-    "email": "thanakarn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanakarn@gistda.or.th"
   },
   {
     "name": "น.ส.พัชราภรณ์ นาคสุก",
     "position": "พนักงานธุรการ",
     "section": "10. สปท.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "062 463 5588",
-    "email": "chutipong@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "chutipong@gistda.or.th"
   },
   {
-    "name": "นายสยาม  ลววิโรจน์วงศ์ (สยาม)",
+    "name": "นายสยาม ลววิโรจน์วงศ์ (สยาม)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "11. สนภ.",
-    "mobile": "081 856 2836\n080 070 8456",
-    "email": "siam@gistda.or.th",
-    "is_head": true
+    "division": "สำนักนวัตกรรมเทคโนโลยีภูมิสารสนเทศ - สนภ. (Office of Geo-Informatics Innovation)",
+    "gender": "M",
+    "mobile": "081 856 2836 080 070 8456",
+    "desk": "02 141 4445",
+    "email": "siam@gistda.or.th"
   },
   {
     "name": "นางธัญวรัตม์ อนันต์ (อ้อย)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ / ผช.ผอ.สนภ.",
     "section": "11. สนภ.",
+    "division": "สำนักนวัตกรรมเทคโนโลยีภูมิสารสนเทศ - สนภ. (Office of Geo-Informatics Innovation)",
+    "gender": "F",
     "mobile": "084 566 4166",
-    "email": "twarat@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4595",
+    "email": "twarat@gistda.or.th"
   },
   {
     "name": "น.ส.ดลพร พิมพิชัย (จิ)",
     "position": "หัวหน้าฝ่าย",
     "section": "11. สนภ.",
+    "division": "ฝ่ายจัดการภูมิสารสนเทศขนาดใหญ่ (Geospatial Big Data Management Division) - ฝภญ.",
+    "gender": "F",
     "mobile": "082 474 4998",
-    "email": "donlaphon@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4632",
+    "email": "donlaphon@gistda.or.th"
   },
   {
     "name": "นายวนพงศ์ แก้วสิงห์ (เก่ง)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการพิเศษ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายจัดการภูมิสารสนเทศขนาดใหญ่ (Geospatial Big Data Management Division) - ฝภญ.",
+    "gender": "M",
     "mobile": "086 629 8050",
-    "email": "wanapong@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4624",
+    "email": "wanapong@gistda.or.th"
   },
   {
     "name": "นายกีรติพงศ์ เพชรดาพงศ์ (จ๊อบ)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายจัดการภูมิสารสนเทศขนาดใหญ่ (Geospatial Big Data Management Division) - ฝภญ.",
+    "gender": "M",
     "mobile": "081 964 9136",
-    "email": "keerati@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "keerati@gistda.or.th"
   },
   {
-    "name": "นายศักรินทร์  อุ่นทานนท์ (บอล)",
+    "name": "นายศักรินทร์ อุ่นทานนท์ (บอล)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "11. สนภ.",
+    "division": "ฝ่ายจัดการภูมิสารสนเทศขนาดใหญ่ (Geospatial Big Data Management Division) - ฝภญ.",
+    "gender": "M",
     "mobile": "",
-    "email": "sukkasin.aun@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "sukkasin.aun@gistda.or.th"
   },
   {
-    "name": "นายกษิด์เดช  กรสังข์",
+    "name": "นายกษิด์เดช กรสังข์",
     "position": "นักพัฒนานวัตกรรม",
     "section": "11. สนภ.",
+    "division": "ฝ่ายจัดการภูมิสารสนเทศขนาดใหญ่ (Geospatial Big Data Management Division) - ฝภญ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.ศิริกุล หุตะเสวี (เบล)",
     "position": "หน.ฝภก.",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "F",
     "mobile": "081 829 3702",
-    "email": "sirikul@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4525",
+    "email": "sirikul@gistda.or.th"
   },
   {
     "name": "นายสุกิจ สกาวแสง (เปิ้ล)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "M",
     "mobile": "083 613 9456",
-    "email": "sukij@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4525",
+    "email": "sukij@gistda.or.th"
   },
   {
     "name": "นายกาญจน์ กมลบริสุทธิ์ (อาร์ม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "M",
     "mobile": "084 752 7221",
-    "email": "karn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4525",
+    "email": "karn@gistda.or.th"
   },
   {
     "name": "นายธีรวัฒน์ สุวรรณเลิศเจริญ (ธี)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "M",
     "mobile": "086 804 3321",
-    "email": "teerawat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4550",
+    "email": "teerawat@gistda.or.th"
   },
   {
     "name": "น.ส.นันทิกร กิจรัตน์ภร (ตา)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "F",
     "mobile": "061 418 4402",
-    "email": "nuntikorn.kit@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "nuntikorn.kit@gistda.or.th"
   },
   {
     "name": "นางสาวพิชญารัตน์ ปิยะจันทร์",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "F",
     "mobile": "096 235 2312",
-    "email": "pichayarat.piy@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4920",
+    "email": "pichayarat.piy@gistda.or.th"
   },
   {
-    "name": "น.ส. พิมพ์นิภา  ธนูพราน (เมบี)",
+    "name": "น.ส. พิมพ์นิภา ธนูพราน (เมบี)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "F",
     "mobile": "095 056 9460",
-    "email": "pimnipathanupran@gmail.com",
-    "is_head": false
+    "desk": "02 141 4920",
+    "email": "pimnipathanupran@gmail.com"
   },
   {
     "name": "น.ส. ณัฐชา นนทารักษ์ (พลอย)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "F",
     "mobile": "082 353 5151",
-    "email": "Nutcha.non@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "Nutcha.non@gistda.or.th"
   },
   {
     "name": "น.ส. ปานวาด นิติกุล",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายภูมิสารสนเทศเชิงกลยุทธ์ (Strategic Spatial Information Division) - ฝภก.",
+    "gender": "F",
     "mobile": "091 859 3285",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายภานุ เศรษฐเสถียร (ต๋อง)",
     "position": "หน.ฝผส.",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "086 384 1033",
-    "email": "panu@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "panu@gistda.or.th"
   },
   {
     "name": "นางธัญวรัตม์ อนันต์ (อ้อย)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "084 566 4166",
-    "email": "twarat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4595",
+    "email": "twarat@gistda.or.th"
   },
   {
     "name": "นายวีระวิทธ์ คำนวน (ตุ้ม)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "081 497 7499",
-    "email": "weerawit@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4594",
+    "email": "weerawit@gistda.or.th"
   },
   {
     "name": "น.ส.สุวลักษณ์ นาคยา (เอ๊กซ์)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "085 480 9086",
-    "email": "suwalak@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4620",
+    "email": "suwalak@gistda.or.th"
   },
   {
     "name": "นางธีรกานต์ ชัยคงทอง (รม)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "099 246 3355",
-    "email": "thirakan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thirakan@gistda.or.th"
   },
   {
     "name": "นายภาสภัค สารถิน (เฟริส์ท)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "089 092 2269",
-    "email": "passapak@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4627",
+    "email": "passapak@gistda.or.th"
   },
   {
     "name": "นายสุรมงคล ศิริพล (แว่น)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "094 519 6961",
-    "email": "suramongkon@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4590",
+    "email": "suramongkon@gistda.or.th"
   },
   {
     "name": "น.ส.ปิยวรรณ จารุภุมมิก (ออ)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "092 278 1951",
-    "email": "piyawan@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4548",
+    "email": "piyawan@gistda.or.th"
   },
   {
     "name": "น.ส.บุษกร ศรัทธา (บุษ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "098 263 2398",
-    "email": "bussakon@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "bussakon@gistda.or.th"
   },
   {
     "name": "น.ส.อรพรรณ เฉลิมศิลป์ (นูรีน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "085 225 3771",
-    "email": "oraparn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "oraparn@gistda.or.th"
   },
   {
     "name": "น.ส.ปูริตา จิตจง (ปู)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "094 956 6698",
-    "email": "purita@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "purita@gistda.or.th"
   },
   {
     "name": "นายราเชนทร์ สุขวงษ์ (เชน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "094 296 6446",
-    "email": "rachain@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4635",
+    "email": "rachain@gistda.or.th"
   },
   {
     "name": "นางธนิดา วงศ์สุทินวัฒนา (ปลา)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "094 546 1954",
-    "email": "thanida@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4635",
+    "email": "thanida@gistda.or.th"
   },
   {
     "name": "น.ส.อัชฌาพร ทับทิมไทย (กิ๊บ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "094 952 8694",
-    "email": "atchapor.t@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4635",
+    "email": "atchapor.t@gistda.or.th"
   },
   {
     "name": "นางวารุณี จิโนบัว (นี)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "094 964 9825",
-    "email": "warunee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4627",
+    "email": "warunee@gistda.or.th"
   },
   {
     "name": "นางวราภรณ์ โคสลัก (ปู)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "084 006 6205",
-    "email": "varaporn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4629",
+    "email": "varaporn@gistda.or.th"
   },
   {
     "name": "นายนิติ เธียรถาวร (หนึ่ง)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "083 047 8442",
-    "email": "niti@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4592",
+    "email": "niti@gistda.or.th"
   },
   {
-    "name": "นายเอกสุระ  นันท์ธนาวรกุล",
+    "name": "นายเอกสุระ นันท์ธนาวรกุล",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.ดรุณี พรมโชติ (ฝ้าย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "F",
     "mobile": "089 508 5816",
-    "email": "darunee@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "darunee@gistda.or.th"
   },
   {
     "name": "นายประทวนณ์ เพ็ชรตะคุ (ทวนณ์)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "11. สนภ.",
+    "division": "ฝ่ายแผนที่และสำรวจ (Mapping and Survey Division) - ฝผส.",
+    "gender": "M",
     "mobile": "099 425 9359",
-    "email": "pratuan17@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4586",
+    "email": "pratuan17@gistda.or.th"
   },
   {
     "name": "นางนุชจรี แก้วภู่ (นุช)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "11. สนภ.",
+    "division": "งานบริหารทั่วไป (General Administration Division) - งบท.",
+    "gender": "F",
     "mobile": "081 911 3244",
-    "email": "nutchari@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4623",
+    "email": "nutchari@gistda.or.th"
   },
   {
     "name": "นายภิญโญ ปีกสันเทียะ (โย)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "11. สนภ.",
+    "division": "งานบริหารทั่วไป (General Administration Division) - งบท.",
+    "gender": "M",
     "mobile": "089 007 0251",
-    "email": "pinyo@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4456",
+    "email": "pinyo@gistda.or.th"
   },
   {
-    "name": "น.ส.กวิตา  ทองนิ่ม (ไนซ์)",
+    "name": "น.ส.กวิตา ทองนิ่ม (ไนซ์)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้างโครงการ )",
     "section": "11. สนภ.",
+    "division": "งานบริหารทั่วไป (General Administration Division) - งบท.",
+    "gender": "F",
     "mobile": "085 950 3851",
-    "email": "kawita.ton@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4635",
+    "email": "kawita.ton@gistda.or.th"
   },
   {
-    "name": "น.ส.เสาวลักษณ์  วีรเดชกำแหง (กำไล)",
+    "name": "น.ส.เสาวลักษณ์ วีรเดชกำแหง (กำไล)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้างโครงการ )",
     "section": "11. สนภ.",
+    "division": "งานบริหารทั่วไป (General Administration Division) - งบท.",
+    "gender": "F",
     "mobile": "084 101 5335",
-    "email": "saowaluk.wee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4635",
+    "email": "saowaluk.wee@gistda.or.th"
   },
   {
-    "name": "นางสาวธรรศณพร เภสัชชา  (มิกกี้)",
+    "name": "นางสาวธรรศณพร เภสัชชา (มิกกี้)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้างโครงการ)",
     "section": "11. สนภ.",
-    "mobile": "061-136-2193",
-    "email": "thassanaporn.phe@gistda.or.th",
-    "is_head": false
+    "division": "งานบริหารทั่วไป (General Administration Division) - งบท.",
+    "gender": "F",
+    "mobile": "",
+    "desk": "061-136-2193",
+    "email": "thassanaporn.phe@gistda.or.th"
   },
   {
-    "name": "นายปกรณ์  เพ็ชรประยูร (ปี่)",
+    "name": "นายปกรณ์ เพ็ชรประยูร (ปี่)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "12. สปภ.",
-    "mobile": "080 070 8146 (เบอร์สำนักงาน) \n061 403 8041",
-    "email": "pakorn@gistda.or.th",
-    "is_head": true
+    "division": "สำนักประยุกต์และพัฒนาภูมิสารสนเทศ - สปภ. (Office of Geo-Informatics Development and Application)",
+    "gender": "M",
+    "mobile": "080 070 8146 (เบอร์สำนักงาน) 061 403 8041",
+    "desk": "",
+    "email": "pakorn@gistda.or.th"
   },
   {
     "name": "นายกัมปนาท ดีอุดมจันทร์ (เป๊บซี่)",
     "position": "หัวหน้าฝ่าย",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "089 117 9233",
-    "email": "kampanat.dee@gistda.or.th",
-    "is_head": true
+    "desk": "02 143 0563",
+    "email": "kampanat.dee@gistda.or.th"
   },
   {
     "name": "น.ส.บุษบา อ่วมเกษม (บุษ)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "084 771 3651",
-    "email": "budzba@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "budzba@gistda.or.th"
   },
   {
     "name": "น.ส.วรนุช จันทร์สุริย์ (กิ่ง)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "089 708 2487",
-    "email": "woranut@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "woranut@gistda.or.th"
   },
   {
     "name": "นายเธียรศิริ มูลจันทร์ (เธียร)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "084 656 8814",
-    "email": "teansiri@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4551",
+    "email": "teansiri@gistda.or.th"
   },
   {
     "name": "น.ส. สุรัสวดี ภูมิพานิช (ปุ้มปุ้ย)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "062 415 3266",
-    "email": "surassa@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4423",
+    "email": "surassa@gistda.or.th"
   },
   {
     "name": "น.ส.ฐิตวดี สุวัจนานนท์ (แนน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "092 409 3883",
-    "email": "thita@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4536",
+    "email": "thita@gistda.or.th"
   },
   {
     "name": "น.ส.ศศิประภา แถวถาทำ (ก้าน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "086 672 2883",
-    "email": "sasiprapa.t@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4423",
+    "email": "sasiprapa.t@gistda.or.th"
   },
   {
     "name": "นายกฤษกร อุ้ยนิรันดรกุล (กร)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "091 716 2888",
-    "email": "kridsakron@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4524",
+    "email": "kridsakron@gistda.or.th"
   },
   {
     "name": "น.ส.ญาติกานต์ ฉวีวงศ์ (ปุ๊ก)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "086 725 0498",
-    "email": "yatikarn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4527",
+    "email": "yatikarn@gistda.or.th"
   },
   {
-    "name": "นายณัฐดนัย พันธุ์สิน  (บูม)",
+    "name": "นายณัฐดนัย พันธุ์สิน (บูม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "097 2517836",
-    "email": "natdanai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "natdanai@gistda.or.th"
   },
   {
     "name": "นายบุญยะสิทธิ์ ขอบคุณ (โบ๊ต)",
     "position": "วิศวกรชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "099 617 0176",
-    "email": "boonyasith@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "boonyasith@gistda.or.th"
   },
   {
     "name": "น.ส. วินิตา เขตตะ (ตูน)",
     "position": "วิศวกร",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "063 446 5058",
-    "email": "vinitar@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "vinitar@gistda.or.th"
   },
   {
     "name": "นายธีรยุทธ พยายาม (ยุทธ)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "081 492 9256",
-    "email": "teerayut@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4586",
+    "email": "teerayut@gistda.or.th"
   },
   {
     "name": "นายสิริภูมิ สุวรรณมณี (ภูมิ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวพนิดา หวังสกุล (ฝ้าย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายกิตติศัพท์ บุญทวี (เก้า)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายภัทร โกศลวดี (ภัทร)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวสุชญา มาโนษยวงศ์ (แท๊บ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายจิรวัฒน์ ภักดิ์วาปี (โฟล์ค)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวศศินา ปันจักรคำ (นุ๊ก)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวพิมรัก รุ่งเรือง (พลอย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวอรปรียา ศิริแพทย์ (ถุงแป้ง)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวอทิตยา สกุลมั่งมี (ฟีล์ม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวรสสุคนธ์ ทัศสาคร (อุ้ม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายกฤษณะ ทัศนามล (ณะ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการภัยธรรมชาติ (Natural Disaster Management Division) - ฝจภ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายคติวิช กันธา  (วิช)",
+    "name": "นายคติวิช กันธา (วิช)",
     "position": "หัวหน้าฝ่าย",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "081 847 9704",
-    "email": "kativich@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4414",
+    "email": "kativich@gistda.or.th"
   },
   {
     "name": "นายวัชระ เกษเดช (เอ็กซ์)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "084 062 0122",
-    "email": "watchara@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4533",
+    "email": "watchara@gistda.or.th"
   },
   {
     "name": "นายณัทธร แก้วภู่ (นัท)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "086 272 4220",
-    "email": "nuttorn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4533",
+    "email": "nuttorn@gistda.or.th"
   },
   {
     "name": "นายไกรรพ พงศ์พิบูลเกียรติ (ดิว)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "083 049 3248",
-    "email": "kairop@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4538",
+    "email": "kairop@gistda.or.th"
   },
   {
     "name": "นางภัทรภร แสงระวี (จี่)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "061 7675666",
-    "email": "phatporn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4539",
+    "email": "phatporn@gistda.or.th"
   },
   {
     "name": "นายอภิสิทธิ์ กองพรหม (สิทธิ์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "089 977 6537",
-    "email": "nsapisit@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4538",
+    "email": "nsapisit@gistda.or.th"
   },
   {
     "name": "นายปฏิเวธ เฉลิมพงษ์ (จ๊ะเอ๋)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "089 176 2142",
-    "email": "patiwet@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "patiwet@gistda.or.th"
   },
   {
     "name": "นายธนะพัฒน์ ธนรัฐเกียรติกุล (เจษ)",
     "position": "วิศวกร",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "061 419 9666",
-    "email": "tanapat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "tanapat@gistda.or.th"
   },
   {
     "name": "นายประเมศ แก้วมีศรี (ป้อง)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "pramet.kae@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "pramet.kae@gistda.or.th"
   },
   {
     "name": "นายศราวุธ พูลสวัสดิ์ (บ่าว)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายเกรียงกฤษ ช่างเหล็ก (ลิฟ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวสุธางศุ์รัตน์ บุญเกิด (เอมมี่)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายเตชทัต อุ้ยกิ้ม (เอก)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวจริยา ขาวสม (อุ้ม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวชณิชา ยอดโสภา (กิ๊ฟ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวศิริวรรณ จันทรศิริ (ศิ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวธารารัตน์ บุญฤทธิการ (โฟกัส)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายฮาริน โต๊ะหลี (ดุล)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายพยัคฆภูมิ วิสัย (ฟีฟ่า)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวพิชญ์สุกานต์ เอี่ยมยัง (จอย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวมาลัยวรรณ ทองเสริม (มิ้ง)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวธัญลักษณ์ กันหา  (แหม่ม)",
+    "name": "นางสาวธัญลักษณ์ กันหา (แหม่ม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายจักรพงษ์ ศรีสุวรรณ์  (โจ)",
+    "name": "นายจักรพงษ์ ศรีสุวรรณ์ (โจ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวปทุมรัตนา สุขสันต์หรรษา  (แก้ว)",
+    "name": "นางสาวปทุมรัตนา สุขสันต์หรรษา (แก้ว)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวนุชนารถ กิวัฒนา  (น้ำผึ้ง)",
+    "name": "นางสาวนุชนารถ กิวัฒนา (น้ำผึ้ง)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "ว่าที่ ร.ต. หญิงจุฑาภรณ์ อินสว่าง  (น้ำ)",
+    "name": "ว่าที่ ร.ต. หญิงจุฑาภรณ์ อินสว่าง (น้ำ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาววารุณี อังคะคำมูล  (เบียร์)",
+    "name": "นางสาววารุณี อังคะคำมูล (เบียร์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวอลิษา เสมานารถ  (บี)",
+    "name": "นางสาวอลิษา เสมานารถ (บี)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวมลฤดี ต๊ะคิงษา  (เฟิน)",
+    "name": "นางสาวมลฤดี ต๊ะคิงษา (เฟิน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาววัชราพร อู่เงิน  (นิ)",
+    "name": "นางสาววัชราพร อู่เงิน (นิ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวสิริมาตา รู้ทำนอง  (มาตา)",
+    "name": "นางสาวสิริมาตา รู้ทำนอง (มาตา)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวบุษบา แก้วสาลี  (ช็อก)",
+    "name": "นางสาวบุษบา แก้วสาลี (ช็อก)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายภูมิชาย ม้าวค้อม  (ภู)",
+    "name": "นายภูมิชาย ม้าวค้อม (ภู)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายปวรปรัชญ์ แสงสด  (ปูน)",
+    "name": "นายปวรปรัชญ์ แสงสด (ปูน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายภูวนาถ พิศพานต์  (นิค)",
+    "name": "นายภูวนาถ พิศพานต์ (นิค)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายนนทวัฒน์ บางชวด  (นน)",
+    "name": "นายนนทวัฒน์ บางชวด (นน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวพัชรินทร์ เมธีอภิรักษ์  (น้ำ)",
+    "name": "นางสาวพัชรินทร์ เมธีอภิรักษ์ (น้ำ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวศิริวรรณ รื่นรมย์  (โย)",
+    "name": "นางสาวศิริวรรณ รื่นรมย์ (โย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวปิยะพร สระศรีชล (ป่าน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวสุณิสา กลายเจริญ  (กีต้าร์)",
+    "name": "นางสาวสุณิสา กลายเจริญ (กีต้าร์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวบูรณี น้อยเพ็ง  (บู)",
+    "name": "นางสาวบูรณี น้อยเพ็ง (บู)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวณัฐลิกา วังอิ่นคำ  (เฟิร์น)",
+    "name": "นางสาวณัฐลิกา วังอิ่นคำ (เฟิร์น)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวนารากร มุ่งจูงกลาง  (กันย์)",
+    "name": "นางสาวนารากร มุ่งจูงกลาง (กันย์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายภูมิชาติ ม้าวค้อม  (ภูมิ)",
+    "name": "นายภูมิชาติ ม้าวค้อม (ภูมิ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายสุรยุทธ พิทักษ์มงคล  (โน้ต)",
+    "name": "นายสุรยุทธ พิทักษ์มงคล (โน้ต)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายคุณานนต์ เป้าทอง  (บาส)",
+    "name": "นายคุณานนต์ เป้าทอง (บาส)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายทัพไท ชุมเรียง  (โท)",
+    "name": "นายทัพไท ชุมเรียง (โท)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวชุติญา กองเพชร  (ดรีม)",
+    "name": "นางสาวชุติญา กองเพชร (ดรีม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายรอม ชื่นตระกูล  (ไม้)",
+    "name": "นายรอม ชื่นตระกูล (ไม้)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายชัยวัฒน์ กล้าแข็ง  (นุ๊ก)",
+    "name": "นายชัยวัฒน์ กล้าแข็ง (นุ๊ก)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวอัจฉราวรรณ ศุภกา  (เกษ)",
+    "name": "นางสาวอัจฉราวรรณ ศุภกา (เกษ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวทักษวีร์ ช่วยชม  (มุก)",
+    "name": "นางสาวทักษวีร์ ช่วยชม (มุก)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวภัทริกา พรมดี  (มายด์)",
+    "name": "นางสาวภัทริกา พรมดี (มายด์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวศรีวรรณ แก้วดอนรี  (แนน)",
+    "name": "นางสาวศรีวรรณ แก้วดอนรี (แนน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายทรัพยากรธรรมชาติและสิ่งแวดล้อม (Natural Resources and Environment Division) - ฝทส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายภานุ เนื่องจำนงค์ (นุ)",
     "position": "หัวหน้าฝ่าย",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "089 936 1250",
-    "email": "panu.n@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "panu.n@gistda.or.th"
   },
   {
     "name": "นายเอกราช ปรีชาชน (ตาล)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "089 108 2518",
-    "email": "ekkarat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "ekkarat@gistda.or.th"
   },
   {
     "name": "นางมิ่งขวัญ กันธา (ขวัญ)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "081 820 7172",
-    "email": "mingkwan@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "mingkwan@gistda.or.th"
   },
   {
     "name": "นายธนากร สงวนตระกูล (ยอด)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "085 906 6699",
-    "email": "thanakon@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanakon@gistda.or.th"
   },
   {
     "name": "น.ส.กาญจนา เกิดกุรัง (อ้อ)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "065 676 2542",
-    "email": "kanjana@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kanjana@gistda.or.th"
   },
   {
     "name": "น.ส.อนุสรา มิตรกัลยา (หนิง)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "089 928 9709",
-    "email": "anootsara@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "anootsara@gistda.or.th"
   },
   {
     "name": "นางพอฤทัย เทียนไทย (แป๋ม)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "084 788 8000",
-    "email": "porutai@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "porutai@gistda.or.th"
   },
   {
     "name": "น.ส.ประภาพร ภาชีรัตน์ (บุ๋ม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "089 410 3894",
-    "email": "prapaporn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "prapaporn@gistda.or.th"
   },
   {
     "name": "นายฤกษ์ชัย นธีนาม (ฤกษ์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "081 843 8062",
-    "email": "rerkchai.nat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "rerkchai.nat@gistda.or.th"
   },
   {
     "name": "น.ส.เมธาวี ศรีสวัสดิ์ (จ๋า)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "095 045 6645",
-    "email": "matawee@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "matawee@gistda.or.th"
   },
   {
     "name": "น.ส.ชมภูนุช ฉายาเวช (นุช)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "chompunut.cha@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "chompunut.cha@gistda.or.th"
   },
   {
     "name": "นางสาวอุษาวรรณ อุปโคตร (ต๊อบแต๊บ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวนฤภร เทพอยู่ (มายด์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวศศิวิมล เกตุศรี (แต้ว)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวณัฐณิชา พันธุ์สิงห์ (นัทนิ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวธัญญาลักษณ์ ขันจินา (ชมพู่)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวภูไพลิน เศตะพราหมณ์ (ภู)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายกิตติชาติ พึ่งรูป (เชลล์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวณัฏฐา อันพาพรม (นัท)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายศักรินทร์ งามนัก (ต้อ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายวิศรุตต์ ขวัญสิริดำรง (มิว)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายไกรวี อ่อนล้อม (ซัน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวธีร์สุดา จันทร์เทพา (อิงฟ้า)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวปรียาภรณ์ ศรีลาศักดิ์ (ปุ้ย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
+  },
+  {
+    "name": "นางสาวกาญจนศิริ ปานอุไร",
+    "position": "",
+    "section": "12. สปภ.",
+    "division": "ฝ่ายจัดการการเกษตร (Agricultural Management Division) - ฝกษ.",
+    "gender": "F",
+    "mobile": "",
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวพีระดา เต๋จ๊ะนัง (บริม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวพนิดา อินทมาตร์ (แนน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวธนิดา นันทคีรี (โบ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวธิชานันท์ ล่ามกิจจา (เฟรน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายสิรภพ ขุระจี (เอ็กซ์)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวศศิชา มุมอ่อน (มิน)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายจิณณวัตร์ ทัพบำรุง (จ๊อบ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายยุทธภูมิ เขียวโม (ยิว)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "69029 / โครงการยกระดับการผลิตสินค้าเกษตรที่ใช้เทคโนโลยีสมัยใหม่/อัจฉริยะ ด้วยนวัตกรรมภูมิสารสนเทศแบบมี ส่วนร่วมกับชุมชน (SGi - Farm)",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.ฌานิกา สุขวัฒนวิจิตร (จอย)",
     "position": "หัวหน้าฝ่าย",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "098 249 6187",
-    "email": "chanika@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "chanika@gistda.or.th"
   },
   {
     "name": "นายวรวิทย์ อัคนิพัชร (วิทย์)",
     "position": "นักภูมิสารสนเทศชำนาญการพิเศษ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "086 970 4893",
-    "email": "worawit@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "worawit@gistda.or.th"
   },
   {
     "name": "น.ส.จิรัติวัล เครือศิลป์ (อิ๊ง)",
     "position": "นักภูมิสารสนเทศชำนาญการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "094 350 5013",
-    "email": "jirati@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "jirati@gistda.or.th"
   },
   {
     "name": "นายกุลพัชร หล้าปาวงศ์ (กอน)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "087 569 9782",
-    "email": "kulapach@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "kulapach@gistda.or.th"
   },
   {
     "name": "นายธนบดี สกุลอรุณเพชร (ทอย)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "093 580 8093",
-    "email": "thanabordee.sak@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanabordee.sak@gistda.or.th"
   },
   {
     "name": "น.ส.ณัฐธิญา โคระวัตร (เบล)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "nattiya.kor@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "nattiya.kor@gistda.or.th"
   },
   {
     "name": "น.ส.ธนตรากรณ์ ตราช่าง (เฟิร์น)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "086 090 3666",
-    "email": "thanatrakorn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thanatrakorn@gistda.or.th"
   },
   {
     "name": "น.ส.ปวันรัตน์ แสงสมสวัสดิ์ (แหม่ม)",
     "position": "เจ้าหน้าที่ประสานงานวิชาการ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "085 146 4987",
-    "email": "pavanrat@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "pavanrat@gistda.or.th"
   },
   {
     "name": "น.ส.อภิชญา ธานีรัตน์",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวอโณทัย ชัยคำภา (ตันหยง)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวอมรรัตน์ คงกระจ่าง (ส้มโอ)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายนภัสภรณ์ ปัญญา (บูมบีม)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวปิณฑิรา โปรยกลาง (อะตอม)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายกฤตเมธ แว่นศรีทอง (ป๊อป)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวสิรีธร ศรีจิรารัตน์ (น้ำฟ้า)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายกฤษฎา ชมภูพาน (อ๊อฟ)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวมีนา พลีบัตร (มีนา)",
     "position": "นักพัฒนานวัตกรรม",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวสิริพัฒน์ สานเพ็ง (ผักบุ้ง)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายพัทธดนย์ คนงาน (มาร์ค)",
     "position": "นักภููมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "ฝ่ายความมั่นคงทางสังคม (Social Stability Division) - ฝคส.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวนิตยา ยั่งยืน (นิต)",
     "position": "นักภูมิสารสนเทศ",
     "section": "12. สปภ.",
+    "division": "69077 / โครงการ นวัตกรรมด้านเทคโนโลยีภูมิสารสนเทศแสดงการจัดกลุ่มและคาดคะเนการลุกลามของไฟป่า จากข้อมูลจุดความร้อน (Hotspot) ในประเทศไทย (กองทุนวิจัย วช.) กันเหลื่อม",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.อัฉราพร ธรรมชาติ (บี)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "12. สปภ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "061 593 5474",
-    "email": "acharaporn@gistda.or.th",
-    "is_head": false
+    "desk": "02 561 4227",
+    "email": "acharaporn@gistda.or.th"
   },
   {
     "name": "นายประเสริฐ สถะบดี (อ๊อด)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "12. สปภ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "M",
     "mobile": "081 347 3587",
-    "email": "prasert@gistda.or.th",
-    "is_head": false
+    "desk": "02 561 4227",
+    "email": "prasert@gistda.or.th"
   },
   {
-    "name": "นางสาวศรัณย์ภัทร สุสิทธิมงคล  (มุก)",
+    "name": "นางสาวศรัณย์ภัทร สุสิทธิมงคล (มุก)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "12. สปภ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางสาวภัณฑิรา นิติโยธิน  (มุก)",
+    "name": "นางสาวภัณฑิรา นิติโยธิน (มุก)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "12. สปภ.",
+    "division": "งานบริหารทั่วไป (General Administration Section) - งบท.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางพนิดา  อุ่นคำ (ดา)",
+    "name": "นางพนิดา อุ่นคำ (ดา)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "13. สจก.",
+    "division": "สำนักจัดการองค์กรส่วนกลาง - สจก. (Administration Office)",
+    "gender": "F",
     "mobile": "081 837 0012",
-    "email": "panida@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4420",
+    "email": "panida@gistda.or.th"
   },
   {
-    "name": "น.ส.วิไลพร  แดงขำ (หนู)",
+    "name": "น.ส.วิไลพร แดงขำ (หนู)",
     "position": "หัวหน้าฝ่าย",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "F",
     "mobile": "091 819 4486",
-    "email": "wilaiporn@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4422",
+    "email": "wilaiporn@gistda.or.th"
   },
   {
-    "name": "นายสุรศักดิ์  ศิริรัตน์ (อ๋อง)",
+    "name": "นายสุรศักดิ์ ศิริรัตน์ (อ๋อง)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการพิเศษ",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "089 036 8992",
-    "email": "surasak.sir@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4481",
+    "email": "surasak.sir@gistda.or.th"
   },
   {
-    "name": "น.ส.สุภาวดี  ห่วงมี (สุ)",
+    "name": "น.ส.สุภาวดี ห่วงมี (สุ)",
     "position": "เจ้าหน้าที่พัสดุ",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "F",
     "mobile": "092 257 4752",
-    "email": "supawadeeh@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4479",
+    "email": "supawadeeh@gistda.or.th"
   },
   {
-    "name": "นางขวัญประภา  ปลั่งสอน (ขวัญ)",
+    "name": "นางขวัญประภา ปลั่งสอน (ขวัญ)",
     "position": "เจ้าหน้าที่พัสดุ",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "F",
     "mobile": "081 306 4525",
-    "email": "kwanprapha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4582",
+    "email": "kwanprapha@gistda.or.th"
   },
   {
-    "name": "น.ส. เพ็ญนภา  เช้ารุ่งโรจน์ (หญิง)",
+    "name": "น.ส. เพ็ญนภา เช้ารุ่งโรจน์ (หญิง)",
     "position": "เจ้าหน้าที่พัสดุ",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "F",
     "mobile": "086 003 9950",
-    "email": "phennapha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4663",
+    "email": "phennapha@gistda.or.th"
   },
   {
-    "name": "น.ส. ชุติมา  แก้วสุโข (มีนา)",
+    "name": "น.ส. ชุติมา แก้วสุโข (มีนา)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "F",
     "mobile": "086 356 1949",
-    "email": "chutima@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4921",
+    "email": "chutima@gistda.or.th"
   },
   {
-    "name": "นายดุสิต  บัวเทศ (ปิง)",
+    "name": "นายดุสิต บัวเทศ (ปิง)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "092 419 7885",
-    "email": "dusit@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4588",
+    "email": "dusit@gistda.or.th"
   },
   {
-    "name": "นายสุชาติ  ชวนชอบ (ชาติ)",
+    "name": "นายสุชาติ ชวนชอบ (ชาติ)",
     "position": "พนักงานเทคนิค",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "087 498 2385",
-    "email": "suchat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4529",
+    "email": "suchat@gistda.or.th"
   },
   {
-    "name": "นายสุรสิทธิ์  ศรีนาม  (บอมพ์)",
+    "name": "นายสุรสิทธิ์ ศรีนาม (บอมพ์)",
     "position": "พนักงานเทคนิค",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "098 280 2647",
-    "email": "surasit.sri@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4529",
+    "email": "surasit.sri@gistda.or.th"
   },
   {
-    "name": "นายสำภาส  เชาว์วันแล่น (ต้น)",
+    "name": "นายสำภาส เชาว์วันแล่น (ต้น)",
     "position": "พนักงานธุรการ",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "094 562 4477",
-    "email": "sompart@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4412",
+    "email": "sompart@gistda.or.th"
   },
   {
     "name": "นายอโนทัย สว่างวงศ์ (ไปร์ท)",
     "position": "เจ้าหน้าที่พัสดุ (ลูกจ้าง สทอภ.)",
     "section": "13. สจก.",
-    "mobile": "",
-    "email": "anotai.saw@gistda.or.th",
-    "is_head": false
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
+    "mobile": "02 141 4663",
+    "desk": "",
+    "email": "anotai.saw@gistda.or.th"
   },
   {
     "name": "นายพีรพัฒน์ ภิญโญ (พัฒน์)",
     "position": "เจ้าหน้าที่พัสดุ (ลูกจ้างโครงการ)",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายฤทธานุภาพ ภิเศก (ทิว)",
     "position": "เจ้าหน้าที่พัสดุ (จ้างเหมา)",
     "section": "13. สจก.",
+    "division": "ฝ่ายพัสดุและโครงสร้างพื้นฐาน (Procurement and Infrastructure Division) - ฝพด.-1",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางวลัลญ์ชยา  สุจริตจันทร์  (เดียร์)",
+    "name": "นางวลัลญ์ชยา สุจริตจันทร์ (เดียร์)",
     "position": "หัวหน้าฝ่าย",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "064 949 3547",
-    "email": "warunchaya@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4477",
+    "email": "warunchaya@gistda.or.th"
   },
   {
-    "name": "นางอรุณี  สังข์ทอง  (แอร์)",
+    "name": "นางอรุณี สังข์ทอง (แอร์)",
     "position": "เจ้าหน้าที่คลังชำนาญการ",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "081 910 4494",
-    "email": "arunee_a@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4483",
+    "email": "arunee_a@gistda.or.th"
   },
   {
-    "name": "น.ส. มลณภัสร์  ศรีศิริเบญจกุล  (มล)",
+    "name": "น.ส. มลณภัสร์ ศรีศิริเบญจกุล (มล)",
     "position": "เจ้าหน้าที่คลังชำนาญการ",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "081 359 5437",
-    "email": "molnapat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4471",
+    "email": "molnapat@gistda.or.th"
   },
   {
-    "name": "นางรัตนา  กองพรหม  (โอ๋)",
+    "name": "นางรัตนา กองพรหม (โอ๋)",
     "position": "เจ้าหน้าที่คลังชำนาญการ",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "086 426 1698",
-    "email": "rattana@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4467",
+    "email": "rattana@gistda.or.th"
   },
   {
-    "name": "น.ส. สุคนธา  โตเพราะญาติ  (จอย)",
+    "name": "น.ส. สุคนธา โตเพราะญาติ (จอย)",
     "position": "เจ้าหน้าที่การคลัง",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "081 267 7163",
-    "email": "sukontha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4482",
+    "email": "sukontha@gistda.or.th"
   },
   {
-    "name": "น.ส.อรทัย พุดสง  (ไก่)",
+    "name": "น.ส.อรทัย พุดสง (ไก่)",
     "position": "เจ้าหน้าที่การคลัง",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "086 453 5914",
-    "email": "orathai@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4915",
+    "email": "orathai@gistda.or.th"
   },
   {
-    "name": "น.ส.อัญชลี  ปานหลุมข้าว  (อัญ)",
+    "name": "น.ส.อัญชลี ปานหลุมข้าว (อัญ)",
     "position": "เจ้าหน้าที่การคลัง",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "086 781 3270",
-    "email": "unchalee@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4658",
+    "email": "unchalee@gistda.or.th"
   },
   {
-    "name": "น.ส.รุจินันท์  ปานอริยะนันท์ (ตั๊ก)",
+    "name": "น.ส.รุจินันท์ ปานอริยะนันท์ (ตั๊ก)",
     "position": "เจ้าหน้าที่การคลัง",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "092 259 1197",
-    "email": "rujinun@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4474",
+    "email": "rujinun@gistda.or.th"
   },
   {
-    "name": "น.ส.พัชราวรรณ  แก้วมณี  (ดิว)",
+    "name": "น.ส.พัชราวรรณ แก้วมณี (ดิว)",
     "position": "เจ้าหน้าที่การคลัง",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "095 896 2359",
-    "email": "patcharawan@gistda.or.th",
-    "is_head": false
+    "desk": "02-141 4467",
+    "email": "patcharawan@gistda.or.th"
   },
   {
-    "name": "น.ส.อรจิรา  ศรีสรินทร์ (ติ๊บ)",
+    "name": "น.ส.อรจิรา ศรีสรินทร์ (ติ๊บ)",
     "position": "เจ้าหน้าที่การคลัง",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "082 339 9082",
-    "email": "onjira.sri@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4458",
+    "email": "onjira.sri@gistda.or.th"
   },
   {
-    "name": "น.ส.ธรรศณพร  เภสัชชา (มิกกี้)",
-    "position": "เจ้าหน้าที่การคลัง  (ลูกจ้าง สทอภ.)",
+    "name": "น.ส.ธรรศณพร เภสัชชา (มิกกี้)",
+    "position": "เจ้าหน้าที่การคลัง (ลูกจ้าง สทอภ.)",
     "section": "13. สจก.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-1",
+    "gender": "F",
     "mobile": "061 136 2193",
-    "email": "thassanaporn.phe@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "thassanaporn.phe@gistda.or.th"
   },
   {
     "name": "นายภัทราวุฒิ ภู่ทอง (เอ็ม)",
     "position": "หัวหน้าฝ่าย",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "",
-    "email": "pattrawuth@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "pattrawuth@gistda.or.th"
   },
   {
     "name": "ว่าที่ร้อยตรี ปฐมพงศ์ เวชโพธิ์ (โอม)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการพิเศษ",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "087 111 9918",
-    "email": "patompong@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4522",
+    "email": "patompong@gistda.or.th"
   },
   {
     "name": "น.ส.ทิพารัตน์ วงศ์ประคอง (แอม)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการ",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "F",
     "mobile": "081 255 9047",
-    "email": "tiparatw@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4516",
+    "email": "tiparatw@gistda.or.th"
   },
   {
     "name": "นายธชชา สาธร (พัตเตอร์)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศ",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "090 143 4273",
-    "email": "thachacha@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4519",
+    "email": "thachacha@gistda.or.th"
   },
   {
-    "name": "นายศุภชาติ ภู่มณี  (เอก)",
+    "name": "นายศุภชาติ ภู่มณี (เอก)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศ",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.น่านฟ้า แสงนคร (ฟ้า)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศ (ลูกจ้าง สทอภ.)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "F",
     "mobile": "095 551 0403",
-    "email": "nanfa.san@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4522",
+    "email": "nanfa.san@gistda.or.th"
   },
   {
-    "name": "นายพีรพล  กุลเมือง  (อาร์ม)",
+    "name": "นายพีรพล กุลเมือง (อาร์ม)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศ (ลูกจ้าง สทอภ.)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายณัฐศักดิ์  สิทธิสุข (ณัฐ)",
+    "name": "นายณัฐศักดิ์ สิทธิสุข (ณัฐ)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้าง สทอภ.)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "091 551 2315",
-    "email": "nutthasak@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4613",
+    "email": "nutthasak@gistda.or.th"
   },
   {
     "name": "นางสาวนพรัตน์ เพียรรัตน์พิมล (โบว์)",
     "position": "จนท.บริหารโครงการและสัญญา (จ้างเหมา)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายธัชกฤช รัชตบัญชาสุข",
     "position": "จนท.ดูแลระบบ Data Center (จ้างเหมา)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นางสาวพิชามญชุ์ จงสุขกลาง",
     "position": "จนท.ดูแลระบบ Back Office (จ้างเหมา)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายโยธวาทิต วรรณสา",
     "position": "จนท.พัฒนาระบบ (จ้างเหมา)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "นายยุทธการ ชื่นกลิ่น (เฟิร์ส)",
     "position": "จนท. IT Support (จ้างเหมา)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "062 671 2197",
-    "email": "yutthakan.chu@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "yutthakan.chu@gistda.or.th"
   },
   {
     "name": "นายทัศนนท์ น้อยสุวรรณา",
     "position": "จนท.บริษัท AIT (ปฏิบัติงานด้านเครือข่าย)",
     "section": "13. สจก.",
+    "division": "ฝ่ายบริหารเทคโนโลยีดิจิทัล (Organization Technology Management Division) - ฝทด.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นายจักรกฤษณ์  ดีแท้ (มีน)",
+    "name": "นายจักรกฤษณ์ ดีแท้ (มีน)",
     "position": "หัวหน้าฝ่าย",
     "section": "13. สจก.",
+    "division": "ฝ่ายกฎหมายและสัญญา (Legal and Contract Division) - ฝกส.",
+    "gender": "M",
     "mobile": "088 930 3617",
-    "email": "jakkrit@gistda.or.th",
-    "is_head": true
+    "desk": "02 141 4476",
+    "email": "jakkrit@gistda.or.th"
   },
   {
-    "name": "นายณราษิณพงษ์  อกนิษฐ์กุล (แชมป์)",
+    "name": "นายณราษิณพงษ์ อกนิษฐ์กุล (แชมป์)",
     "position": "นิติกรชำนาญการพิเศษ",
     "section": "13. สจก.",
+    "division": "ฝ่ายกฎหมายและสัญญา (Legal and Contract Division) - ฝกส.",
+    "gender": "M",
     "mobile": "086 392 8989",
-    "email": "narasinphong@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4464",
+    "email": "narasinphong@gistda.or.th"
   },
   {
-    "name": "น.ส.พิชามญชุ์  สินบริสุทธิ์ (แพร)",
+    "name": "น.ส.พิชามญชุ์ สินบริสุทธิ์ (แพร)",
     "position": "นิติกร",
     "section": "13. สจก.",
+    "division": "ฝ่ายกฎหมายและสัญญา (Legal and Contract Division) - ฝกส.",
+    "gender": "F",
     "mobile": "083 952 7638",
-    "email": "phichamon.sin@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4425",
+    "email": "phichamon.sin@gistda.or.th"
   },
   {
-    "name": "นายสุรสิงห์  อิฐรักษา  (สิงห์)",
+    "name": "นายสุรสิงห์ อิฐรักษา (สิงห์)",
     "position": "นิติกร",
     "section": "13. สจก.",
+    "division": "ฝ่ายกฎหมายและสัญญา (Legal and Contract Division) - ฝกส.",
+    "gender": "M",
     "mobile": "083 491 1861",
-    "email": "surasing@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4473",
+    "email": "surasing@gistda.or.th"
   },
   {
-    "name": "นายวิชัย รัตนประเสริฐ  (ไมค์)",
+    "name": "นายวิชัย รัตนประเสริฐ (ไมค์)",
     "position": "นิติกร",
     "section": "13. สจก.",
+    "division": "ฝ่ายกฎหมายและสัญญา (Legal and Contract Division) - ฝกส.",
+    "gender": "M",
     "mobile": "080 287 9535",
-    "email": "vichai.rat@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4475",
+    "email": "vichai.rat@gistda.or.th"
   },
   {
-    "name": "นางสุรางค์  สิงห์อยู่  (เล็ก)",
+    "name": "นางสุรางค์ สิงห์อยู่ (เล็ก)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "13. สจก.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-1",
+    "gender": "F",
     "mobile": "086 757 4775",
-    "email": "surang@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4468",
+    "email": "surang@gistda.or.th"
   },
   {
-    "name": "นางธนาภรณ์  เทพชุลีพรศิลป์  (จอย)",
+    "name": "นางธนาภรณ์ เทพชุลีพรศิลป์ (จอย)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "13. สจก.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-1",
+    "gender": "F",
     "mobile": "095 579 6363",
-    "email": "thanaporn@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4466",
+    "email": "thanaporn@gistda.or.th"
   },
   {
     "name": "น.ส. วรรณวีร์ ศิลโรจน์ (หนุ่ย)",
     "position": "ผู้อำนวยการสำนัก",
     "section": "14. สจอ.",
+    "division": "สำนักจัดการอุทยานรังสรรค์นวัตกรรมอวกาศ - สจอ. (Office of Space Krenovation Park Administration)",
+    "gender": "F",
     "mobile": "086 414 4598",
-    "email": "wanwee@gistda.or.th",
-    "is_head": true
+    "desk": "033 046 325 หรือเลขภายใน 3012",
+    "email": "wanwee@gistda.or.th"
   },
   {
-    "name": "นายประวิทย์  เฉิดโฉม (อ้น)",
+    "name": "นายประวิทย์ เฉิดโฉม (อ้น)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการพิเศษ / ผช.ผอ.สจอ.",
     "section": "14. สจอ.",
+    "division": "สำนักจัดการอุทยานรังสรรค์นวัตกรรมอวกาศ - สจอ. (Office of Space Krenovation Park Administration)",
+    "gender": "M",
     "mobile": "084 765 7148",
-    "email": "prawit@gistda.or.th",
-    "is_head": true
+    "desk": "033 046 300 ต่อ 2009",
+    "email": "prawit@gistda.or.th"
   },
   {
     "name": "นายธนะพัฒน์ ธนรัฐเกียรติกุล (เจษ)",
     "position": "วิศวกร / ผช.ผอ.สจอ.",
     "section": "14. สจอ.",
+    "division": "สำนักจัดการอุทยานรังสรรค์นวัตกรรมอวกาศ - สจอ. (Office of Space Krenovation Park Administration)",
+    "gender": "M",
     "mobile": "061 419 9666",
-    "email": "tanapat@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "tanapat@gistda.or.th"
   },
   {
-    "name": "นางสุภาณี  บุ้งทอง (อ๋อย)",
+    "name": "นางสุภาณี บุ้งทอง (อ๋อย)",
     "position": "หัวหน้าฝ่าย",
     "section": "14. สจอ.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-2",
+    "gender": "F",
     "mobile": "085 132 7643",
-    "email": "supanee@gistda.or.th",
-    "is_head": true
+    "desk": "033 046 327 หรือเลขภายใน 3015",
+    "email": "supanee@gistda.or.th"
   },
   {
-    "name": "น.ส.พิชุดา  เพ็ชรธนวงศ์ (กิ๊ก)",
+    "name": "น.ส.พิชุดา เพ็ชรธนวงศ์ (กิ๊ก)",
     "position": "เจ้าหน้าที่คลัง",
     "section": "14. สจอ.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-2",
+    "gender": "F",
     "mobile": "096 848 8291",
-    "email": "pichuda@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 326 หรือเลขภายใน 3016",
+    "email": "pichuda@gistda.or.th"
   },
   {
-    "name": "น.ส.น้ำฝน  โค้วมณี (ฝน)",
+    "name": "น.ส.น้ำฝน โค้วมณี (ฝน)",
     "position": "เจ้าหน้าที่คลัง",
     "section": "14. สจอ.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-2",
+    "gender": "F",
     "mobile": "083 084 6007",
-    "email": "namfon@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 326 หรือเลขภายใน 3016",
+    "email": "namfon@gistda.or.th"
   },
   {
-    "name": "นางนวพร  ทองตา (มิว)",
+    "name": "นางนวพร ทองตา (มิว)",
     "position": "เจ้าหน้าที่คลัง",
     "section": "14. สจอ.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-2",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส. พรนภา ภาระจ่า",
     "position": "เจ้าหน้าที่คลัง (ลูกจ้าง สทอภ.)",
     "section": "14. สจอ.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-2",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "น.ส.นวินตา  อธิศวาริน",
+    "name": "น.ส.นวินตา อธิศวาริน",
     "position": "เจ้าหน้าที่คลัง (ลูกจ้าง สทอภ.)",
     "section": "14. สจอ.",
+    "division": "ฝ่ายการคลัง (Finance Division) - ฝกค.-2",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "น.ส.จุฑามาศ  งามเสงี่ยม (เน่)",
+    "name": "น.ส.จุฑามาศ งามเสงี่ยม (เน่)",
     "position": "หัวหน้าฝ่าย",
     "section": "14. สจอ.",
+    "division": "ฝ่ายพัสดุ (Procurement Division) - ฝพด.-2",
+    "gender": "F",
     "mobile": "092 491 2121",
-    "email": "juthamas@gistda.or.th",
-    "is_head": true
+    "desk": "033 046 300 ต่อ 2008",
+    "email": "juthamas@gistda.or.th"
   },
   {
-    "name": "น.ส.ณอาภา  ฉายสุริยะ (อุ๊)",
+    "name": "น.ส.ณอาภา ฉายสุริยะ (อุ๊)",
     "position": "เจ้าหน้าที่พัสดุชำนาญการพิเศษ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายพัสดุ (Procurement Division) - ฝพด.-2",
+    "gender": "F",
     "mobile": "061 716 4564",
-    "email": "nitchraporn@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 300 ต่อ 2007",
+    "email": "nitchraporn@gistda.or.th"
   },
   {
-    "name": "น.ส.พิมพ์รัชพร  จันทรินทร์ (อ้อย)",
+    "name": "น.ส.พิมพ์รัชพร จันทรินทร์ (อ้อย)",
     "position": "เจ้าหน้าที่พัสดุชำนาญการ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายพัสดุ (Procurement Division) - ฝพด.-2",
+    "gender": "F",
     "mobile": "081 801 1442",
-    "email": "kanyanat@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 306",
+    "email": "kanyanat@gistda.or.th"
   },
   {
-    "name": "น.ส.สกลวรรณ  ศรีสุวรรณ (มุก)",
+    "name": "น.ส.สกลวรรณ ศรีสุวรรณ (มุก)",
     "position": "เจ้าหน้าที่พัสดุ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายพัสดุ (Procurement Division) - ฝพด.-2",
+    "gender": "F",
     "mobile": "085 220 8364",
-    "email": "sagonwan@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 300 ต่อ 2036",
+    "email": "sagonwan@gistda.or.th"
   },
   {
-    "name": "น.ส.มลิวรรณ  หล่ายบุญ (วรรณ)",
+    "name": "น.ส.มลิวรรณ หล่ายบุญ (วรรณ)",
     "position": "เจ้าหน้าที่พัสดุ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายพัสดุ (Procurement Division) - ฝพด.-2",
+    "gender": "F",
     "mobile": "081 659 8814",
-    "email": "maliwan@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 300 ต่อ 2036",
+    "email": "maliwan@gistda.or.th"
   },
   {
-    "name": "น.ส.ณัฐฏ์ณภรรค  จันทร์แต่งผล (ฝ้าย)",
+    "name": "น.ส.ณัฐฏ์ณภรรค จันทร์แต่งผล (ฝ้าย)",
     "position": "เจ้าหน้าที่พัสดุ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายพัสดุ (Procurement Division) - ฝพด.-2",
+    "gender": "F",
     "mobile": "098 275 6634",
-    "email": "natnapak@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 301",
+    "email": "natnapak@gistda.or.th"
   },
   {
-    "name": "นายอภิชา  มุสิแก้ว (อุ้ม)",
+    "name": "นายอภิชา มุสิแก้ว (อุ้ม)",
     "position": "หัวหน้าฝ่าย",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "082 999 0877",
-    "email": "apichar@gistda.or.th",
-    "is_head": true
+    "desk": "",
+    "email": "apichar@gistda.or.th"
   },
   {
-    "name": "นายประวิทย์  เฉิดโฉม (อ้น)",
+    "name": "นายประวิทย์ เฉิดโฉม (อ้น)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศชำนาญการพิเศษ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "084 765 7148",
-    "email": "prawit@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 300 ต่อ 2009",
+    "email": "prawit@gistda.or.th"
   },
   {
-    "name": "นายณรงค์  ศรีวิลัย (รงค์)",
+    "name": "นายณรงค์ ศรีวิลัย (รงค์)",
     "position": "เจ้าหน้าที่เทคโนโลยีสารสนเทศ",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "087 109 3446",
-    "email": "narong.siv@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 300 ต่อ 2006",
+    "email": "narong.siv@gistda.or.th"
   },
   {
     "name": "นางสาวจุฑามาศ ปานกลิ่น (ยุ้ย)",
     "position": "เจ้าหน้าที่ยุทธศาสตร์",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "F",
     "mobile": "061 164 5466",
-    "email": "chuthamart@gistda.or.th",
-    "is_head": false
+    "desk": "02 141 4653",
+    "email": "chuthamart@gistda.or.th"
   },
   {
-    "name": "นายธันยากร  วนพานิช (เบ็นซ์)",
+    "name": "นายธันยากร วนพานิช (เบ็นซ์)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "064 406 5965",
-    "email": "tanyakorn@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 318",
+    "email": "tanyakorn@gistda.or.th"
   },
   {
-    "name": "นายนภัทร  รักพินิจ (วิน)",
+    "name": "นายนภัทร รักพินิจ (วิน)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "083 821 4015",
-    "email": "napat.r@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 306",
+    "email": "napat.r@gistda.or.th"
   },
   {
-    "name": "นายบรรยง  นนทภา (ยง)",
+    "name": "นายบรรยง นนทภา (ยง)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "086 536 8397",
-    "email": "bunyong@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 318",
+    "email": "bunyong@gistda.or.th"
   },
   {
     "name": "นายรุ่งโรจน์ สุทธการ",
     "position": "พนักงานเทคนิค (ลูกจ้าง สทอภ.)",
     "section": "14. สจอ.",
+    "division": "ฝ่ายจัดการพื้นที่และโครงสร้างพื้นฐาน (Facilities and Infrastructure Management Division) - ฝจพ.",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
-    "name": "นางภัสรชล  ครสิงห์ (ต้อม)",
+    "name": "นางภัสรชล ครสิงห์ (ต้อม)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ",
     "section": "14. สจอ.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-2",
+    "gender": "F",
     "mobile": "089 811 1704",
-    "email": "phatsarachol@gistda.or.th",
-    "is_head": false
+    "desk": "033 046 325 / 033 046 300",
+    "email": "phatsarachol@gistda.or.th"
   },
   {
     "name": "น.ส.ภัทราภรณ์ พวงมณี (ดาว)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "14. สจอ.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-2",
+    "gender": "F",
     "mobile": "081 886 5414",
-    "email": "pattaraporn@gistda.or.th",
-    "is_head": false
+    "desk": "",
+    "email": "pattaraporn@gistda.or.th"
   },
   {
-    "name": "นายสยาม สุดสวงค์  (ช่วยปฏิบัติงาน ณ ฝจพ./สจอ.)",
+    "name": "นายสยาม สุดสวงค์ (ช่วยปฏิบัติงาน ณ ฝจพ./สจอ.)",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป",
     "section": "14. สจอ.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-2",
+    "gender": "M",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.ภัทรนันท์ แซ่ซิน",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้าง สทอภ.)",
     "section": "14. สจอ.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-2",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   },
   {
     "name": "น.ส.อาธิญา ปัดตาลาโพธิ์",
     "position": "เจ้าหน้าที่จัดการงานทั่วไป (ลูกจ้าง สทอภ.)",
     "section": "14. สจอ.",
+    "division": "งานบริหารทั่วไปสำนักงาน (General Administration Section) - งบส.-2",
+    "gender": "F",
     "mobile": "",
-    "email": "",
-    "is_head": false
+    "desk": "",
+    "email": ""
   }
 ]
