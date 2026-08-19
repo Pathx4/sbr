@@ -88,9 +88,11 @@ function BudgetPage() {
     if (formData.activityType === 'training') {
       const attendees = parseInt(formData.totalAttendees) || 0;
       const staffNames = formData.staffNames || [];
+      const otherStaffNames = formData.otherStaffNames || [];
+      const allStaffNames = [...staffNames, ...otherStaffNames];
       const executiveNames = formData.executiveNames || [];
       const directorNames = formData.directorNames || [];
-      const staff = staffNames.length || parseInt(formData.staffCount) || 0;
+      const staff = allStaffNames.length || parseInt(formData.staffCount) || 0;
       const execs = executiveNames.length;
       const directorsCount = directorNames.length;
       const totalPeople = attendees + staff + execs + directorsCount;
@@ -170,11 +172,11 @@ function BudgetPage() {
 
       // 3. Staff Allowance & Room
       let staffAllowance = 0;
-      staffNames.forEach((name: string) => {
+      allStaffNames.forEach((name: string) => {
         const rate = isGistda ? getGistdaAllowanceRate(name, false) : getGovAllowanceRate(name, false);
         staffAllowance += rate * days;
       });
-      if (staffNames.length === 0 && staff > 0) {
+      if (allStaffNames.length === 0 && staff > 0) {
         const rate = isGistda ? 400 : 240;
         staffAllowance = staff * rate * days;
       }
@@ -377,6 +379,31 @@ function BudgetPage() {
         if (car > 0) { result.breakdown.push({ label: 'ค่าเช่ารถและค่าน้ำมัน', amount: car, detail: 'ตามจ่ายจริง' }); result.totalCost += car; }
         if (ins > 0) { result.breakdown.push({ label: 'ค่าประกันภัยการเดินทาง', amount: ins, detail: 'ตามจ่ายจริง' }); result.totalCost += ins; }
       }
+    }
+
+    // Custom Other Expenses (ค่าใช้จ่ายอื่นๆ: ชื่อรายการ และ จำนวนเงิน)
+    const otherExpAmt = parseFloat(formData.otherExpenseAmount) || 0;
+    if (otherExpAmt > 0) {
+      result.breakdown.push({
+        label: formData.otherExpenseName || 'ค่าใช้จ่ายอื่นๆ',
+        amount: otherExpAmt,
+        detail: 'ตามจ่ายจริง'
+      });
+      result.totalCost += otherExpAmt;
+    }
+
+    if (formData.otherExpenses && formData.otherExpenses.length > 0) {
+      formData.otherExpenses.forEach((item) => {
+        const amt = parseFloat(item.amount) || 0;
+        if (amt > 0) {
+          result.breakdown.push({
+            label: item.name || 'ค่าใช้จ่ายอื่นๆ',
+            amount: amt,
+            detail: 'ตามจ่ายจริง'
+          });
+          result.totalCost += amt;
+        }
+      });
     }
 
     return result;

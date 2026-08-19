@@ -1,5 +1,11 @@
 export type ActivityType = 'training' | 'meeting' | 'field_trip' | '';
 
+export interface CustomExpense {
+  id: string;
+  name: string;
+  amount: string;
+}
+
 export interface BudgetFormData {
   regulation: string;
   activityType: ActivityType;
@@ -20,6 +26,7 @@ export interface BudgetFormData {
   
   staffCount: string;
   staffNames: string[];
+  otherStaffNames: string[]; // List of selected staff from other GISTDA bureaus
   staffRooms: { id: string; person1: string; person2: string }[];
   
   // Accommodation
@@ -52,11 +59,16 @@ export interface BudgetFormData {
   foodReception: boolean;
   foodReceptionDays: number[];
 
-  // New customizable costs
+  // Customizable costs
   speakerForeignFlightFees: string[];
   speakerTaxiFee: string;
   foodOthersAmount: string;
   foodOthersDetails: string;
+
+  // Other Custom Expenses (ค่าใช้จ่ายอื่นๆ)
+  otherExpenseName: string;
+  otherExpenseAmount: string;
+  otherExpenses: CustomExpense[];
 }
 
 export const initialFormData: BudgetFormData = {
@@ -70,6 +82,7 @@ export const initialFormData: BudgetFormData = {
   committeeCount: '',
   staffCount: '',
   staffNames: [],
+  otherStaffNames: [],
   staffRooms: [],
   executiveNames: [],
   directorNames: [],
@@ -100,4 +113,7 @@ export const initialFormData: BudgetFormData = {
   speakerTaxiFee: '',
   foodOthersAmount: '',
   foodOthersDetails: '',
+  otherExpenseName: '',
+  otherExpenseAmount: '',
+  otherExpenses: [],
 };

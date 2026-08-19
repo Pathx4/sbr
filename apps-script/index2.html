@@ -7,7 +7,7 @@
     <title>ระบบรายงานจัดซื้อจัดจ้างสำหรับผู้บริหาร</title>
 
     <!-- Tailwind CSS & Google Fonts & Font Awesome -->
-    <script></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- โหลดแบบอักษร Sarabun (มีหัวกลมมนชัดเจน อ่านง่ายเป็นทางการ) และ Inter สำหรับส่วนของตัวเลข -->
@@ -17,7 +17,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Chart.js -->
-    <script></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
     <script>
         tailwind.config = {
@@ -358,7 +359,8 @@
                                         id="kpiTotalProjects">0</h2>
                                     <span class="text-xs text-slate-400 font-bold">รายการ</span>
                                 </div>
-                                <p class="text-[10px] text-blue-600 font-medium" id="kpiTotalSubText">ทะเบียนพอร์ตสะสม</p>
+                                <p class="text-[10px] text-blue-600 font-medium" id="kpiTotalSubText">ทะเบียนพอร์ตสะสม
+                                </p>
                             </div>
                             <div class="bg-blue-50 p-3 rounded-xl text-blue-600 shadow-inner">
                                 <i class="fa-solid fa-list-check text-xl"></i>
@@ -489,15 +491,19 @@
                                     Registry)
                                 </h3>
                                 <p class="text-xs text-slate-500 font-medium">
-                                    แสดงทะเบียนโครงสร้างคอลัมน์และลำดับงานสอดคล้องตามเป้าหมายผู้บริหาร (กด Ctrl+K เพื่อค้นหา)</p>
+                                    แสดงทะเบียนโครงสร้างคอลัมน์และลำดับงานสอดคล้องตามเป้าหมายผู้บริหาร (กด Ctrl+K
+                                    เพื่อค้นหา)</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 self-start lg:self-center">
                                 <!-- สลับมุมมอง Table / Kanban -->
-                                <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100 mr-1 shadow-2xs">
-                                    <button id="btnViewTable" onclick="switchViewMode('table')" class="px-2.5 py-1.5 text-xs font-bold rounded-md bg-white text-blue-900 shadow-2xs transition-all">
+                                <div
+                                    class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100 mr-1 shadow-2xs">
+                                    <button id="btnViewTable" onclick="switchViewMode('table')"
+                                        class="px-2.5 py-1.5 text-xs font-bold rounded-md bg-white text-blue-900 shadow-2xs transition-all">
                                         <i class="fa-solid fa-table-list mr-1"></i> ตาราง
                                     </button>
-                                    <button id="btnViewKanban" onclick="switchViewMode('kanban')" class="px-2.5 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-900 transition-all">
+                                    <button id="btnViewKanban" onclick="switchViewMode('kanban')"
+                                        class="px-2.5 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-900 transition-all">
                                         <i class="fa-solid fa-table-columns mr-1"></i> กระดาน Kanban
                                     </button>
                                 </div>
@@ -524,14 +530,33 @@
                         </div>
 
                         <!-- แถบปุ่ม Quick Filter Tags ด่วน -->
-                        <div class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center gap-2 text-xs font-bold">
-                            <span class="text-slate-400 font-semibold mr-1 flex items-center gap-1"><i class="fa-solid fa-filter text-blue-500"></i> ตัวกรองด่วน:</span>
-                            <button onclick="setQuickFilter('all')" class="quick-filter-btn px-2.5 py-1 rounded-full border bg-blue-600 text-white border-blue-600 shadow-2xs transition-all" data-filter="all">ทั้งหมด</button>
-                            <button onclick="setQuickFilter('inspecting')" class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50 transition-all" data-filter="inspecting"><i class="fa-solid fa-clock text-indigo-500 mr-1"></i>รอตรวจรับ</button>
-                            <button onclick="setQuickFilter('approved')" class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-violet-700 border-violet-200 hover:bg-violet-50 transition-all" data-filter="approved"><i class="fa-solid fa-file-signature text-violet-500 mr-1"></i>อนุมัติแล้ว</button>
-                            <button onclick="setQuickFilter('ongoing')" class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-amber-700 border-amber-200 hover:bg-amber-50 transition-all" data-filter="ongoing"><i class="fa-solid fa-screwdriver-wrench text-amber-500 mr-1"></i>งานระหว่างทำ</button>
-                            <button onclick="setQuickFilter('ebidding')" class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-blue-700 border-blue-200 hover:bg-blue-50 transition-all" data-filter="ebidding"><i class="fa-solid fa-gavel text-blue-500 mr-1"></i>วิธี e-Bidding</button>
-                            <button onclick="setQuickFilter('paid')" class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 transition-all" data-filter="paid"><i class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>เบิกจ่ายจบงาน</button>
+                        <div
+                            class="px-5 py-2.5 bg-slate-50/70 border-b border-slate-100 flex flex-wrap items-center gap-2 text-xs font-bold">
+                            <span class="text-slate-400 font-semibold mr-1 flex items-center gap-1"><i
+                                    class="fa-solid fa-filter text-blue-500"></i> ตัวกรองด่วน:</span>
+                            <button onclick="setQuickFilter('all')"
+                                class="quick-filter-btn px-2.5 py-1 rounded-full border bg-blue-600 text-white border-blue-600 shadow-2xs transition-all"
+                                data-filter="all">ทั้งหมด</button>
+                            <button onclick="setQuickFilter('inspecting')"
+                                class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50 transition-all"
+                                data-filter="inspecting"><i
+                                    class="fa-solid fa-clock text-indigo-500 mr-1"></i>รอตรวจรับ</button>
+                            <button onclick="setQuickFilter('approved')"
+                                class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-violet-700 border-violet-200 hover:bg-violet-50 transition-all"
+                                data-filter="approved"><i
+                                    class="fa-solid fa-file-signature text-violet-500 mr-1"></i>อนุมัติแล้ว</button>
+                            <button onclick="setQuickFilter('ongoing')"
+                                class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-amber-700 border-amber-200 hover:bg-amber-50 transition-all"
+                                data-filter="ongoing"><i
+                                    class="fa-solid fa-screwdriver-wrench text-amber-500 mr-1"></i>งานระหว่างทำ</button>
+                            <button onclick="setQuickFilter('ebidding')"
+                                class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-blue-700 border-blue-200 hover:bg-blue-50 transition-all"
+                                data-filter="ebidding"><i class="fa-solid fa-gavel text-blue-500 mr-1"></i>วิธี
+                                e-Bidding</button>
+                            <button onclick="setQuickFilter('paid')"
+                                class="quick-filter-btn px-2.5 py-1 rounded-full border bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 transition-all"
+                                data-filter="paid"><i
+                                    class="fa-solid fa-circle-check text-emerald-500 mr-1"></i>เบิกจ่ายจบงาน</button>
                         </div>
 
                         <!-- Responsive Table Container -->
@@ -1847,20 +1872,26 @@
     </script>
 
     <!-- Modal รายละเอียดโครงการเชิงลึก (Executive Project Detail Modal) -->
-    <div id="projectModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all">
+    <div id="projectModal"
+        class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all">
             <!-- Header -->
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 bg-white/90 backdrop-blur-md z-10">
+            <div
+                class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 sticky top-0 bg-white/90 backdrop-blur-md z-10">
                 <div class="flex items-center gap-3">
                     <div class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
                         <i class="fa-solid fa-folder-open text-lg"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] font-bold text-slate-400 block tracking-wider uppercase font-mono" id="modalDocNo">DOC-001</span>
-                        <h3 class="font-heading font-bold text-base text-slate-900 leading-tight" id="modalProjectName">ชื่อโครงการ</h3>
+                        <span class="text-[10px] font-bold text-slate-400 block tracking-wider uppercase font-mono"
+                            id="modalDocNo">DOC-001</span>
+                        <h3 class="font-heading font-bold text-base text-slate-900 leading-tight" id="modalProjectName">
+                            ชื่อโครงการ</h3>
                     </div>
                 </div>
-                <button onclick="closeProjectModal()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                <button onclick="closeProjectModal()"
+                    class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -1870,7 +1901,8 @@
             </div>
             <!-- Footer -->
             <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
-                <button onclick="closeProjectModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                <button onclick="closeProjectModal()"
+                    class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs transition">
                     ปิดหน้าต่าง
                 </button>
             </div>

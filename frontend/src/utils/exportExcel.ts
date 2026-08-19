@@ -241,7 +241,7 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
   // ==========================================
   // ITEM 1: เบี้ยเลี้ยง ผู้บริหารและเจ้าหน้าที่
   // ==========================================
-  const staffNames = formData.staffNames || [];
+  const staffNames = [...(formData.staffNames || []), ...(formData.otherStaffNames || [])];
   const executiveNames = formData.executiveNames || [];
   const directorNames = formData.directorNames || [];
   
@@ -948,6 +948,79 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
       itemTotalRowRefs.push(`J${item6StartRow}`);
     }
   }
+
+  // ==========================================
+  // ITEM 7: ค่าใช้จ่ายอื่นๆ (ระบุชื่อรายการและจำนวนเงิน)
+  // ==========================================
+  const customOtherAmount = parseFloat(formData.otherExpenseAmount) || 0;
+  const customOtherList = formData.otherExpenses || [];
+  const hasCustomOthers = customOtherAmount > 0 || customOtherList.some((e: any) => (parseFloat(e.amount) || 0) > 0);
+
+  if (hasCustomOthers) {
+    const item7StartRow = rIndex;
+    worksheet.getRow(rIndex).height = 22;
+    worksheet.getCell(`A${rIndex}`).value = itemTotalRowRefs.length + 1;
+    worksheet.getCell(`B${rIndex}`).value = 'ค่าใช้จ่ายอื่นๆ';
+    
+    for (let c = 1; c <= 11; c++) {
+      const cell = worksheet.getCell(rIndex, c);
+      applyCellStyle(cell, 16, true, c === 1 ? 'center' : (c === 10 ? 'right' : 'left'));
+      applyBorders(cell);
+    }
+    rIndex++;
+
+    const subtotalRows: number[] = [];
+
+    if (customOtherAmount > 0) {
+      const row = rIndex++;
+      subtotalRows.push(row);
+      worksheet.getRow(row).height = 22;
+      worksheet.getCell(`B${row}`).value = ' - ' + (formData.otherExpenseName || 'ค่าใช้จ่ายอื่นๆ');
+      worksheet.getCell(`C${row}`).value = 'ตามจ่ายจริง';
+      worksheet.getCell(`D${row}`).value = '=';
+      worksheet.getCell(`E${row}`).value = customOtherAmount;
+      worksheet.getCell(`F${row}`).value = 'บาท';
+      worksheet.getCell(`H${row}`).value = customOtherAmount;
+      worksheet.getCell(`I${row}`).value = 'บาท';
+      
+      for (let c = 1; c <= 11; c++) {
+        const cell = worksheet.getCell(row, c);
+        applyCellStyle(cell, 16, false, c === 4 || c === 5 || c === 8 ? (c === 8 ? 'right' : 'center') : 'left');
+        if (c === 5 || c === 8) cell.numFmt = '#,##0.00';
+        applyBorders(cell);
+      }
+    }
+
+    customOtherList.forEach((item: any) => {
+      const amt = parseFloat(item.amount) || 0;
+      if (amt > 0) {
+        const row = rIndex++;
+        subtotalRows.push(row);
+        worksheet.getRow(row).height = 22;
+        worksheet.getCell(`B${row}`).value = ' - ' + (item.name || 'ค่าใช้จ่ายอื่นๆ');
+        worksheet.getCell(`C${row}`).value = 'ตามจ่ายจริง';
+        worksheet.getCell(`D${row}`).value = '=';
+        worksheet.getCell(`E${row}`).value = amt;
+        worksheet.getCell(`F${row}`).value = 'บาท';
+        worksheet.getCell(`H${row}`).value = amt;
+        worksheet.getCell(`I${row}`).value = 'บาท';
+        
+        for (let c = 1; c <= 11; c++) {
+          const cell = worksheet.getCell(row, c);
+          applyCellStyle(cell, 16, false, c === 4 || c === 5 || c === 8 ? (c === 8 ? 'right' : 'center') : 'left');
+          if (c === 5 || c === 8) cell.numFmt = '#,##0.00';
+          applyBorders(cell);
+        }
+      }
+    });
+
+    if (subtotalRows.length > 0) {
+      const sumStr = subtotalRows.map(r => `H${r}`).join('+');
+      worksheet.getCell(`J${item7StartRow}`).value = { formula: sumStr };
+      worksheet.getCell(`J${item7StartRow}`).numFmt = '#,##0.00';
+      itemTotalRowRefs.push(`J${item7StartRow}`);
+    }
+  }
   } else if (formData.activityType === 'meeting' || formData.activityType === 'field_trip') {
   // ==========================================
   // MEETING & FIELD TRIP EXPORT CODE
@@ -1346,6 +1419,79 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
     worksheet.getCell(`J${itemStartRow}`).value = { formula: `H${subtotalRow}` };
     worksheet.getCell(`J${itemStartRow}`).numFmt = '#,##0.00';
     itemTotalRowRefs.push(`J${itemStartRow}`);
+  }
+
+  // ==========================================
+  // CUSTOM OTHER EXPENSES: ค่าใช้จ่ายอื่นๆ (ระบุชื่อรายการและจำนวนเงิน)
+  // ==========================================
+  const customOtherMeetingAmount = parseFloat(formData.otherExpenseAmount) || 0;
+  const customOtherMeetingList = formData.otherExpenses || [];
+  const hasCustomOthersMeeting = customOtherMeetingAmount > 0 || customOtherMeetingList.some((e: any) => (parseFloat(e.amount) || 0) > 0);
+
+  if (hasCustomOthersMeeting) {
+    const itemOtherStartRow = rIndex;
+    worksheet.getRow(rIndex).height = 22;
+    worksheet.getCell(`A${rIndex}`).value = itemTotalRowRefs.length + 1;
+    worksheet.getCell(`B${rIndex}`).value = 'ค่าใช้จ่ายอื่นๆ';
+    
+    for (let c = 1; c <= 11; c++) {
+      const cell = worksheet.getCell(rIndex, c);
+      applyCellStyle(cell, 16, true, c === 1 ? 'center' : (c === 10 ? 'right' : 'left'));
+      applyBorders(cell);
+    }
+    rIndex++;
+
+    const subtotalRows: number[] = [];
+
+    if (customOtherMeetingAmount > 0) {
+      const row = rIndex++;
+      subtotalRows.push(row);
+      worksheet.getRow(row).height = 22;
+      worksheet.getCell(`B${row}`).value = ' - ' + (formData.otherExpenseName || 'ค่าใช้จ่ายอื่นๆ');
+      worksheet.getCell(`C${row}`).value = 'ตามจ่ายจริง';
+      worksheet.getCell(`D${row}`).value = '=';
+      worksheet.getCell(`E${row}`).value = customOtherMeetingAmount;
+      worksheet.getCell(`F${row}`).value = 'บาท';
+      worksheet.getCell(`H${row}`).value = customOtherMeetingAmount;
+      worksheet.getCell(`I${row}`).value = 'บาท';
+      
+      for (let c = 1; c <= 11; c++) {
+        const cell = worksheet.getCell(row, c);
+        applyCellStyle(cell, 16, false, c === 4 || c === 5 || c === 8 ? (c === 8 ? 'right' : 'center') : 'left');
+        if (c === 5 || c === 8) cell.numFmt = '#,##0.00';
+        applyBorders(cell);
+      }
+    }
+
+    customOtherMeetingList.forEach((item: any) => {
+      const amt = parseFloat(item.amount) || 0;
+      if (amt > 0) {
+        const row = rIndex++;
+        subtotalRows.push(row);
+        worksheet.getRow(row).height = 22;
+        worksheet.getCell(`B${row}`).value = ' - ' + (item.name || 'ค่าใช้จ่ายอื่นๆ');
+        worksheet.getCell(`C${row}`).value = 'ตามจ่ายจริง';
+        worksheet.getCell(`D${row}`).value = '=';
+        worksheet.getCell(`E${row}`).value = amt;
+        worksheet.getCell(`F${row}`).value = 'บาท';
+        worksheet.getCell(`H${row}`).value = amt;
+        worksheet.getCell(`I${row}`).value = 'บาท';
+        
+        for (let c = 1; c <= 11; c++) {
+          const cell = worksheet.getCell(row, c);
+          applyCellStyle(cell, 16, false, c === 4 || c === 5 || c === 8 ? (c === 8 ? 'right' : 'center') : 'left');
+          if (c === 5 || c === 8) cell.numFmt = '#,##0.00';
+          applyBorders(cell);
+        }
+      }
+    });
+
+    if (subtotalRows.length > 0) {
+      const sumStr = subtotalRows.map(r => `H${r}`).join('+');
+      worksheet.getCell(`J${itemOtherStartRow}`).value = { formula: sumStr };
+      worksheet.getCell(`J${itemOtherStartRow}`).numFmt = '#,##0.00';
+      itemTotalRowRefs.push(`J${itemOtherStartRow}`);
+    }
   }
 
   }

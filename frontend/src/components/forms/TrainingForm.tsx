@@ -2,9 +2,11 @@ import React from 'react';
 import { Users, FileText, UserCheck, Hotel, UserPlus, Plus, Eraser, RefreshCcw } from 'lucide-react';
 import type { BudgetFormData } from '../../types';
 import { FoodSection } from './FoodSection';
+import { OtherExpensesSection } from './OtherExpensesSection';
 import personnelData from '../../data/personnel.json';
 import staffData from '../../data/staff_sbr.json';
 import directorsData from '../../data/directors.json';
+import contactsData from '../../data/contacts.json';
 
 interface Props {
   formData: BudgetFormData;
@@ -22,49 +24,35 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     }
   };
 
-  const handleExecutiveToggle = (name: string) => {
-    setFormData(prev => {
-      const isSelected = prev.executiveNames.includes(name);
-      if (isSelected) {
-        return { ...prev, executiveNames: prev.executiveNames.filter(n => n !== name) };
-      } else {
-        return { ...prev, executiveNames: [...prev.executiveNames, name] };
-      }
-    });
-  };
-
-  const handleDirectorToggle = (name: string) => {
-    setFormData(prev => {
-      const isSelected = prev.directorNames.includes(name);
-      const newNames = isSelected ? prev.directorNames.filter(n => n !== name) : [...prev.directorNames, name];
-      const newRooms = generateRooms(prev.staffNames, newNames);
-      
-      let doubleRooms = 0;
-      let singleRooms = 0;
-      newRooms.forEach(room => {
-        if (room.person1 && room.person2) doubleRooms++;
-        else if (room.person1 || room.person2) singleRooms++;
-      });
-
+  const getStaffInfo = (name: string) => {
+    const s = staffData.find(x => x.name === name);
+    if (s) return s;
+    const c = contactsData.find(x => x.name === name);
+    if (c) {
       return {
-        ...prev,
-        directorNames: newNames,
-        staffRooms: newRooms,
-        staffDoubleRooms: doubleRooms.toString(),
-        staffSingleRooms: singleRooms.toString()
+        name: c.name,
+        title: c.position || 'เจ้าหน้าที่',
+        gender: (c.name.startsWith('นาย') ? 'M' : 'F') as 'M' | 'F',
+        sheet: c.section
       };
-    });
+    }
+    return {
+      name,
+      title: 'เจ้าหน้าที่',
+      gender: (name.startsWith('นาย') ? 'M' : 'F') as 'M' | 'F'
+    };
   };
 
-  const generateRooms = (names: string[], _dirNames?: string[]) => {
-    const selectedStaff = staffData.filter(s => names.includes(s.name));
+  const generateRooms = (names: string[], otherNames: string[] = [], _dirNames?: string[]) => {
+    const allNames = [...names, ...otherNames];
+    const selectedStaff = allNames.map(name => getStaffInfo(name));
     
     const rooms: { id: string; person1: string; person2: string }[] = [];
     let roomCounter = 1;
 
     // 1. Separate Directors (including selected GISTDA directors + SBR staff directors)
-    const staffDirs = selectedStaff.filter(s => s.title && s.title.includes('ผู้อำนวยการ'));
-    const others = selectedStaff.filter(s => !(s.title && s.title.includes('ผู้อำนวยการ')));
+    const staffDirs = selectedStaff.filter(s => s.title && (s.title.includes('ผู้อำนวยการ') || s.title.includes('ผอ.')));
+    const others = selectedStaff.filter(s => !(s.title && (s.title.includes('ผู้อำนวยการ') || s.title.includes('ผอ.'))));
 
     staffDirs.forEach(d => {
       rooms.push({ id: roomCounter.toString(), person1: d.name, person2: '' });
@@ -97,12 +85,22 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     return rooms;
   };
 
-  const handleStaffToggle = (name: string) => {
+  const handleExecutiveToggle = (name: string) => {
     setFormData(prev => {
-      const isSelected = prev.staffNames.includes(name);
-      const newNames = isSelected ? prev.staffNames.filter(n => n !== name) : [...prev.staffNames, name];
-      
-      const newRooms = generateRooms(newNames, prev.directorNames);
+      const isSelected = prev.executiveNames.includes(name);
+      if (isSelected) {
+        return { ...prev, executiveNames: prev.executiveNames.filter(n => n !== name) };
+      } else {
+        return { ...prev, executiveNames: [...prev.executiveNames, name] };
+      }
+    });
+  };
+
+  const handleDirectorToggle = (name: string) => {
+    setFormData(prev => {
+      const isSelected = prev.directorNames.includes(name);
+      const newNames = isSelected ? prev.directorNames.filter(n => n !== name) : [...prev.directorNames, name];
+      const newRooms = generateRooms(prev.staffNames, prev.otherStaffNames || [], newNames);
       
       let doubleRooms = 0;
       let singleRooms = 0;
@@ -111,10 +109,65 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
         else if (room.person1 || room.person2) singleRooms++;
       });
 
+      return {
+        ...prev,
+        directorNames: newNames,
+        staffRooms: newRooms,
+        staffDoubleRooms: doubleRooms.toString(),
+        staffSingleRooms: singleRooms.toString()
+      };
+    });
+  };
+
+  const handleStaffToggle = (name: string) => {
+    setFormData(prev => {
+      const isSelected = prev.staffNames.includes(name);
+      const newNames = isSelected ? prev.staffNames.filter(n => n !== name) : [...prev.staffNames, name];
+      
+      const newRooms = generateRooms(newNames, prev.otherStaffNames || [], prev.directorNames);
+      
+      let doubleRooms = 0;
+      let singleRooms = 0;
+      newRooms.forEach(room => {
+        if (room.person1 && room.person2) doubleRooms++;
+        else if (room.person1 || room.person2) singleRooms++;
+      });
+
+      const totalCount = newNames.length + (prev.otherStaffNames || []).length;
+
       return { 
         ...prev, 
         staffNames: newNames,
-        staffCount: newNames.length.toString(),
+        staffCount: totalCount.toString(),
+        staffRooms: newRooms,
+        staffDoubleRooms: doubleRooms.toString(),
+        staffSingleRooms: singleRooms.toString()
+      };
+    });
+  };
+
+  const handleOtherStaffToggle = (name: string) => {
+    setFormData(prev => {
+      const isSelected = (prev.otherStaffNames || []).includes(name);
+      const newOtherNames = isSelected 
+        ? (prev.otherStaffNames || []).filter(n => n !== name) 
+        : [...(prev.otherStaffNames || []), name];
+      
+      const newRooms = generateRooms(prev.staffNames, newOtherNames, prev.directorNames);
+      
+      let doubleRooms = 0;
+      let singleRooms = 0;
+      newRooms.forEach(room => {
+        if (room.person1 && room.person2) doubleRooms++;
+        else if (room.person1 || room.person2) singleRooms++;
+      });
+
+      const totalCount = prev.staffNames.length + newOtherNames.length;
+
+      return { 
+        ...prev, 
+        otherStaffNames: newOtherNames,
+        staffCount: totalCount.toString(),
         staffRooms: newRooms,
         staffDoubleRooms: doubleRooms.toString(),
         staffSingleRooms: singleRooms.toString()
@@ -178,7 +231,8 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
 
   const handleClearAllBeds = () => {
     setFormData(prev => {
-      const roomCount = Math.max(prev.staffRooms.length, Math.ceil(prev.staffNames.length / 2));
+      const totalStaff = prev.staffNames.length + (prev.otherStaffNames || []).length;
+      const roomCount = Math.max(prev.staffRooms.length, Math.ceil(totalStaff / 2));
       const emptyRooms = Array.from({ length: roomCount }).map((_, i) => ({
         id: (i + 1).toString(),
         person1: '',
@@ -196,7 +250,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
 
   const handleAutoAssignRooms = () => {
     setFormData(prev => {
-      const newRooms = generateRooms(prev.staffNames, prev.directorNames);
+      const newRooms = generateRooms(prev.staffNames, prev.otherStaffNames || [], prev.directorNames);
       
       let doubleRooms = 0;
       let singleRooms = 0;
@@ -215,12 +269,13 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
   };
 
   const getValidOptions = (currentName: string, otherSlotName: string) => {
-    return formData.staffNames.filter(name => {
+    const allNames = [...formData.staffNames, ...(formData.otherStaffNames || [])];
+    return allNames.filter(name => {
       if (name === currentName) return true;
       if (!otherSlotName) return true;
       
-      const otherPerson = staffData.find(s => s.name === otherSlotName);
-      const p = staffData.find(s => s.name === name);
+      const otherPerson = getStaffInfo(otherSlotName);
+      const p = getStaffInfo(name);
       if (!otherPerson || !p) return true;
       
       const isOtherDirector = otherPerson.title?.includes('ผู้อำนวยการ') || directorsData.some(d => d.name === otherSlotName);
@@ -231,6 +286,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     });
   };
 
+  // Filter Personnel / Executives
   const [searchTerm, setSearchTerm] = React.useState('');
   const filteredPersonnel = personnelData.filter(p => {
     const isSecretary = p?.title && p.title.includes('เลขานุการ');
@@ -238,6 +294,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     return !isSecretary && matchesSearch;
   });
 
+  // Filter SBR Staff
   const [searchStaffTerm, setSearchStaffTerm] = React.useState('');
   const filteredStaff = staffData.filter(s => {
     const isDirector = s?.title && s.title.includes('ผู้อำนวยการ');
@@ -246,11 +303,39 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     return !isDirector && matchesSearch;
   });
 
+  // Filter Directors
   const [searchDirectorTerm, setSearchDirectorTerm] = React.useState('');
   const filteredDirectors = directorsData.filter(d => 
     (d?.name ? d.name.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false) || 
     (d?.title ? d.title.toLowerCase().includes(searchDirectorTerm.toLowerCase()) : false)
   );
+
+  // Filter Other Bureaus Staff
+  const [selectedSection, setSelectedSection] = React.useState('all');
+  const [searchOtherStaffTerm, setSearchOtherStaffTerm] = React.useState('');
+  
+  const bureauList = Array.from(new Set(contactsData.map(c => c.section).filter(Boolean)));
+  
+  const filteredOtherStaff = contactsData.filter(c => {
+    // Exclude executives/directors if already categorized
+    const isExec = personnelData.some(p => p.name === c.name);
+    if (isExec) return false;
+    
+    // Filter by selected bureau
+    if (selectedSection !== 'all' && c.section !== selectedSection) return false;
+    
+    // Search query
+    const query = searchOtherStaffTerm.toLowerCase();
+    const matches = (c.name && c.name.toLowerCase().includes(query)) ||
+                    (c.position && c.position.toLowerCase().includes(query)) ||
+                    (c.section && c.section.toLowerCase().includes(query));
+    return matches;
+  }).map(c => ({
+    name: c.name,
+    position: c.position,
+    section: c.section,
+    gender: (c.name.startsWith('นาย') ? 'M' : 'F') as 'M' | 'F'
+  }));
 
   const inputClass = "w-full px-4 py-3 rounded-2xl border border-slate-200/10 bg-slate-100/40 shadow-neumorph-inset focus:outline-none focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] transition-all duration-300 text-sm";
   const labelClass = "text-sm font-medium text-foreground/80 mb-1.5 block";
@@ -269,7 +354,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
         newNames = newNames.filter(n => !filteredNames.includes(n));
       }
       
-      const newRooms = generateRooms(newNames, prev.directorNames);
+      const newRooms = generateRooms(newNames, prev.otherStaffNames || [], prev.directorNames);
       
       let doubleRooms = 0;
       let singleRooms = 0;
@@ -278,10 +363,45 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
         else if (room.person1 || room.person2) singleRooms++;
       });
 
+      const totalCount = newNames.length + (prev.otherStaffNames || []).length;
+
       return { 
         ...prev, 
         staffNames: newNames,
-        staffCount: newNames.length.toString(),
+        staffCount: totalCount.toString(),
+        staffRooms: newRooms,
+        staffDoubleRooms: doubleRooms.toString(),
+        staffSingleRooms: singleRooms.toString()
+      };
+    });
+  };
+
+  const handleSelectAllOtherStaff = (selectAll: boolean) => {
+    setFormData(prev => {
+      const filteredNames = filteredOtherStaff.map(s => s.name);
+      let currentOther = [...(prev.otherStaffNames || [])];
+      if (selectAll) {
+        const toAdd = filteredNames.filter(n => !currentOther.includes(n));
+        currentOther = [...currentOther, ...toAdd];
+      } else {
+        currentOther = currentOther.filter(n => !filteredNames.includes(n));
+      }
+      
+      const newRooms = generateRooms(prev.staffNames, currentOther, prev.directorNames);
+      
+      let doubleRooms = 0;
+      let singleRooms = 0;
+      newRooms.forEach(room => {
+        if (room.person1 && room.person2) doubleRooms++;
+        else if (room.person1 || room.person2) singleRooms++;
+      });
+
+      const totalCount = prev.staffNames.length + currentOther.length;
+
+      return { 
+        ...prev, 
+        otherStaffNames: currentOther,
+        staffCount: totalCount.toString(),
         staffRooms: newRooms,
         staffDoubleRooms: doubleRooms.toString(),
         staffSingleRooms: singleRooms.toString()
@@ -299,70 +419,41 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
       } else {
         newNames = newNames.filter(n => !filteredNames.includes(n));
       }
-      
-      const newRooms = generateRooms(prev.staffNames, newNames);
-      let doubleRooms = 0;
-      let singleRooms = 0;
-      newRooms.forEach(room => {
-        if (room.person1 && room.person2) doubleRooms++;
-        else if (room.person1 || room.person2) singleRooms++;
-      });
-
-      return { 
-        ...prev, 
-        directorNames: newNames,
-        staffRooms: newRooms,
-        staffDoubleRooms: doubleRooms.toString(),
-        staffSingleRooms: singleRooms.toString()
-      };
-    });
-  };
-
-  const handleSelectAllExecutives = (selectAll: boolean) => {
-    setFormData(prev => {
-      const filteredNames = filteredPersonnel.map(p => p.name);
-      let newNames = [...prev.executiveNames];
-      if (selectAll) {
-        const toAdd = filteredNames.filter(n => !newNames.includes(n));
-        newNames = [...newNames, ...toAdd];
-      } else {
-        newNames = newNames.filter(n => !filteredNames.includes(n));
-      }
-      return { ...prev, executiveNames: newNames };
+      return { ...prev, directorNames: newNames };
     });
   };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
+      
       {/* Basic Info */}
       <div className={cardClass}>
         <h3 className={titleClass}>
           <div className="p-1.5 bg-primary/10 rounded-md">
             <FileText className="w-4 h-4 text-primary" />
           </div>
-          ข้อมูลโครงการอบรม
+          ข้อมูลทั่วไป (General Information)
         </h3>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
-            <label className={labelClass} htmlFor="projectName">ชื่อโครงการ</label>
-            <input id="projectName" value={formData.projectName} onChange={handleChange} className={inputClass} placeholder="ระบุชื่อโครงการ..." />
+            <label className={labelClass} htmlFor="projectName">ชื่อโครงการ / หลักสูตรฝึกอบรม</label>
+            <input type="text" id="projectName" value={formData.projectName} onChange={handleChange} className={inputClass} placeholder="ระบุชื่อโครงการ..." />
           </div>
-          <div className="md:col-span-2">
-            <label className={labelClass} htmlFor="location">สถานที่จัดงาน / สถานที่อบรม</label>
-            <input id="location" value={formData.location} onChange={handleChange} className={inputClass} placeholder="เช่น ห้องฝึกอบรม ชั้น 3 อาคารสถาบันวิทยาการอวกาศ..." />
-          </div>
+
           <div>
-            <label className={labelClass} htmlFor="date">วันที่</label>
+            <label className={labelClass} htmlFor="date">วันที่จัดกิจกรรม</label>
             <input type="date" id="date" value={formData.date} onChange={handleChange} className={inputClass} />
           </div>
+
           <div>
-            <label className={labelClass} htmlFor="days">จำนวนวันอบรม</label>
-            <input type="number" id="days" value={formData.days} onChange={handleChange} className={inputClass} min="1" placeholder="เช่น 2" />
+            <label className={labelClass} htmlFor="days">จำนวนวันอบรม (วัน)</label>
+            <input type="number" id="days" value={formData.days} onChange={handleChange} className={inputClass} min="1" placeholder="ระบุจำนวนวัน..." />
           </div>
+
           <div className="md:col-span-2">
-            <label className={labelClass} htmlFor="totalAttendees">จำนวนผู้เข้าร่วมทั้งหมด (คน)</label>
-            <input type="number" id="totalAttendees" value={formData.totalAttendees} onChange={handleChange} className={inputClass} min="1" placeholder="รวมทุกคนที่เข้าร่วม" />
+            <label className={labelClass} htmlFor="location">สถานที่จัดกิจกรรม</label>
+            <input type="text" id="location" value={formData.location} onChange={handleChange} className={inputClass} placeholder="เช่น โรงแรม..., สทอภ., ศูนย์ราชการ..." />
           </div>
         </div>
       </div>
@@ -373,98 +464,116 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
           <div className="p-1.5 bg-primary/10 rounded-md">
             <UserCheck className="w-4 h-4 text-primary" />
           </div>
-          ข้อมูลวิทยากร
+          วิทยากรและผู้ทรงคุณวุฒิ (Speakers)
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <div>
-            <label className={labelClass} htmlFor="speakerThaiNormal">วิทยากรไทย - ปกติ (คน)</label>
+            <label className={labelClass} htmlFor="speakerThaiNormal">วิทยากรไทย (บุคคลทั่วไป) (คน)</label>
             <input type="number" id="speakerThaiNormal" value={formData.speakerThaiNormal} onChange={handleChange} className={inputClass} min="0" placeholder="0" />
           </div>
+
           <div>
-            <label className={labelClass} htmlFor="speakerThaiExpert">วิทยากรไทย - เชี่ยวชาญ (คน)</label>
+            <label className={labelClass} htmlFor="speakerThaiExpert">วิทยากรไทย (ผู้เชี่ยวชาญ) (คน)</label>
             <input type="number" id="speakerThaiExpert" value={formData.speakerThaiExpert} onChange={handleChange} className={inputClass} min="0" placeholder="0" />
           </div>
+
           <div>
             <label className={labelClass} htmlFor="speakerForeign">วิทยากรต่างประเทศ (คน)</label>
             <input type="number" id="speakerForeign" value={formData.speakerForeign} onChange={handleChange} className={inputClass} min="0" placeholder="0" />
           </div>
-          {parseInt(formData.speakerForeign) > 0 && (
-            <div className="md:col-span-2 space-y-3 bg-muted/30 p-4 rounded-xl border border-border/40">
-              <span className="text-xs font-bold text-muted-foreground block">ระบุค่าตั๋วเครื่องบิน/เดินทางต่างประเทศ แยกรายคน (บาท)</span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Array.from({ length: parseInt(formData.speakerForeign) || 0 }).map((_, idx) => (
-                  <div key={idx}>
-                    <label className="block text-xs font-semibold text-muted-foreground mb-1" htmlFor={`speakerForeignFlightFee-${idx}`}>
-                      วิทยากรต่างประเทศท่านที่ {idx + 1} (บาท)
-                    </label>
-                    <input
-                      type="number"
-                      id={`speakerForeignFlightFee-${idx}`}
-                      value={formData.speakerForeignFlightFees?.[idx] || ''}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setFormData(prev => {
-                          const fees = [...(prev.speakerForeignFlightFees || [])];
-                          fees[idx] = val;
-                          return { ...prev, speakerForeignFlightFees: fees };
-                        });
-                      }}
-                      className={inputClass}
-                      min="0"
-                      placeholder="0.00"
-                    />
-                  </div>
-                ))}
-              </div>
+        </div>
+
+        {/* Foreign Speaker Flight Costs Dynamic inputs */}
+        {parseInt(formData.speakerForeign) > 0 && (
+          <div className="mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-3">
+            <div className="text-sm font-semibold text-primary flex items-center gap-2">
+              ✈️ ค่าบัตรโดยสารเครื่องบินสำหรับวิทยากรต่างประเทศ
             </div>
-          )}
-          {((parseInt(formData.speakerThaiNormal) || 0) + (parseInt(formData.speakerThaiExpert) || 0) + (parseInt(formData.speakerForeign) || 0)) > 0 && (
-            <div className="md:col-span-2 space-y-3 bg-muted/30 p-4 rounded-xl border border-border/40">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center justify-center">
-                  <input type="checkbox" id="speakerNeedsTravel" checked={formData.speakerNeedsTravel} onChange={handleChange} className="peer sr-only" />
-                  <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
-                    {formData.speakerNeedsTravel && <UserCheck className="w-3.5 h-3.5 text-primary-foreground" />}
-                  </div>
-                </div>
-                <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">เบิกค่าพาหนะวิทยากร (ค่าแท็กซี่ ไป-กลับ)</span>
-              </label>
-              
-              {formData.speakerNeedsTravel && (
-                <div className="pl-8 animate-in fade-in slide-in-from-top-1 duration-200">
-                  <label className="block text-xs font-semibold text-muted-foreground mb-1" htmlFor="speakerTaxiFee">
-                    ระบุจำนวนเงินค่าแท็กซี่ (บาท ต่อคน)
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {Array.from({ length: parseInt(formData.speakerForeign) || 0 }).map((_, idx) => (
+                <div key={idx}>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                    ท่านที่ {idx + 1} (บาท)
                   </label>
                   <input
                     type="number"
-                    id="speakerTaxiFee"
-                    value={formData.speakerTaxiFee || ''}
-                    onChange={handleChange}
-                    className={inputClass}
                     min="0"
-                    placeholder="ปล่อยว่างหากต้องการเว้นช่องว่างไปเขียนเขียนเองใน Excel"
+                    placeholder="0.00"
+                    value={formData.speakerForeignFlightFees?.[idx] || ''}
+                    onChange={(e) => {
+                      const newFees = [...(formData.speakerForeignFlightFees || [])];
+                      newFees[idx] = e.target.value;
+                      setFormData(prev => ({ ...prev, speakerForeignFlightFees: newFees }));
+                    }}
+                    className={inputClass}
                   />
                 </div>
-              )}
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-border/40 space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative flex items-center justify-center">
+              <input type="checkbox" id="speakerNeedsTravel" checked={formData.speakerNeedsTravel} onChange={handleChange} className="peer sr-only" />
+              <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                {formData.speakerNeedsTravel && <UserCheck className="w-3.5 h-3.5 text-primary-foreground" />}
+              </div>
+            </div>
+            <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+              วิทยากรต้องการค่าพาหนะ (แท็กซี่ ไป-กลับ)
+            </span>
+          </label>
+
+          {formData.speakerNeedsTravel && (
+            <div className="pl-8 pt-2">
+              <div className="max-w-xs">
+                <label className="text-xs font-semibold text-muted-foreground mb-1 block" htmlFor="speakerTaxiFee">
+                  อัตราค่าพาหนะ/คน (บาท)
+                </label>
+                <input
+                  type="number"
+                  id="speakerTaxiFee"
+                  value={formData.speakerTaxiFee || ''}
+                  onChange={handleChange}
+                  placeholder="1000"
+                  className={inputClass}
+                />
+              </div>
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label className={labelClass} htmlFor="tollFee">ค่าทางด่วนสำหรับวิทยากร (บาท)</label>
+              <input type="number" id="tollFee" value={formData.tollFee} onChange={handleChange} className={inputClass} min="0" placeholder="0" />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Staff & Executives */}
+      {/* Attendees & Staff */}
       <div className={cardClass}>
         <h3 className={titleClass}>
           <div className="p-1.5 bg-primary/10 rounded-md">
             <Users className="w-4 h-4 text-primary" />
           </div>
-          เจ้าหน้าที่และผู้บริหาร
+          เลือกผู้เข้าร่วมและเจ้าหน้าที่ (Attendees & Staff)
         </h3>
 
         <div className="space-y-6">
-          {/* Executives */}
+          {/* Total Attendees */}
+          <div>
+            <label className={labelClass} htmlFor="totalAttendees">จำนวนผู้เข้าร่วมอบรมทั้งหมด (คน)</label>
+            <input type="number" id="totalAttendees" value={formData.totalAttendees} onChange={handleChange} className={inputClass} min="0" placeholder="ระบุจำนวนคน..." />
+          </div>
+
+          {/* 1. Executives */}
           <div className="bg-muted/50 p-5 rounded-xl border border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-              <h4 className={subTitleClass} style={{ marginBottom: 0 }}>1. เลือกผู้บริหารที่เข้าร่วม (ระดับ รอง ผสทอภ. / ผสทอภ.)</h4>
+              <h4 className={subTitleClass} style={{ marginBottom: 0 }}>1. เลือกผู้บริหารระดับสูง (สทอภ.)</h4>
               {formData.executiveNames.length > 0 && (
                 <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full w-fit">
                   เลือกแล้ว {formData.executiveNames.length} ท่าน
@@ -482,15 +591,6 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                   className={inputClass} 
                 />
               </div>
-              <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap bg-background border border-border rounded-lg px-3 py-2.5 hover:bg-muted/50 transition-colors">
-                <input 
-                  type="checkbox" 
-                  className="rounded border-border/60 text-primary focus:ring-primary/20 w-4 h-4 cursor-pointer"
-                  checked={filteredPersonnel.length > 0 && filteredPersonnel.every(p => formData.executiveNames.includes(p.name))}
-                  onChange={(e) => handleSelectAllExecutives(e.target.checked)}
-                />
-                <span className="text-sm font-medium text-foreground/80">เลือกทั้งหมด</span>
-              </label>
             </div>
             
             <div className="max-h-56 overflow-y-auto border border-border/60 bg-background rounded-lg p-2 space-y-1 shadow-inner">
@@ -508,7 +608,9 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                     </div>
                   </div>
                   <div>
-                    <div className={`text-sm font-medium ${formData.executiveNames.includes(p.name) ? 'text-primary' : 'text-foreground'}`}>{p.name}</div>
+                    <div className={`text-sm font-medium ${formData.executiveNames.includes(p.name) ? 'text-primary' : 'text-foreground'}`}>
+                      {p.name}
+                    </div>
                     {p.title && <div className="text-xs text-muted-foreground mt-0.5">{p.title}</div>}
                   </div>
                 </label>
@@ -517,10 +619,10 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
             </div>
           </div>
 
-          {/* Directors */}
+          {/* 2. Directors */}
           <div className="bg-muted/50 p-5 rounded-xl border border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
-              <h4 className={subTitleClass} style={{ marginBottom: 0 }}>2. เลือกผู้อำนวยการที่เข้าร่วม (ระดับ ผอ.สำนัก)</h4>
+              <h4 className={subTitleClass} style={{ marginBottom: 0 }}>2. เลือกผู้อำนวยการสำนัก (ผอ. สำนักต่างๆ)</h4>
               {formData.directorNames.length > 0 && (
                 <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full w-fit">
                   เลือกแล้ว {formData.directorNames.length} ท่าน
@@ -532,7 +634,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
               <div className="flex-1">
                 <input 
                   type="text" 
-                  placeholder="ค้นหาชื่อผู้อำนวยการ..." 
+                  placeholder="ค้นหาชื่อผู้อำนวยการ/สำนัก..." 
                   value={searchDirectorTerm}
                   onChange={e => setSearchDirectorTerm(e.target.value)}
                   className={inputClass} 
@@ -575,7 +677,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
             </div>
           </div>
 
-          {/* Staff */}
+          {/* 3. SBR Staff */}
           <div className="bg-muted/50 p-5 rounded-xl border border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
               <h4 className={subTitleClass} style={{ marginBottom: 0 }}>3. เลือกเจ้าหน้าที่ สบร. (ระดับ จนท.)</h4>
@@ -590,7 +692,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
               <div className="flex-1">
                 <input 
                   type="text" 
-                  placeholder="ค้นหาชื่อเจ้าหน้าที่..." 
+                  placeholder="ค้นหาชื่อเจ้าหน้าที่ สบร...." 
                   value={searchStaffTerm}
                   onChange={e => setSearchStaffTerm(e.target.value)}
                   className={inputClass} 
@@ -630,6 +732,86 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                 </label>
               ))}
               {filteredStaff.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">ไม่พบข้อมูลเจ้าหน้าที่</div>}
+            </div>
+          </div>
+
+          {/* 4. Other Bureaus Staff (สำนักอื่นๆ สทอภ.) */}
+          <div className="bg-muted/50 p-5 rounded-xl border border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+              <h4 className={subTitleClass} style={{ marginBottom: 0 }}>4. เลือกเจ้าหน้าที่สำนักอื่นๆ (สทอภ.)</h4>
+              {(formData.otherStaffNames || []).length > 0 && (
+                <span className="text-xs font-semibold bg-primary/10 text-primary px-2.5 py-1 rounded-full w-fit">
+                  เลือกแล้ว {(formData.otherStaffNames || []).length} ท่าน
+                </span>
+              )}
+            </div>
+            
+            {/* Bureau Selector & Search */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-3">
+              <div className="sm:col-span-5">
+                <select 
+                  value={selectedSection} 
+                  onChange={(e) => setSelectedSection(e.target.value)}
+                  className="w-full text-sm border border-slate-200/10 rounded-xl px-3 py-2.5 bg-background shadow-neumorph-inset focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] transition-all"
+                >
+                  <option value="all">🏢 ทุกสำนัก (GISTDA)</option>
+                  {bureauList.map((sec, idx) => (
+                    <option key={idx} value={sec}>{sec}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="sm:col-span-4">
+                <input 
+                  type="text" 
+                  placeholder="ค้นหาชื่อ/ตำแหน่ง..." 
+                  value={searchOtherStaffTerm}
+                  onChange={e => setSearchOtherStaffTerm(e.target.value)}
+                  className={inputClass} 
+                />
+              </div>
+              <div className="sm:col-span-3 flex items-center">
+                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap bg-background border border-border rounded-lg px-3 py-2.5 hover:bg-muted/50 transition-colors w-full justify-center">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-border/60 text-primary focus:ring-primary/20 w-4 h-4 cursor-pointer"
+                    checked={filteredOtherStaff.length > 0 && filteredOtherStaff.every(s => (formData.otherStaffNames || []).includes(s.name))}
+                    onChange={(e) => handleSelectAllOtherStaff(e.target.checked)}
+                  />
+                  <span className="text-sm font-medium text-foreground/80">เลือกทั้งหมด</span>
+                </label>
+              </div>
+            </div>
+            
+            <div className="max-h-56 overflow-y-auto border border-border/60 bg-background rounded-lg p-2 space-y-1 shadow-inner">
+              {filteredOtherStaff.map((s, i) => (
+                <label key={i} className={`flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors ${(formData.otherStaffNames || []).includes(s.name) ? 'bg-primary/5 border border-primary/20' : 'hover:bg-muted border border-transparent'}`}>
+                  <div className="relative flex items-center justify-center mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={(formData.otherStaffNames || []).includes(s.name)}
+                      onChange={() => handleOtherStaffToggle(s.name)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
+                      {(formData.otherStaffNames || []).includes(s.name) && <UserPlus className="w-3.5 h-3.5 text-primary-foreground" />}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`text-sm font-medium ${(formData.otherStaffNames || []).includes(s.name) ? 'text-primary' : 'text-foreground'}`}>
+                      {s.name} <span className="text-muted-foreground/50 text-xs ml-1">({s.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap items-center gap-2">
+                      <span>{s.position || 'เจ้าหน้าที่'}</span>
+                      {s.section && (
+                        <span className="bg-muted px-1.5 py-0.5 rounded text-[11px] font-medium text-muted-foreground">
+                          {s.section}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </label>
+              ))}
+              {filteredOtherStaff.length === 0 && <div className="p-4 text-sm text-muted-foreground text-center">ไม่พบข้อมูลเจ้าหน้าที่ในสำนักที่เลือก</div>}
             </div>
           </div>
         </div>
@@ -708,7 +890,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                   ระบบจะคำนวณ <strong className="text-foreground">ห้องพักคู่จำนวน {formData.staffDoubleRooms || '0'} ห้อง</strong> และ <strong className="text-foreground">ห้องพักเดี่ยวจำนวน {formData.staffSingleRooms || '0'} ห้อง</strong> อัตโนมัติ (แยกชาย-หญิง) ตามรายชื่อเจ้าหน้าที่ที่เลือกไว้
                 </div>
                 
-                {formData.staffNames.length > 0 && (
+                {(formData.staffNames.length > 0 || (formData.otherStaffNames || []).length > 0) && (
                   <div className="bg-background rounded-lg border border-border/50 overflow-hidden">
                     <div className="bg-muted/50 px-4 py-2 border-b border-border/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       รายชื่อการจับคู่ห้องพัก
@@ -728,7 +910,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                             >
                               <option value="" className="text-muted-foreground">- เตียงว่าง -</option>
                               {getValidOptions(room.person1 || '', room.person2 || '').map(name => {
-                                const p = staffData.find(s => s.name === name);
+                                const p = getStaffInfo(name);
                                 const tag = p?.title?.includes('ผู้อำนวยการ') ? 'ผอ.' : (p?.gender === 'M' ? 'ชาย' : 'หญิง');
                                 return <option key={`1-${name}`} value={name}>{name} ({tag})</option>;
                               })}
@@ -741,7 +923,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                             >
                               <option value="" className="text-muted-foreground">- เตียงว่าง -</option>
                               {getValidOptions(room.person2 || '', room.person1 || '').map(name => {
-                                const p = staffData.find(s => s.name === name);
+                                const p = getStaffInfo(name);
                                 const tag = p?.title?.includes('ผู้อำนวยการ') ? 'ผอ.' : (p?.gender === 'M' ? 'ชาย' : 'หญิง');
                                 return <option key={`2-${name}`} value={name}>{name} ({tag})</option>;
                               })}
@@ -783,6 +965,9 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
 
       {/* Food */}
       <FoodSection formData={formData} setFormData={setFormData} />
+
+      {/* Other Custom Expenses (ชื่อรายการ และ จำนวนเงิน) */}
+      <OtherExpensesSection formData={formData} setFormData={setFormData} />
 
     </div>
   );

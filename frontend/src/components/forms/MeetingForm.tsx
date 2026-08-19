@@ -2,6 +2,7 @@ import React from 'react';
 import { FileText, Users, Receipt } from 'lucide-react';
 import type { BudgetFormData } from '../../types';
 import { FoodSection } from './FoodSection';
+import { OtherExpensesSection } from './OtherExpensesSection';
 
 interface Props {
   formData: BudgetFormData;
@@ -66,13 +67,13 @@ export const MeetingForm: React.FC<Props> = ({ formData, setFormData }) => {
       {/* Food */}
       <FoodSection formData={formData} setFormData={setFormData} />
 
-      {/* Other Expenses */}
+      {/* Standard Expenses */}
       <div className={cardClass}>
         <h3 className={titleClass}>
           <div className="p-1.5 bg-primary/10 rounded-md">
             <Receipt className="w-4 h-4 text-primary" />
           </div>
-          ค่าใช้จ่ายอื่นๆ (ระบุจำนวนเงิน)
+          ค่าสถานที่และทางด่วน (ระบุจำนวนเงิน)
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
@@ -80,12 +81,15 @@ export const MeetingForm: React.FC<Props> = ({ formData, setFormData }) => {
             <input type="number" id="tollFee" value={formData.tollFee} onChange={handleChange} className={inputClass} min="0" placeholder="0" />
           </div>
 
-          <div className="md:col-span-2">
-            <label className={labelClass} htmlFor="roomRental">ค่าเช่าห้อง (บาท)</label>
+          <div>
+            <label className={labelClass} htmlFor="roomRental">ค่าเช่าห้องประชุม (บาท)</label>
             <input type="number" id="roomRental" value={formData.roomRental} onChange={handleChange} className={inputClass} min="0" placeholder="0" />
           </div>
         </div>
       </div>
+
+      {/* Other Custom Expenses (ชื่อรายการ และ จำนวนเงิน) */}
+      <OtherExpensesSection formData={formData} setFormData={setFormData} />
 
     </div>
   );

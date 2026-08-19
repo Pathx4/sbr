@@ -1,0 +1,1137 @@
+<!-- ══════════════════════════════════════════════════════════════════
+     🚀 BOOT LOADER & SYSTEM DIAGNOSTICS
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="spaceshipBootLoader"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md transition-opacity duration-500">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center animate-pulse">
+                <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.25"></circle>
+                    <path d="M4 12a8 8 0 0 1 8-8" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </div>
+            <div class="text-left">
+                <h2 class="text-base font-bold text-slate-900 dark:text-white tracking-wide">SBR EXECUTIVE COCKPIT</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">กำลังเตรียมพร้อมระบบและเชื่อมต่อฐานข้อมูล...</p>
+            </div>
+        </div>
+
+        <div class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 mb-4 text-xs font-mono text-left text-slate-600 dark:text-slate-300 space-y-1.5 h-28 overflow-y-hidden"
+            id="bootTerminalOutput">
+            <div>[ 01 ] INITIALIZING UNIFIED CLOUD ENGINE...</div>
+        </div>
+
+        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden mb-2">
+            <div id="bootLoaderProgress" class="bg-blue-600 h-full w-0 transition-all duration-300 rounded-full"></div>
+        </div>
+        <div class="flex justify-between items-center text-[11px] font-bold text-slate-400">
+            <span>UNIFIED DATA PIPELINE</span>
+            <span id="bootPercent" class="font-num">0%</span>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     🔔 TOAST NOTIFICATION
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="toastNotification" role="alert"
+    class="fixed top-5 right-5 z-50 bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-y-[-140%] opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 border border-slate-700">
+    <div id="toastIconBg"
+        class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0">
+        <svg id="toastIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+    </div>
+    <div>
+        <p id="toastHeader" class="font-bold text-sm leading-tight">แจ้งเตือน</p>
+        <p id="toastMessage" class="text-xs text-slate-300 mt-0.5">ดำเนินการเรียบร้อย</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     🏛️ UNIFIED EXECUTIVE APP SHELL
+     ══════════════════════════════════════════════════════════════════ -->
+<div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+
+    <!-- Top Global Executive Header -->
+    <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
+        <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+
+            <!-- Brand & Badge -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+                        ส
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">สบร. Executive Cockpit</h1>
+                            <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                2569
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">สำนักบริการองค์ความรู้ (GISTDA) - ระบบบริหารงบประมาณ จัดซื้อจัดจ้าง และวิเคราะห์เชิงยุทธศาสตร์</p>
+                    </div>
+                </div>
+
+                <!-- Mobile Header Actions -->
+                <div class="flex md:hidden items-center gap-1.5">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <span class="dark:hidden">🌙</span>
+                        <span class="hidden dark:inline">☀️</span>
+                    </button>
+                    <button onclick="openDataEntryModal()" class="p-2 rounded-lg bg-blue-600 text-white text-xs font-bold">
+                        + เพิ่ม
+                    </button>
+                </div>
+            </div>
+
+            <!-- Single Page App (SPA) Tab Switcher (4 Tabs) -->
+            <div class="tab-switcher-container flex items-center bg-slate-100/90 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 self-start md:self-auto overflow-x-auto max-w-full">
+                <button id="tabBtn-budget" onclick="switchAppTab('budget')" class="tab-btn active">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                    <span>งบประมาณ & กิจกรรม</span>
+                </button>
+
+                <button id="tabBtn-procurement" onclick="switchAppTab('procurement')" class="tab-btn">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <span>จัดซื้อจัดจ้าง</span>
+                    <span id="tabProcCountBadge"
+                        class="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-[10px] font-bold px-1.5 py-0.2 rounded-full font-num">0</span>
+                </button>
+
+                <button id="tabBtn-staff" onclick="switchAppTab('staff')" class="tab-btn">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    <span>บุคลากร สบร.</span>
+                </button>
+
+                <button id="tabBtn-analytics" onclick="switchAppTab('analytics')" class="tab-btn">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    <span>สรุปผู้บริหาร (Insights)</span>
+                </button>
+            </div>
+
+            <!-- Top Actions & Sync Status (Desktop) -->
+            <div class="hidden md:flex items-center gap-2.5">
+                <div class="text-right mr-1">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">สถานะข้อมูล</p>
+                    <p id="statusText" class="text-xs font-bold text-emerald-600 dark:text-emerald-400">พร้อมใช้งาน (Live Engine)</p>
+                </div>
+
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleDarkMode()" title="สลับโหมดสว่าง / มืด"
+                    class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+                    <span class="dark:hidden">🌙</span>
+                    <span class="hidden dark:inline">☀️</span>
+                </button>
+
+                <!-- Print Report Button -->
+                <button onclick="printExecutiveReport()" title="พิมพ์รายงานสรุปผู้บริหาร (Print / PDF)"
+                    class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                        </path>
+                    </svg>
+                </button>
+
+                <!-- Live Sync Button -->
+                <button onclick="reloadData()" title="คลิกเพื่อซิงค์ข้อมูลสดจาก Google Sheets"
+                    class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                </button>
+
+                <!-- Add Button -->
+                <button onclick="openDataEntryModal()" class="btn-primary text-xs py-2 px-3.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    เพิ่มข้อมูล
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             📊 TAB 1: ระบบบริหารงบประมาณและกิจกรรม (Budget & Activities)
+             ══════════════════════════════════════════════════════════════════ -->
+        <div id="tabContent-budget" class="tab-content active space-y-6">
+
+            <!-- Filter Bar for Budget Tab -->
+            <div class="filter-bar-container exec-card p-4 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <!-- Year Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">ปีงบประมาณ:</span>
+                        <select id="filterYear" onchange="handleYearChange()"
+                            class="exec-input text-xs font-semibold py-1.5 px-3 w-auto cursor-pointer">
+                            <option value="2568">ปี 2568</option>
+                            <option value="2569" selected>ปี 2569</option>
+                            <option value="2570">ปี 2570</option>
+                            <option value="2571">ปี 2571</option>
+                        </select>
+                    </div>
+
+                    <!-- Dept Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">ฝ่าย:</span>
+                        <select id="filterDept" onchange="updateUI()"
+                            class="exec-input text-xs py-1.5 px-3 w-auto cursor-pointer">
+                            <option value="all">ทุกฝ่าย (ภาพรวม)</option>
+                            <option value="ฝบร.">ฝบร. (บริหาร)</option>
+                            <option value="ฝมร.">ฝมร. (มาตรฐาน)</option>
+                            <option value="ฝสร.">ฝสร. (ส่งเสริม)</option>
+                            <option value="ฝถร.">ฝถร. (ถ่ายทอด)</option>
+                        </select>
+                    </div>
+
+                    <!-- Month Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">เดือน:</span>
+                        <select id="filterMonth" onchange="updateUI()"
+                            class="exec-input text-xs py-1.5 px-3 w-auto cursor-pointer">
+                            <option value="all">ทั้งปีงบประมาณ</option>
+                            <option value="10">ตุลาคม (Q1)</option>
+                            <option value="11">พฤศจิกายน (Q1)</option>
+                            <option value="12">ธันวาคม (Q1)</option>
+                            <option value="1">มกราคม (Q2)</option>
+                            <option value="2">กุมภาพันธ์ (Q2)</option>
+                            <option value="3">มีนาคม (Q2)</option>
+                            <option value="4">เมษายน (Q3)</option>
+                            <option value="5">พฤษภาคม (Q3)</option>
+                            <option value="6">มิถุนายน (Q3)</option>
+                            <option value="7">กรกฎาคม (Q4)</option>
+                            <option value="8">สิงหาคม (Q4)</option>
+                            <option value="9">กันยายน (Q4)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Preset Filter Chips -->
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <button class="filter-chip active" onclick="applyQuarterFilter('all', this)">ทั้งปี</button>
+                    <button class="filter-chip" onclick="applyQuarterFilter('Q1', this)">Q1 (ต.ค.-ธ.ค.)</button>
+                    <button class="filter-chip" onclick="applyQuarterFilter('Q2', this)">Q2 (ม.ค.-มี.ค.)</button>
+                    <button class="filter-chip" onclick="applyQuarterFilter('Q3', this)">Q3 (เม.ย.-มิ.ย.)</button>
+                    <button class="filter-chip" onclick="applyQuarterFilter('Q4', this)">Q4 (ก.ค.-ก.ย.)</button>
+                </div>
+            </div>
+
+            <!-- 🏆 4 HERO KPI CARDS WITH SPARKLINE (Row 1) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+
+                <!-- KPI 1: งบประมาณรวม -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">งบประมาณจัดสรรรวม</span>
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-bold text-slate-400">฿</span>
+                            <span id="kpi-budget"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Sparkline SVG -->
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-blue-600" d="M 0,20 Q 25,25 50,15 T 100,5"></path>
+                            <path class="sparkline-fill fill-blue-500"
+                                d="M 0,20 Q 25,25 50,15 T 100,5 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">สถานะงบประมาณ</span>
+                        <span class="font-bold text-blue-600 dark:text-blue-400">จัดสรรครบ 100%</span>
+                    </div>
+                </div>
+
+                <!-- KPI 2: ผู้เข้าร่วมอบรม / ผลผลิตคน -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">ผู้เข้าร่วมกิจกรรม / ผลผลิต</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span id="kpi-people"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                            <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">คน</span>
+                        </div>
+                    </div>
+
+                    <!-- Sparkline SVG -->
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-emerald-600" d="M 0,25 Q 30,10 60,18 T 100,4"></path>
+                            <path class="sparkline-fill fill-emerald-500"
+                                d="M 0,25 Q 30,10 60,18 T 100,4 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">เครือข่ายหน่วยงาน</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400 font-num"><span id="kpi-orgs">0</span> แห่ง</span>
+                    </div>
+                </div>
+
+                <!-- KPI 3: รายได้สะสม (Revenue) -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">รายได้สะสม (Revenue)</span>
+                            <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-bold text-slate-400">฿</span>
+                            <span id="kpi-income"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Sparkline SVG -->
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-amber-600" d="M 0,22 Q 40,28 70,12 T 100,6"></path>
+                            <path class="sparkline-fill fill-amber-500"
+                                d="M 0,22 Q 40,28 70,12 T 100,6 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">มูลค่าทางสังคม</span>
+                        <span class="font-bold text-amber-600 dark:text-amber-400 font-num">฿<span id="kpi-social">0</span></span>
+                    </div>
+                </div>
+
+                <!-- KPI 4: สิทธิ์สมนาคุณ (Privilege) -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">สิทธิ์สมนาคุณ (Privilege)</span>
+                            <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-bold text-slate-400">฿</span>
+                            <span id="kpi-priv-value"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Sparkline SVG -->
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-purple-600" d="M 0,26 Q 35,16 65,20 T 100,8"></path>
+                            <path class="sparkline-fill fill-purple-500"
+                                d="M 0,26 Q 35,16 65,20 T 100,8 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">จำนวนผู้รับสิทธิ์</span>
+                        <span class="font-bold text-purple-600 dark:text-purple-400 font-num"><span id="kpi-priv-people">0</span> คน</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 📈 VISUAL ANALYTICS & INSIGHT CHARTS (Row 2) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+                <!-- Main Performance Chart -->
+                <div class="exec-card p-5 lg:col-span-2 flex flex-col">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">การดำเนินงานและการสร้างรายได้รายฝ่าย</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">เปรียบเทียบผลงานผู้เข้าร่วม (คน) และรายได้ (บาท) แยกตามฝ่าย</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2.5 py-1 rounded-lg font-medium">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span> ผลผลิตคน
+                            </span>
+                            <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1 rounded-lg font-medium">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span> รายได้ (บาท)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 min-h-[280px]">
+                        <canvas id="deptPerformanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- KPI Liquid Gauge & Department Progress -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-1">ภาพรวมความก้าวหน้า KPI</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">ความก้าวหน้าผลสัมฤทธิ์ตามแผนงาน</p>
+
+                        <!-- Beaker Water Gauge Visual -->
+                        <div id="main-kpi-beaker" class="beaker-gauge-container">
+                            <div class="beaker-wrapper">
+                                <div class="beaker-glass">
+                                    <div id="mainBeakerLiquid" class="beaker-liquid" style="height: 0%;">
+                                        <div class="bubbles-container">
+                                            <div class="bubble"></div>
+                                            <div class="bubble"></div>
+                                            <div class="bubble"></div>
+                                        </div>
+                                    </div>
+                                    <div class="beaker-markings">
+                                        <div class="marking"></div>
+                                        <div class="marking"></div>
+                                        <div class="marking"></div>
+                                        <div class="marking"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="kpi-percent" class="beaker-percentage font-num">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Department Mini-Progress Indicators -->
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-medium text-slate-600 dark:text-slate-400">ฝบร. (บริหารจัดการ)</span>
+                            <span id="prog-fbr" class="font-bold text-slate-800 dark:text-slate-200 font-num">0 กิจกรรม</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-medium text-slate-600 dark:text-slate-400">ฝมร. (มาตรฐานฯ)</span>
+                            <span id="prog-fmr" class="font-bold text-slate-800 dark:text-slate-200 font-num">0 กิจกรรม</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-medium text-slate-600 dark:text-slate-400">ฝสร. (ส่งเสริมฯ)</span>
+                            <span id="prog-fsr" class="font-bold text-slate-800 dark:text-slate-200 font-num">0 กิจกรรม</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-medium text-slate-600 dark:text-slate-400">ฝถร. (พัฒนาถ่ายทอดฯ)</span>
+                            <span id="prog-ftr" class="font-bold text-slate-800 dark:text-slate-200 font-num">0 กิจกรรม</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 📋 MASTER ACTIVITIES DATA EXPLORER (Row 3) -->
+            <div class="exec-card p-5 space-y-4">
+
+                <!-- Table Controls Bar -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">ทะเบียนรายการกิจกรรมและโครงการ (Activities Explorer)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">คลิกที่แถวเพื่อดูรายละเอียดเชิงลึก หรือค้นหาและส่งออก Excel</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <!-- Search Input -->
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="tableSearch" onkeyup="handleTableSearch()"
+                                placeholder="ค้นหากิจกรรม, ผู้รับผิดชอบ..." class="exec-input text-xs pl-8 pr-3 py-2">
+                            <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+
+                        <!-- Export Excel Button -->
+                        <button onclick="exportToExcel()" class="btn-secondary text-xs py-2 px-3">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            ส่งออก Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Responsive Container -->
+                <div class="overflow-x-auto custom-scroll rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="exec-table">
+                        <thead>
+                            <tr>
+                                <th class="w-12 text-center sortable" onclick="sortTable('id')">ลำดับ <span class="sort-icon">▲</span></th>
+                                <th class="w-28 sortable" onclick="sortTable('date')">วันที่จัด <span class="sort-icon">▲</span></th>
+                                <th class="sortable" onclick="sortTable('title')">ชื่อกิจกรรม / โครงการ <span class="sort-icon">▲</span></th>
+                                <th class="w-24 sortable" onclick="sortTable('dept')">ฝ่าย <span class="sort-icon">▲</span></th>
+                                <th class="w-28 text-right sortable" onclick="sortTable('people')">ผลผลิต (คน) <span class="sort-icon">▲</span></th>
+                                <th class="w-28 text-right sortable" onclick="sortTable('income')">รายได้ (บาท) <span class="sort-icon">▲</span></th>
+                                <th class="w-32 text-right sortable" onclick="sortTable('social')">มูลค่าสังคม <span class="sort-icon">▲</span></th>
+                                <th class="w-36 sortable" onclick="sortTable('resp')">ผู้รับผิดชอบ <span class="sort-icon">▲</span></th>
+                                <th class="w-32 sortable" onclick="sortTable('cat')">ประเภท <span class="sort-icon">▲</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="activitiesTableBody">
+                            <tr>
+                                <td colspan="9" class="p-8 text-center text-slate-400">
+                                    <div class="space-y-3 max-w-lg mx-auto">
+                                        <div class="skeleton h-5 w-full"></div>
+                                        <div class="skeleton h-5 w-4/5 mx-auto"></div>
+                                        <div class="skeleton h-5 w-3/5 mx-auto"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Pagination Bar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
+                    <div>
+                        แสดง <span id="tableShowingCount" class="font-bold text-slate-800 dark:text-slate-200 font-num">0</span> จากทั้งหมด
+                        <span id="tableTotalCount" class="font-bold text-slate-800 dark:text-slate-200 font-num">0</span> รายการ
+                    </div>
+                    <div class="flex items-center gap-1.5" id="tablePaginationControls"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             🛒 TAB 2: แดชบอร์ดจัดซื้อจัดจ้างสำหรับผู้บริหาร (Procurement Analytics)
+             ══════════════════════════════════════════════════════════════════ -->
+        <div id="tabContent-procurement" class="tab-content space-y-6">
+
+            <!-- Procurement Filter Bar -->
+            <div class="filter-bar-container exec-card p-4 flex flex-col md:flex-row items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <!-- Scope Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">กลุ่มวงเงิน:</span>
+                        <select id="filterProcScope" onchange="handleProcScopeChange()"
+                            class="exec-input text-xs font-semibold py-1.5 px-3 w-auto cursor-pointer">
+                            <option value="จัดซื้อจัดจ้างทั้งหมด" selected>ภาพรวมทั้งหมด (ทุกวงเงิน)</option>
+                            <option value="จัดซื้อจัดจ้าง 2569 (ไม่เกิน5แสน)">งบไม่เกิน 500,000 บาท</option>
+                            <option value="จัดซื้อจัดจ้าง 2569 (เกิน5แสน)">งบเกิน 500,000 บาท</option>
+                        </select>
+                    </div>
+
+                    <!-- Procurement Dept Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">ฝ่าย:</span>
+                        <select id="filterProcDept" onchange="updateProcurementUI()"
+                            class="exec-input text-xs py-1.5 px-3 w-auto cursor-pointer">
+                            <option value="all">ทุกฝ่าย</option>
+                            <option value="ฝ่ายเทคโนโลยีสารสนเทศ">ฝ่ายเทคโนโลยีสารสนเทศ</option>
+                            <option value="ฝ่ายบริหารงานทั่วไป">ฝ่ายบริหารงานทั่วไป</option>
+                            <option value="ฝ่ายจัดส่งและคลังสินค้า">ฝ่ายจัดส่งและคลังสินค้า</option>
+                            <option value="ฝ่ายทรัพยากรบุคคล">ฝ่ายทรัพยากรบุคคล</option>
+                            <option value="ฝ่ายบัญชีและการเงิน">ฝ่ายบัญชีและการเงิน</option>
+                        </select>
+                    </div>
+
+                    <!-- Status Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">สถานะ:</span>
+                        <select id="filterProcStatus" onchange="updateProcurementUI()"
+                            class="exec-input text-xs py-1.5 px-3 w-auto cursor-pointer">
+                            <option value="all">ทุกสถานะ</option>
+                            <option value="อยู่ระหว่างกระบวนการจัดจ้าง">อยู่ระหว่างกระบวนการจัดจ้าง</option>
+                            <option value="งานระหว่างทำ">งานระหว่างทำ</option>
+                            <option value="ส่งมอบงานแล้ว รอตรวจรับ">ส่งมอบงานแล้ว รอตรวจรับ</option>
+                            <option value="อยู่ระหว่าง คกก. ตรวจรับ">อยู่ระหว่าง คกก. ตรวจรับ</option>
+                            <option value="ส่งรายงานตรวจรับแล้ว /รอพัสดุตรวจ">ส่งรายงานตรวจรับแล้ว /รอพัสดุตรวจ</option>
+                            <option value="อนุมัติรายงานตรวจรับแล้ว">อนุมัติรายงานตรวจรับแล้ว</option>
+                            <option value="เบิกจ่ายแล้ว/จบงาน">เบิกจ่ายแล้ว/จบงาน</option>
+                            <option value="ยกเลิกการจัดซื้อ/จัดจ้าง">ยกเลิกการจัดซื้อ/จัดจ้าง</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="loadProcurementData(true)" class="btn-secondary text-xs py-1.5 px-3">
+                        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg>
+                        ซิงค์จัดซื้อจัดจ้าง
+                    </button>
+                </div>
+            </div>
+
+            <!-- 🏆 4 PROCUREMENT KPI CARDS -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+
+                <!-- KPI 1: วงเงินสัญญารวม -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">วงเงินสัญญาจริงรวม</span>
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-bold text-slate-400">฿</span>
+                            <span id="proc-kpi-total-contract"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                        </div>
+                    </div>
+
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-blue-600" d="M 0,22 Q 35,28 65,14 T 100,4"></path>
+                            <path class="sparkline-fill fill-blue-500"
+                                d="M 0,22 Q 35,28 65,14 T 100,4 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">จำนวนโครงการทั้งหมด</span>
+                        <span class="font-bold text-blue-600 dark:text-blue-400 font-num"><span id="proc-kpi-project-count">0</span> โครงการ</span>
+                    </div>
+                </div>
+
+                <!-- KPI 2: งบประมาณไม่เกิน 5 แสน -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">งบไม่เกิน 500,000 บาท</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-bold text-slate-400">฿</span>
+                            <span id="proc-kpi-under-amount"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                        </div>
+                    </div>
+
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-emerald-600" d="M 0,25 Q 40,15 70,22 T 100,5"></path>
+                            <path class="sparkline-fill fill-emerald-500"
+                                d="M 0,25 Q 40,15 70,22 T 100,5 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">เฉพาะเจาะจง</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400 font-num"><span id="proc-kpi-under-count">0</span> รายการ</span>
+                    </div>
+                </div>
+
+                <!-- KPI 3: งบประมาณเกิน 5 แสน -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">งบเกิน 500,000 บาท (e-Bidding)</span>
+                            <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-bold text-slate-400">฿</span>
+                            <span id="proc-kpi-over-amount"
+                                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white font-num">0</span>
+                        </div>
+                    </div>
+
+                    <div class="my-2">
+                        <svg class="sparkline-svg" viewBox="0 0 100 30">
+                            <path class="sparkline-path stroke-purple-600" d="M 0,20 Q 30,28 60,10 T 100,6"></path>
+                            <path class="sparkline-fill fill-purple-500"
+                                d="M 0,20 Q 30,28 60,10 T 100,6 L 100,30 L 0,30 Z"></path>
+                        </svg>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">e-Bidding / ประกวดราคา</span>
+                        <span class="font-bold text-purple-600 dark:text-purple-400 font-num"><span id="proc-kpi-over-count">0</span> รายการ</span>
+                    </div>
+                </div>
+
+                <!-- KPI 4: อัตราเบิกจ่ายสำเร็จ -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">เบิกจ่ายแล้ว / จบงาน</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1">
+                            <span id="proc-kpi-paid-rate"
+                                class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 font-num">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="my-2">
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                            <div id="proc-paid-progress-bar"
+                                class="bg-emerald-500 h-full w-0 transition-all duration-1000 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <span class="text-slate-500 dark:text-slate-400">จบงานแล้ว</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400 font-num"><span id="proc-kpi-paid-count">0</span> โครงการ</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 📊 PROCUREMENT VISUAL CHARTS -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+                <!-- Chart: Spending by Department -->
+                <div class="exec-card p-5 lg:col-span-2 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900 dark:text-white">วงเงินสัญญาจัดซื้อจัดจ้างจำแนกตามฝ่าย</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">สัดส่วนวงเงินสัญญาจริง (บาท) แยกตามฝ่ายงานที่รับผิดชอบ</p>
+                        </div>
+                    </div>
+                    <div class="relative flex-1 min-h-[280px]">
+                        <canvas id="procDeptChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart: 8 Status Distribution -->
+                <div class="exec-card p-5 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white mb-1">สถานะกระบวนการจัดจ้าง</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">แจกแจงตาม 8 สถานะความรับผิดชอบ</p>
+                        <div class="relative min-h-[220px]">
+                            <canvas id="procStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 📋 PROCUREMENT DATA TABLE EXPLORER -->
+            <div class="exec-card p-5 space-y-4">
+
+                <!-- Table Header Controls -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">ทะเบียนรายการจัดซื้อจัดจ้างทั้งหมด (Procurement Explorer)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">คลิกที่แถวเพื่อดูรายละเอียดสัญญา ผู้ชนะ และไทม์ไลน์</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2.5">
+                        <!-- Search Input -->
+                        <div class="relative w-full sm:w-64">
+                            <input type="text" id="procTableSearch" onkeyup="handleProcTableSearch()"
+                                placeholder="ค้นหาชื่อโครงการ, เลขที่ AX, บริษัท..."
+                                class="exec-input text-xs pl-8 pr-3 py-2">
+                            <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+
+                        <!-- Export Excel Button -->
+                        <button onclick="exportProcurementToExcel()" class="btn-secondary text-xs py-2 px-3">
+                            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            ส่งออก Excel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Responsive Container -->
+                <div class="overflow-x-auto custom-scroll rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="exec-table">
+                        <thead>
+                            <tr>
+                                <th class="w-12 text-center sortable" onclick="sortProcTable('id')">ลำดับ <span class="sort-icon">▲</span></th>
+                                <th class="w-32 sortable" onclick="sortProcTable('doc')">เลขที่เอกสาร <span class="sort-icon">▲</span></th>
+                                <th class="sortable" onclick="sortProcTable('name')">รายการ (โครงการ/งาน) <span class="sort-icon">▲</span></th>
+                                <th class="w-36 sortable" onclick="sortProcTable('dept')">ฝ่าย <span class="sort-icon">▲</span></th>
+                                <th class="w-32 text-right sortable" onclick="sortProcTable('amt')">วงเงินสัญญา <span class="sort-icon">▲</span></th>
+                                <th class="w-44 sortable" onclick="sortProcTable('vendor')">ผู้ชนะ / คู่สัญญา <span class="sort-icon">▲</span></th>
+                                <th class="w-40 text-center sortable" onclick="sortProcTable('status')">สถานะของงาน <span class="sort-icon">▲</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="procTableBody">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-slate-400">
+                                    <div class="space-y-3 max-w-lg mx-auto">
+                                        <div class="skeleton h-5 w-full"></div>
+                                        <div class="skeleton h-5 w-4/5 mx-auto"></div>
+                                        <div class="skeleton h-5 w-3/5 mx-auto"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Pagination -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400">
+                    <div>
+                        แสดง <span id="procShowingCount" class="font-bold text-slate-800 dark:text-slate-200 font-num">0</span> จากทั้งหมด
+                        <span id="procTotalCount" class="font-bold text-slate-800 dark:text-slate-200 font-num">0</span> โครงการ
+                    </div>
+                    <div class="flex items-center gap-1.5" id="procPaginationControls"></div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             👥 TAB 3: ทะเบียนและภาระงานบุคลากร สบร. (Staff Matrix)
+             ══════════════════════════════════════════════════════════════════ -->
+        <div id="tabContent-staff" class="tab-content space-y-6">
+
+            <div class="exec-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">ทะเบียนกำลังคนและภาระงานบุคลากร สบร.</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">จำแนกตามฝ่ายบริหาร (ฝบร.), ฝ่ายมาตรฐาน (ฝมร.), ฝ่ายส่งเสริม (ฝสร.), และฝ่ายถ่ายทอด (ฝถร.)</p>
+                </div>
+                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/40 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800">
+                    ทั้งหมด 13 อัตรากำลัง
+                </span>
+            </div>
+
+            <!-- Staff Grid Container -->
+            <div id="staffGridContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Staff cards injected dynamically -->
+            </div>
+
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════════
+             📈 TAB 4: รายงานสรุปผู้บริหารเชิงวิเคราะห์ (Executive Insights)
+             ══════════════════════════════════════════════════════════════════ -->
+        <div id="tabContent-analytics" class="tab-content space-y-6">
+
+            <!-- Executive Summary Top Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="exec-card p-5">
+                    <span class="text-xs font-bold uppercase text-slate-400">ผลประโยชน์ทางเศรษฐกิจรวม</span>
+                    <p class="text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1 font-num" id="insight-economic-impact">฿0</p>
+                    <p class="text-[11px] text-slate-500 mt-1">รายได้ + มูลค่าทางสังคมสะสม</p>
+                </div>
+                <div class="exec-card p-5">
+                    <span class="text-xs font-bold uppercase text-slate-400">อัตราความสำเร็จกิจกรรม</span>
+                    <p class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 font-num" id="insight-activity-rate">100%</p>
+                    <p class="text-[11px] text-slate-500 mt-1">ดำเนินงานตามแผนงาน</p>
+                </div>
+                <div class="exec-card p-5">
+                    <span class="text-xs font-bold uppercase text-slate-400">วงเงินผูกพันสัญญาจัดซื้อ</span>
+                    <p class="text-2xl font-extrabold text-purple-600 dark:text-purple-400 mt-1 font-num" id="insight-contract-total">฿0</p>
+                    <p class="text-[11px] text-slate-500 mt-1">ยอดรวมสัญญาที่อนุมัติแล้ว</p>
+                </div>
+                <div class="exec-card p-5">
+                    <span class="text-xs font-bold uppercase text-slate-400">อัตราเบิกจ่ายจบงาน</span>
+                    <p class="text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 font-num" id="insight-proc-rate">0%</p>
+                    <p class="text-[11px] text-slate-500 mt-1">สัดส่วนโครงการที่เบิกจ่ายแล้ว</p>
+                </div>
+            </div>
+
+            <!-- Quarterly Performance Breakdown Matrix -->
+            <div class="exec-card p-5 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">ตารางสรุปผลการดำเนินงานรายไตรมาส (Quarterly Scorecard)</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">เปรียบเทียบผลงานผู้เข้าร่วม รายได้ และจำนวนกิจกรรมตามรอบไตรมาส</p>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scroll rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table class="exec-table">
+                        <thead>
+                            <tr>
+                                <th>ไตรมาส (Quarter)</th>
+                                <th class="text-right">จำนวนกิจกรรม</th>
+                                <th class="text-right">ผลผลิต (คน)</th>
+                                <th class="text-right">หน่วยงานเครือข่าย</th>
+                                <th class="text-right">รายได้ (บาท)</th>
+                                <th class="text-right">มูลค่าสังคม (บาท)</th>
+                                <th class="text-center">ความก้าวหน้า</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quarterlyTableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top 5 Strategic Projects -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="exec-card p-5">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">🏆 โครงการจัดซื้อจัดจ้างมูลค่าสูงสุด (Top 5 Contracts)</h3>
+                    <div id="topProcList" class="space-y-2.5">
+                        <!-- Injected -->
+                    </div>
+                </div>
+
+                <div class="exec-card p-5">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-3">🌟 กิจกรรมที่มีผู้เข้าร่วมสูงสุด (Top 5 Activities)</h3>
+                    <div id="topActivityList" class="space-y-2.5">
+                        <!-- Injected -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     🔍 PROJECT DETAIL INSPECTION MODAL
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="projectDetailModal"
+    class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 opacity-0">
+    <div id="projectDetailModalContent"
+        class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-xl mx-4 max-h-[90vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300 border border-slate-200 dark:border-slate-800">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950 rounded-t-2xl">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-slate-800 dark:text-white" id="modalDetailTitle">รายละเอียดโครงการ</h3>
+            </div>
+            <button onclick="closeProjectDetailModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto custom-scroll flex-1 space-y-4 text-xs" id="modalDetailBody">
+            <!-- Dynamic detailed key-value list -->
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 bg-slate-50 dark:bg-slate-950 rounded-b-2xl">
+            <button onclick="closeProjectDetailModal()" class="btn-secondary text-xs py-2 px-4">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     📝 DATA ENTRY MODAL (Form for New / Edit Activity)
+     ══════════════════════════════════════════════════════════════════ -->
+<div id="dataEntryModal"
+    class="fixed inset-0 z-50 flex items-center justify-center hidden bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 opacity-0">
+    <div id="dataEntryModalContent"
+        class="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col shadow-2xl transform scale-95 transition-transform duration-300 border border-slate-200 dark:border-slate-800">
+
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950 rounded-t-2xl">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-slate-800 dark:text-white" id="modalFormHeader">เพิ่มข้อมูลกิจกรรม / โครงการใหม่</h3>
+            </div>
+            <button onclick="closeDataEntryModal()"
+                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body Form -->
+        <div class="p-6 overflow-y-auto custom-scroll flex-1">
+            <form id="dataEntryForm" class="space-y-4" onsubmit="submitDataEntryForm(event)">
+                <input type="hidden" id="frmRecordId" value="">
+
+                <!-- Date Range & Dept -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">วันที่เริ่ม <span class="text-rose-500">*</span></label>
+                        <input type="date" id="frmStartDate" required class="exec-input p-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">วันที่สิ้นสุด <span class="text-rose-500">*</span></label>
+                        <input type="date" id="frmEndDate" required class="exec-input p-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ฝ่ายรับผิดชอบ <span class="text-rose-500">*</span></label>
+                        <select id="frmDept" required class="exec-input p-2 text-xs" onchange="handleFormDeptChange()">
+                            <option value="">-- เลือกฝ่าย --</option>
+                            <option value="ฝบร.">ฝบร. (บริหาร)</option>
+                            <option value="ฝมร.">ฝมร. (มาตรฐาน)</option>
+                            <option value="ฝสร.">ฝสร. (ส่งเสริม)</option>
+                            <option value="ฝถร.">ฝถร. (ถ่ายทอด)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Title & Project Code -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ชื่อกิจกรรม / โครงการ <span class="text-rose-500">*</span></label>
+                        <input type="text" id="frmTitle" required class="exec-input p-2 text-xs" placeholder="ระบุชื่อกิจกรรม">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">รหัสโครงการ <span class="text-rose-500">*</span></label>
+                        <select id="frmProjectCode" required class="exec-input p-2 text-xs">
+                            <option value="">-- เลือกรหัสโครงการ --</option>
+                            <option value="69042 แผนงานเสริมสร้างความร่วมมือและยกระดับมาตรฐานองค์ความรู้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ">69042 แผนงานเสริมสร้างความร่วมมือและยกระดับมาตรฐานฯ</option>
+                            <option value="69043 แผนงานส่งเสริมและสร้างความตระหนักเพื่อเพิ่มขีดความสามารถการแข่งขันด้าน Space & GI">69043 แผนงานส่งเสริมและสร้างความตระหนักฯ (STEM)</option>
+                            <option value="69044 แผนงานการบริหารจัดการให้บริการ Space Inspirium">69044 แผนงานการบริหารจัดการ Space Inspirium</option>
+                            <option value="69045 แผนงานพัฒนาศักยภาพบุคลากรพร้อมใช้ด้านเทคโนโลยีอวกาศและภูมิสารสนเทศ">69045 แผนงานพัฒนาศักยภาพบุคลากรพร้อมใช้</option>
+                            <option value="69057 แผนงานบริหารจัดการสำนักบริการองค์ความรู้">69057 แผนงานบริหารจัดการสำนักฯ (ฝบร.)</option>
+                            <option value="69050 แผนงานขับเคลื่อนการสร้างคุณค่าและรายได้">69050 แผนงานขับเคลื่อนการสร้างคุณค่าและรายได้</option>
+                            <option value="69144 โครงการการใช้เทคโนโลยีอวกาศเพื่อประเมินความยั่งยืน (SDGs) เชิงพื้นที่">69144 โครงการประเมินความยั่งยืน (SDGs)</option>
+                            <option value="69143 โครงการเสริมสร้างศักยภาพครูด้านบูรณาการเทคโนโลยีอวกาศและภูมิสารสนเทศเพื่อการเรียนการสอน">69143 โครงการเสริมสร้างศักยภาพครู</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Outputs: People & Orgs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">จำนวนผู้รับการอบรม (คน) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="frmPeople" required min="0" class="exec-input p-2 text-xs font-num" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">เครือข่ายงาน (หน่วยงาน)</label>
+                        <input type="number" id="frmOrgs" min="0" class="exec-input p-2 text-xs font-num" value="0">
+                    </div>
+                </div>
+
+                <!-- Financials: Revenue & Social Value -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">รายได้ (บาท) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="frmIncome" required min="0" step="0.01" class="exec-input p-2 text-xs font-num" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">มูลค่าทางสังคม (บาท)</label>
+                        <input type="number" id="frmSocial" min="0" step="0.01" class="exec-input p-2 text-xs font-num" value="0">
+                    </div>
+                </div>
+
+                <!-- Category & Responsible Person -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ประเภทกิจกรรม <span class="text-rose-500">*</span></label>
+                        <select id="frmCategory" required class="exec-input p-2 text-xs">
+                            <option value="">-- เลือกประเภทกิจกรรม --</option>
+                            <option value="อบรม/สัมมนา">อบรม/สัมมนา</option>
+                            <option value="นิทรรศการ/บริการความรู้">นิทรรศการ/บริการความรู้</option>
+                            <option value="ความร่วมมือ/ประชุม">ความร่วมมือ/ประชุม</option>
+                            <option value="พัฒนาหลักสูตร/มาตรฐาน">พัฒนาหลักสูตร/มาตรฐาน</option>
+                            <option value="กิจกรรมอื่นๆ">กิจกรรมอื่นๆ</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ผู้รับผิดชอบ <span class="text-rose-500">*</span></label>
+                        <select id="frmResponsible" required class="exec-input p-2 text-xs">
+                            <option value="">-- เลือกผู้รับผิดชอบ --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Privilege Rights -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">สิทธิ์สมนาคุณ จำนวนคน</label>
+                        <input type="number" id="frmPrivPeople" min="0" class="exec-input p-2 text-xs font-num" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">สิทธิ์สมนาคุณ มูลค่า (บาท)</label>
+                        <input type="number" id="frmPrivValue" min="0" step="0.01" class="exec-input p-2 text-xs font-num" value="0">
+                    </div>
+                </div>
+
+                <!-- Note & Primary KPI -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ตัวชี้วัดสำนัก</label>
+                        <input type="text" id="frmKpi" class="exec-input p-2 text-xs" placeholder="เช่น 2.1, 3.2">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">หมายเหตุ</label>
+                        <input type="text" id="frmNote" class="exec-input p-2 text-xs" placeholder="ข้อมูลเพิ่มเติม (ถ้ามี)">
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2.5">
+                    <button type="button" onclick="closeDataEntryModal()"
+                        class="btn-secondary text-xs py-2 px-4">ยกเลิก</button>
+                    <button type="submit" id="saveDataBtn" class="btn-primary text-xs py-2 px-5">บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>

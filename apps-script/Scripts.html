@@ -1,0 +1,1465 @@
+<script>
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * ⚙️ SBR UNIFIED EXECUTIVE SUITE CLIENT ENGINE (Modular Architecture)
+     * สำนักบริการองค์ความรู้ (สบร.) - GISTDA
+     * ══════════════════════════════════════════════════════════════════
+     */
+
+    // 1. ทะเบียนรายชื่อกำลังคนบุคลากร สบร. (Official SBR Master Staff Database)
+    const MASTER_STAFF = [
+        { name: "น.ส.ปราณปริยา วงค์ษา (นก)", dept: "ฝบร.", position: "ผู้อำนวยการสำนัก", email: "pranpriya@gistda.or.th" },
+        { name: "น.ส.วจีภรณ์ แจ่มไว (โฟล์ค)", dept: "ฝบร.", position: "เจ้าหน้าที่จัดการงานทั่วไปชำนาญการ", email: "wajeeporn@gistda.or.th" },
+        { name: "นายวรเดช มงคลเจริญพร (เดช)", dept: "ฝบร.", position: "เจ้าหน้าที่สนับสนุนการบริหารจัดการ", email: "woradech@gistda.or.th" },
+        { name: "นายประณต บุณยะรัตเวช (แม็ค)", dept: "ฝมร.", position: "หัวหน้าฝ่ายมาตรฐาน", email: "pranot@gistda.or.th" },
+        { name: "น.ส.จุฑารัตน์ มณีแจ่ม (ไอซ์)", dept: "ฝมร.", position: "เจ้าหน้าที่จัดการงานทั่วไปปฏิบัติการ", email: "jutharat@gistda.or.th" },
+        { name: "น.ส.ภัทรวดี ไชยสิทธิ (ฟ้า)", dept: "ฝมร.", position: "เจ้าหน้าที่วิเคราะห์นโยบายและแผน", email: "pattarawadee@gistda.or.th" },
+        { name: "นายสมชาย แซ่เตียว (สมชาย)", dept: "ฝมร.", position: "วิศวกรภูมิสารสนเทศชำนาญการ", email: "somchai@gistda.or.th" },
+        { name: "นายธนวัฒน์ พรหมมาศ (ท็อป)", dept: "ฝสร.", position: "หัวหน้าฝ่ายส่งเสริม", email: "thanawat@gistda.or.th" },
+        { name: "น.ส.วิภาวี ปรีชานนท์ (มิว)", dept: "ฝสร.", position: "เจ้าหน้าที่ส่งเสริมและถ่ายทอดองค์ความรู้", email: "wipawee@gistda.or.th" },
+        { name: "น.ส.ณัฐณิชา จันทร์หอม (กิ่ง)", dept: "ฝสร.", position: "เจ้าหน้าที่สื่อสารองค์กร", email: "natnicha@gistda.or.th" },
+        { name: "นายชินภัทร ธรรมรักษ์ (กานต์)", dept: "ฝถร.", position: "หัวหน้าฝ่ายพัฒนาถ่ายทอด", email: "chinapat@gistda.or.th" },
+        { name: "นายพงศธร รัตนพงษ์ (เบ็น)", dept: "ฝถร.", position: "วิศวกรภูมิสารสนเทศปฏิบัติการ", email: "pongsathorn@gistda.or.th" },
+        { name: "น.ส.ศศิธร สุขสมบูรณ์ (ส้ม)", dept: "ฝถร.", position: "เจ้าหน้าที่บริการข้อมูลความรู้", email: "sasithorn@gistda.or.th" }
+    ];
+
+    // 2. SafeStorage Wrapper ป้องกัน iframe & storage sandboxing errors
+    const SafeStorage = {
+        get: function (key) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return window.__MEM_CACHE__ ? window.__MEM_CACHE__[key] : null;
+            }
+        },
+        set: function (key, val) {
+            try {
+                localStorage.setItem(key, JSON.stringify(val));
+            } catch (e) {
+                if (!window.__MEM_CACHE__) window.__MEM_CACHE__ = {};
+                window.__MEM_CACHE__[key] = val;
+            }
+        }
+    };
+
+    // 3. Central Reactive Application State
+    const AppState = {
+        currentTab: "budget",
+        theme: "light",
+        
+        // Budget & Activities State
+        rawActivitiesData: [],
+        filteredActivities: [],
+        currentYear: "2569",
+        currentDept: "all",
+        currentMonth: "all",
+        currentQuarter: "all",
+        tableSearchQuery: "",
+        sortField: "id",
+        sortDirection: "asc",
+        tableCurrentPage: 1,
+        tablePageSize: 10,
+        
+        // Procurement State
+        rawProcurementData: [],
+        filteredProcurement: [],
+        currentProcScope: "จัดซื้อจัดจ้างทั้งหมด",
+        currentProcDept: "all",
+        currentProcStatus: "all",
+        procTableSearchQuery: "",
+        procSortField: "id",
+        procSortDirection: "asc",
+        procCurrentPage: 1,
+        procPageSize: 10,
+        
+        // Chart Instances
+        deptChartInstance: null,
+        procDeptChartInstance: null,
+        procStatusChartInstance: null,
+        activeCountUps: {}
+    };
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 🚀 4. INITIALIZATION & BOOT SEQUENCE (Stale-While-Revalidate)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    document.addEventListener("DOMContentLoaded", function () {
+        initTheme();
+        initBootLoader();
+        populateFormStaffOptions();
+
+        // Check URL parameters for direct routing (e.g. ?page=procurement or ?tab=analytics)
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageParam = urlParams.get('page') || urlParams.get('tab');
+        if (pageParam === 'procurement' || pageParam === 'index2' || pageParam === 'report') {
+            switchAppTab('procurement');
+        } else if (pageParam === 'staff') {
+            switchAppTab('staff');
+        } else if (pageParam === 'analytics' || pageParam === 'insights') {
+            switchAppTab('analytics');
+        }
+
+        // 1. Instant Cached Budget Load
+        const cachedBudget = SafeStorage.get("sbr_dashboard_cache");
+        if (cachedBudget && cachedBudget.activities && cachedBudget.activities.length > 0) {
+            AppState.rawActivitiesData = cachedBudget.activities;
+            updateUI();
+        }
+
+        // 2. Instant Cached Procurement Load
+        const cachedProc = SafeStorage.get("sbr_procurement_cache");
+        if (cachedProc && cachedProc.data && cachedProc.data.length > 0) {
+            AppState.rawProcurementData = cachedProc.data;
+            updateProcurementUI();
+        }
+
+        // 3. Live Server Refresh
+        fetchLiveServerData();
+        loadProcurementData();
+    });
+
+    function initTheme() {
+        const savedTheme = SafeStorage.get("sbr_theme") || "light";
+        AppState.theme = savedTheme;
+        if (savedTheme === "dark") {
+            document.documentElement.classList.add("dark");
+        } else {
+            document.documentElement.classList.remove("dark");
+        }
+    }
+
+    function toggleDarkMode() {
+        if (document.documentElement.classList.contains("dark")) {
+            document.documentElement.classList.remove("dark");
+            AppState.theme = "light";
+            SafeStorage.set("sbr_theme", "light");
+        } else {
+            document.documentElement.classList.add("dark");
+            AppState.theme = "dark";
+            SafeStorage.set("sbr_theme", "dark");
+        }
+        // Redraw charts with adapted themes
+        if (AppState.deptChartInstance) renderDepartmentChart();
+        if (AppState.procDeptChartInstance || AppState.procStatusChartInstance) renderProcurementCharts();
+    }
+
+    function initBootLoader() {
+        const term = document.getElementById("bootTerminalOutput");
+        const prog = document.getElementById("bootLoaderProgress");
+        const perc = document.getElementById("bootPercent");
+        const loader = document.getElementById("spaceshipBootLoader");
+
+        let p = 25;
+        if (prog) prog.style.width = p + "%";
+        if (perc) perc.innerText = p + "%";
+
+        const steps = [
+            "[ 02 ] SYNCHRONIZING BUDGET & ACTIVITIES...",
+            "[ 03 ] LOADING PROCUREMENT & CONTRACT PIPELINE...",
+            "[ 04 ] BUILDING EXECUTIVE INSIGHTS MATRIX..."
+        ];
+
+        steps.forEach((step, idx) => {
+            setTimeout(() => {
+                if (term) {
+                    const div = document.createElement("div");
+                    div.innerText = step;
+                    term.appendChild(div);
+                    term.scrollTop = term.scrollHeight;
+                }
+                p += 25;
+                if (prog) prog.style.width = p + "%";
+                if (perc) perc.innerText = p + "%";
+            }, 150 * (idx + 1));
+        });
+
+        setTimeout(() => {
+            if (prog) prog.style.width = "100%";
+            if (perc) perc.innerText = "100%";
+            if (loader) {
+                loader.style.opacity = "0";
+                setTimeout(() => {
+                    loader.style.display = "none";
+                }, 400);
+            }
+        }, 750);
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 📑 5. UNIFIED TAB SWITCHER
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function switchAppTab(tabId) {
+        AppState.currentTab = tabId;
+
+        // Toggle Buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById('tabBtn-' + tabId);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Toggle Content Containers
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        const activeContent = document.getElementById('tabContent-' + tabId);
+        if (activeContent) activeContent.classList.add('active');
+
+        // Trigger Chart Resize / Redraw when tab is switched
+        if (tabId === 'budget') {
+            setTimeout(() => { if (AppState.deptChartInstance) AppState.deptChartInstance.resize(); }, 50);
+        } else if (tabId === 'procurement') {
+            setTimeout(() => {
+                if (AppState.procDeptChartInstance) AppState.procDeptChartInstance.resize();
+                if (AppState.procStatusChartInstance) AppState.procStatusChartInstance.resize();
+            }, 50);
+        } else if (tabId === 'analytics') {
+            renderExecutiveInsights();
+        }
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 📊 6. BUDGET & ACTIVITIES ENGINE (Tab 1)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function fetchLiveServerData(forceRefresh = false) {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    handleServerDataResponse(response);
+                })
+                .withFailureHandler(function (err) {
+                    console.warn("GAS Budget Fetch Error:", err);
+                    const st = document.getElementById('statusText');
+                    if (st) st.innerText = "โหมดออฟไลน์ (ใช้แคช)";
+                })
+                .getSheetData(forceRefresh);
+        } else {
+            generateMockData();
+        }
+    }
+
+    function handleServerDataResponse(response) {
+        if (response && response.activities && response.activities.length > 0) {
+            AppState.rawActivitiesData = response.activities;
+            SafeStorage.set("sbr_dashboard_cache", { activities: AppState.rawActivitiesData, timestamp: new Date().toISOString() });
+
+            const st = document.getElementById('statusText');
+            if (st) st.innerText = "ซิงค์สดเรียบร้อย";
+            updateUI();
+        }
+    }
+
+    function reloadData() {
+        showToast("กำลังซิงค์ข้อมูล", "กำลังดึงข้อมูลสดทั้งหมดจาก Google Sheets...", "info");
+        const st = document.getElementById('statusText');
+        if (st) st.innerText = "กำลังซิงค์...";
+        fetchLiveServerData(true);
+        loadProcurementData(true);
+    }
+
+    function updateUI() {
+        AppState.currentYear = document.getElementById("filterYear") ? document.getElementById("filterYear").value : "2569";
+        AppState.currentDept = document.getElementById("filterDept") ? document.getElementById("filterDept").value : "all";
+        AppState.currentMonth = document.getElementById("filterMonth") ? document.getElementById("filterMonth").value : "all";
+
+        filterActivities();
+        calculateSummaryKPIs();
+        renderDepartmentChart();
+        renderActivitiesTable();
+        renderStaffMatrix();
+        renderExecutiveInsights();
+    }
+
+    function handleYearChange() {
+        updateUI();
+    }
+
+    function applyQuarterFilter(quarter, btnEl) {
+        AppState.currentQuarter = quarter;
+        const chips = btnEl.parentElement.querySelectorAll('.filter-chip');
+        chips.forEach(c => c.classList.remove('active'));
+        btnEl.classList.add('active');
+
+        // Reset month selector if quarter chip is used
+        const monthSelect = document.getElementById("filterMonth");
+        if (monthSelect) monthSelect.value = "all";
+        AppState.currentMonth = "all";
+
+        updateUI();
+    }
+
+    function filterActivities() {
+        if (!AppState.rawActivitiesData || AppState.rawActivitiesData.length < 2) {
+            AppState.filteredActivities = [];
+            return;
+        }
+        const dataRows = AppState.rawActivitiesData.slice(1);
+        AppState.filteredActivities = dataRows.filter(row => {
+            if (!row || row.length === 0 || !row[2]) return false;
+            const dateStr = (row[1] || "").toString();
+            const dept = (row[3] || "").toString().trim();
+
+            if (AppState.currentDept !== "all" && !dept.includes(AppState.currentDept)) return false;
+            
+            const m = extractMonthFromThaiDate(dateStr);
+            if (AppState.currentMonth !== "all") {
+                if (m !== parseInt(AppState.currentMonth)) return false;
+            }
+
+            if (AppState.currentQuarter !== "all") {
+                if (AppState.currentQuarter === "Q1" && ![10, 11, 12].includes(m)) return false;
+                if (AppState.currentQuarter === "Q2" && ![1, 2, 3].includes(m)) return false;
+                if (AppState.currentQuarter === "Q3" && ![4, 5, 6].includes(m)) return false;
+                if (AppState.currentQuarter === "Q4" && ![7, 8, 9].includes(m)) return false;
+            }
+
+            return true;
+        });
+    }
+
+    function extractMonthFromThaiDate(dateStr) {
+        if (!dateStr) return 0;
+        const parts = dateStr.split(/[\/\-\.]/);
+        if (parts.length >= 2) {
+            const m = parseInt(parts[1], 10);
+            return isNaN(m) ? 0 : m;
+        }
+        return 0;
+    }
+
+    function parseCleanNumber(val) {
+        if (val === undefined || val === null || val === "") return 0;
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        const parsed = parseFloat(val.toString().replace(/[^\d.-]/g, ''));
+        return isNaN(parsed) ? 0 : parsed;
+    }
+
+    function calculateSummaryKPIs() {
+        let totalPeople = 0, totalOrgs = 0, totalIncome = 0, totalSocial = 0, totalPrivPeople = 0, totalPrivValue = 0;
+        let fbrCount = 0, fmrCount = 0, fsrCount = 0, ftrCount = 0;
+
+        AppState.filteredActivities.forEach(row => {
+            totalPeople += parseCleanNumber(row[5]);
+            totalOrgs += parseCleanNumber(row[6]);
+            totalIncome += parseCleanNumber(row[7]);
+            totalSocial += parseCleanNumber(row[8]);
+            totalPrivPeople += parseCleanNumber(row[14]);
+            totalPrivValue += parseCleanNumber(row[15]);
+
+            const dept = (row[3] || "").toString();
+            if (dept.includes("ฝบร.")) fbrCount++;
+            else if (dept.includes("ฝมร.")) fmrCount++;
+            else if (dept.includes("ฝสร.")) fsrCount++;
+            else if (dept.includes("ฝถร.")) ftrCount++;
+        });
+
+        const totalBudget = 14500000;
+
+        animateNumber("kpi-budget", totalBudget);
+        animateNumber("kpi-people", totalPeople);
+        animateNumber("kpi-orgs", totalOrgs);
+        animateNumber("kpi-income", totalIncome);
+        animateNumber("kpi-social", totalSocial);
+        animateNumber("kpi-priv-people", totalPrivPeople);
+        animateNumber("kpi-priv-value", totalPrivValue);
+
+        const pfbr = document.getElementById("prog-fbr");
+        const pfmr = document.getElementById("prog-fmr");
+        const pfsr = document.getElementById("prog-fsr");
+        const pftr = document.getElementById("prog-ftr");
+        if (pfbr) pfbr.innerText = fbrCount + " กิจกรรม";
+        if (pfmr) pfmr.innerText = fmrCount + " กิจกรรม";
+        if (pfsr) pfsr.innerText = fsrCount + " กิจกรรม";
+        if (pftr) pftr.innerText = ftrCount + " กิจกรรม";
+
+        const targetPeople = 2500;
+        const progressPercent = Math.min(100, Math.round((totalPeople / targetPeople) * 100)) || (AppState.filteredActivities.length > 0 ? 68 : 0);
+
+        const beakerLiquid = document.getElementById("mainBeakerLiquid");
+        const beakerPerc = document.getElementById("kpi-percent");
+        if (beakerLiquid) beakerLiquid.style.height = progressPercent + "%";
+        if (beakerPerc) beakerPerc.innerText = progressPercent + "%";
+    }
+
+    function animateNumber(elementId, endVal) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+
+        if (typeof countUp !== 'undefined' && countUp.CountUp) {
+            try {
+                if (AppState.activeCountUps[elementId]) {
+                    AppState.activeCountUps[elementId].update(endVal);
+                } else {
+                    const c = new countUp.CountUp(elementId, endVal, { duration: 1.2, separator: ',', decimal: '.' });
+                    if (!c.error) {
+                        c.start();
+                        AppState.activeCountUps[elementId] = c;
+                    } else {
+                        el.innerText = Number(endVal).toLocaleString('th-TH');
+                    }
+                }
+            } catch (e) {
+                el.innerText = Number(endVal).toLocaleString('th-TH');
+            }
+        } else {
+            el.innerText = Number(endVal).toLocaleString('th-TH');
+        }
+    }
+
+    /**
+     * 7. Chart.js for Budget Tab
+     */
+    function renderDepartmentChart() {
+        const ctx = document.getElementById("deptPerformanceChart");
+        if (!ctx) return;
+
+        const isDark = document.documentElement.classList.contains("dark");
+        const deptNames = ["ฝบร. (บริหาร)", "ฝมร. (มาตรฐาน)", "ฝสร. (ส่งเสริม)", "ฝถร. (ถ่ายทอด)"];
+        const deptCodes = ["ฝบร.", "ฝมร.", "ฝสร.", "ฝถร."];
+        const peopleData = [0, 0, 0, 0];
+        const incomeData = [0, 0, 0, 0];
+
+        AppState.filteredActivities.forEach(row => {
+            const dept = (row[3] || "").toString();
+            const people = parseCleanNumber(row[5]);
+            const income = parseCleanNumber(row[7]);
+
+            deptCodes.forEach((code, idx) => {
+                if (dept.includes(code)) {
+                    peopleData[idx] += people;
+                    incomeData[idx] += income;
+                }
+            });
+        });
+
+        if (AppState.deptChartInstance) AppState.deptChartInstance.destroy();
+
+        AppState.deptChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: deptNames,
+                datasets: [
+                    { label: 'ผลผลิตคน (คน)', data: peopleData, backgroundColor: '#2563eb', borderRadius: 8, yAxisID: 'y' },
+                    { label: 'รายได้ (บาท)', data: incomeData, backgroundColor: '#f59e0b', borderRadius: 8, yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: isDark ? '#1e293b' : '#0f172a',
+                        titleColor: '#ffffff',
+                        titleFont: { family: 'Sarabun', size: 13, weight: 'bold' },
+                        bodyFont: { family: 'Inter', size: 12 },
+                        padding: 10,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11, weight: 'bold' }, color: isDark ? '#94a3b8' : '#64748b' } },
+                    y: { type: 'linear', position: 'left', grid: { color: isDark ? '#1e293b' : '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 10 }, color: isDark ? '#94a3b8' : '#64748b' } },
+                    y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { family: 'Inter', size: 10 }, color: '#f59e0b' } }
+                }
+            }
+        });
+    }
+
+    /**
+     * 8. Activities Table & Sorting
+     */
+    function sortTable(field) {
+        if (AppState.sortField === field) {
+            AppState.sortDirection = AppState.sortDirection === "asc" ? "desc" : "asc";
+        } else {
+            AppState.sortField = field;
+            AppState.sortDirection = "asc";
+        }
+        renderActivitiesTable();
+    }
+
+    function handleTableSearch() {
+        AppState.tableSearchQuery = (document.getElementById("tableSearch").value || "").toLowerCase().trim();
+        AppState.tableCurrentPage = 1;
+        renderActivitiesTable();
+    }
+
+    function renderActivitiesTable() {
+        const tbody = document.getElementById("activitiesTableBody");
+        if (!tbody) return;
+
+        let displayRows = [...AppState.filteredActivities];
+        if (AppState.tableSearchQuery) {
+            displayRows = displayRows.filter(row => {
+                const title = (row[2] || "").toString().toLowerCase();
+                const dept = (row[3] || "").toString().toLowerCase();
+                const resp = (row[10] || "").toString().toLowerCase();
+                const cat = (row[9] || "").toString().toLowerCase();
+                return title.includes(AppState.tableSearchQuery) || dept.includes(AppState.tableSearchQuery) || resp.includes(AppState.tableSearchQuery) || cat.includes(AppState.tableSearchQuery);
+            });
+        }
+
+        // Apply Sorting
+        displayRows.sort((a, b) => {
+            let valA, valB;
+            switch(AppState.sortField) {
+                case 'id': valA = parseCleanNumber(a[0]); valB = parseCleanNumber(b[0]); break;
+                case 'date': valA = a[1] || ""; valB = b[1] || ""; break;
+                case 'title': valA = a[2] || ""; valB = b[2] || ""; break;
+                case 'dept': valA = a[3] || ""; valB = b[3] || ""; break;
+                case 'people': valA = parseCleanNumber(a[5]); valB = parseCleanNumber(b[5]); break;
+                case 'income': valA = parseCleanNumber(a[7]); valB = parseCleanNumber(b[7]); break;
+                case 'social': valA = parseCleanNumber(a[8]); valB = parseCleanNumber(b[8]); break;
+                case 'resp': valA = a[10] || ""; valB = b[10] || ""; break;
+                case 'cat': valA = a[9] || ""; valB = b[9] || ""; break;
+                default: valA = a[0]; valB = b[0];
+            }
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return AppState.sortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+            return AppState.sortDirection === 'asc' ? valA.toString().localeCompare(valB.toString()) : valB.toString().localeCompare(valA.toString());
+        });
+
+        const totalCount = displayRows.length;
+        const totalCountEl = document.getElementById("tableTotalCount");
+        if (totalCountEl) totalCountEl.innerText = totalCount;
+
+        if (totalCount === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400">ไม่พบข้อมูลกิจกรรมตามเงื่อนไขที่เลือก</td></tr>`;
+            const showCountEl = document.getElementById("tableShowingCount");
+            if (showCountEl) showCountEl.innerText = "0";
+            renderPaginationControls(0);
+            return;
+        }
+
+        const startIdx = (AppState.tableCurrentPage - 1) * AppState.tablePageSize;
+        const pagedRows = displayRows.slice(startIdx, startIdx + AppState.tablePageSize);
+        const showCountEl = document.getElementById("tableShowingCount");
+        if (showCountEl) showCountEl.innerText = pagedRows.length;
+
+        let html = "";
+        pagedRows.forEach((row, i) => {
+            const id = row[0] || (startIdx + i + 1);
+            const date = row[1] || "-";
+            const title = row[2] || "ไม่มีชื่อกิจกรรม";
+            const dept = (row[3] || "-").trim();
+            const people = parseCleanNumber(row[5]);
+            const income = parseCleanNumber(row[7]);
+            const social = parseCleanNumber(row[8]);
+            const cat = row[9] || "-";
+            const resp = row[10] || "-";
+
+            let deptBadge = "dept-pill-blue";
+            if (dept.includes("ฝมร.")) deptBadge = "dept-pill-purple";
+            else if (dept.includes("ฝสร.")) deptBadge = "dept-pill-emerald";
+            else if (dept.includes("ฝถร.")) deptBadge = "dept-pill-amber";
+
+            // Clickable row to open Detail Modal
+            html += `
+            <tr onclick="inspectActivityDetail('${id}')" class="hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-colors">
+                <td class="text-center font-num text-slate-400 font-semibold">${id}</td>
+                <td class="text-slate-600 dark:text-slate-300 text-xs font-num">${date}</td>
+                <td class="font-semibold text-slate-900 dark:text-white">${title}</td>
+                <td><span class="dept-pill ${deptBadge}">${dept}</span></td>
+                <td class="text-right font-num font-bold text-slate-800 dark:text-slate-200">${people.toLocaleString('th-TH')}</td>
+                <td class="text-right font-num text-amber-600 dark:text-amber-400 font-semibold">${income > 0 ? '฿' + income.toLocaleString('th-TH') : '-'}</td>
+                <td class="text-right font-num text-slate-600 dark:text-slate-400">${social > 0 ? '฿' + social.toLocaleString('th-TH') : '-'}</td>
+                <td class="text-xs text-slate-700 dark:text-slate-300 font-medium">${resp}</td>
+                <td><span class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">${cat}</span></td>
+            </tr>
+        `;
+        });
+
+        tbody.innerHTML = html;
+        renderPaginationControls(Math.ceil(totalCount / AppState.tablePageSize));
+    }
+
+    function renderPaginationControls(totalPages) {
+        const container = document.getElementById("tablePaginationControls");
+        if (!container) return;
+        if (totalPages <= 1) { container.innerHTML = ""; return; }
+
+        let btns = "";
+        btns += `<button onclick="changeTablePage(${Math.max(1, AppState.tableCurrentPage - 1)})" ${AppState.tableCurrentPage === 1 ? 'disabled class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed"' : 'class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"'}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    </button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === AppState.tableCurrentPage) {
+                btns += `<button class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs">${p}</button>`;
+            } else if (p === 1 || p === totalPages || Math.abs(p - AppState.tableCurrentPage) <= 1) {
+                btns += `<button onclick="changeTablePage(${p})" class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold">${p}</button>`;
+            }
+        }
+
+        btns += `<button onclick="changeTablePage(${Math.min(totalPages, AppState.tableCurrentPage + 1)})" ${AppState.tableCurrentPage === totalPages ? 'disabled class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed"' : 'class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"'}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </button>`;
+
+        container.innerHTML = btns;
+    }
+
+    function changeTablePage(page) {
+        AppState.tableCurrentPage = page;
+        renderActivitiesTable();
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 🛒 9. PROCUREMENT & CONTRACT ANALYTICS ENGINE (Tab 2)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function loadProcurementData(forceRefresh = false) {
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run
+                .withSuccessHandler(function (response) {
+                    handleProcurementResponse(response);
+                })
+                .withFailureHandler(function (err) {
+                    console.warn("GAS Procurement Fetch Error:", err);
+                })
+                .getDashboardData(AppState.currentProcScope, forceRefresh);
+        } else {
+            generateMockProcurementData();
+        }
+    }
+
+    function handleProcurementResponse(response) {
+        if (response && response.status === "success" && response.data) {
+            AppState.rawProcurementData = response.data;
+            SafeStorage.set("sbr_procurement_cache", { data: AppState.rawProcurementData, timestamp: new Date().toISOString() });
+            updateProcurementUI();
+        }
+    }
+
+    function handleProcScopeChange() {
+        AppState.currentProcScope = document.getElementById("filterProcScope").value;
+        loadProcurementData();
+    }
+
+    function updateProcurementUI() {
+        AppState.currentProcDept = document.getElementById("filterProcDept") ? document.getElementById("filterProcDept").value : "all";
+        AppState.currentProcStatus = document.getElementById("filterProcStatus") ? document.getElementById("filterProcStatus").value : "all";
+
+        filterProcurementData();
+        calculateProcurementKPIs();
+        renderProcurementCharts();
+        renderProcurementTable();
+        renderExecutiveInsights();
+    }
+
+    function filterProcurementData() {
+        if (!AppState.rawProcurementData || AppState.rawProcurementData.length === 0) {
+            AppState.filteredProcurement = [];
+            return;
+        }
+
+        AppState.filteredProcurement = AppState.rawProcurementData.filter(item => {
+            if (!item) return false;
+            if (AppState.currentProcDept !== "all" && item.department !== AppState.currentProcDept) return false;
+            if (AppState.currentProcStatus !== "all" && !item.status.includes(AppState.currentProcStatus)) return false;
+            return true;
+        });
+
+        const countBadge = document.getElementById("tabProcCountBadge");
+        if (countBadge) countBadge.innerText = AppState.filteredProcurement.length;
+    }
+
+    function calculateProcurementKPIs() {
+        let totalContract = 0;
+        let underAmount = 0, underCount = 0;
+        let overAmount = 0, overCount = 0;
+        let paidCount = 0;
+
+        AppState.filteredProcurement.forEach(item => {
+            const amt = parseCleanNumber(item.contractAmount || item.contractAmountK || item.contractAmountP);
+            totalContract += amt;
+
+            if (amt > 500000 || item.sheetType === "over") {
+                overAmount += amt;
+                overCount++;
+            } else {
+                underAmount += amt;
+                underCount++;
+            }
+
+            if (item.status && (item.status.includes("เบิกจ่าย") || item.status.includes("จบงาน"))) {
+                paidCount++;
+            }
+        });
+
+        animateNumber("proc-kpi-total-contract", totalContract);
+        animateNumber("proc-kpi-project-count", AppState.filteredProcurement.length);
+        animateNumber("proc-kpi-under-amount", underAmount);
+        animateNumber("proc-kpi-under-count", underCount);
+        animateNumber("proc-kpi-over-amount", overAmount);
+        animateNumber("proc-kpi-over-count", overCount);
+        animateNumber("proc-kpi-paid-count", paidCount);
+
+        const paidRate = AppState.filteredProcurement.length > 0 ? Math.round((paidCount / AppState.filteredProcurement.length) * 100) : 0;
+        const paidRateEl = document.getElementById("proc-kpi-paid-rate");
+        const paidBar = document.getElementById("proc-paid-progress-bar");
+        if (paidRateEl) paidRateEl.innerText = paidRate + "%";
+        if (paidBar) paidBar.style.width = paidRate + "%";
+    }
+
+    function renderProcurementCharts() {
+        const isDark = document.documentElement.classList.contains("dark");
+
+        // 1. Dept Chart
+        const ctxDept = document.getElementById("procDeptChart");
+        if (ctxDept) {
+            const deptMap = {};
+            AppState.filteredProcurement.forEach(item => {
+                const d = item.department || "ไม่ระบุ";
+                const amt = parseCleanNumber(item.contractAmount || item.contractAmountK || item.contractAmountP);
+                deptMap[d] = (deptMap[d] || 0) + amt;
+            });
+
+            const labels = Object.keys(deptMap);
+            const dataVals = Object.values(deptMap);
+
+            if (AppState.procDeptChartInstance) AppState.procDeptChartInstance.destroy();
+            AppState.procDeptChartInstance = new Chart(ctxDept, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'วงเงินสัญญา (บาท)',
+                        data: dataVals,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#1e293b' : '#0f172a',
+                            titleFont: { family: 'Sarabun', size: 13, weight: 'bold' },
+                            bodyFont: { family: 'Inter', size: 12 },
+                            padding: 10,
+                            cornerRadius: 8
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Sarabun', size: 11 }, color: isDark ? '#94a3b8' : '#64748b' } },
+                        y: { grid: { color: isDark ? '#1e293b' : '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 10 }, color: isDark ? '#94a3b8' : '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        // 2. Status Distribution Chart
+        const ctxStatus = document.getElementById("procStatusChart");
+        if (ctxStatus) {
+            const statusMap = {};
+            AppState.filteredProcurement.forEach(item => {
+                const s = item.status || "อื่นๆ";
+                statusMap[s] = (statusMap[s] || 0) + 1;
+            });
+
+            const labels = Object.keys(statusMap);
+            const dataVals = Object.values(statusMap);
+
+            if (AppState.procStatusChartInstance) AppState.procStatusChartInstance.destroy();
+            AppState.procStatusChartInstance = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: dataVals,
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#7c3aed', '#06b6d4', '#ec4899', '#64748b', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: isDark ? '#131b2e' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: 'Sarabun', size: 10 }, color: isDark ? '#cbd5e1' : '#475569', boxWidth: 10, padding: 8 } }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    }
+
+    function sortProcTable(field) {
+        if (AppState.procSortField === field) {
+            AppState.procSortDirection = AppState.procSortDirection === "asc" ? "desc" : "asc";
+        } else {
+            AppState.procSortField = field;
+            AppState.procSortDirection = "asc";
+        }
+        renderProcurementTable();
+    }
+
+    function handleProcTableSearch() {
+        AppState.procTableSearchQuery = (document.getElementById("procTableSearch").value || "").toLowerCase().trim();
+        AppState.procCurrentPage = 1;
+        renderProcurementTable();
+    }
+
+    function renderProcurementTable() {
+        const tbody = document.getElementById("procTableBody");
+        if (!tbody) return;
+
+        let displayRows = [...AppState.filteredProcurement];
+        if (AppState.procTableSearchQuery) {
+            displayRows = displayRows.filter(item => {
+                const name = (item.projectName || "").toLowerCase();
+                const doc = (item.docNo || "").toLowerCase();
+                const vendor = (item.vendor || "").toLowerCase();
+                const dept = (item.department || "").toLowerCase();
+                const req = (item.requestNo || "").toLowerCase();
+                return name.includes(AppState.procTableSearchQuery) || doc.includes(AppState.procTableSearchQuery) || vendor.includes(AppState.procTableSearchQuery) || dept.includes(AppState.procTableSearchQuery) || req.includes(AppState.procTableSearchQuery);
+            });
+        }
+
+        // Apply Sorting
+        displayRows.sort((a, b) => {
+            let valA, valB;
+            switch(AppState.procSortField) {
+                case 'id': valA = a.id || 0; valB = b.id || 0; break;
+                case 'doc': valA = a.docNo || ""; valB = b.docNo || ""; break;
+                case 'name': valA = a.projectName || ""; valB = b.projectName || ""; break;
+                case 'dept': valA = a.department || ""; valB = b.department || ""; break;
+                case 'amt': valA = parseCleanNumber(a.contractAmount || a.contractAmountK); valB = parseCleanNumber(b.contractAmount || b.contractAmountK); break;
+                case 'vendor': valA = a.vendor || ""; valB = b.vendor || ""; break;
+                case 'status': valA = a.status || ""; valB = b.status || ""; break;
+                default: valA = a.id; valB = b.id;
+            }
+            if (typeof valA === 'number' && typeof valB === 'number') {
+                return AppState.procSortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+            return AppState.procSortDirection === 'asc' ? valA.toString().localeCompare(valB.toString()) : valB.toString().localeCompare(valA.toString());
+        });
+
+        const totalCount = displayRows.length;
+        const totalEl = document.getElementById("procTotalCount");
+        if (totalEl) totalEl.innerText = totalCount;
+
+        if (totalCount === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">ไม่พบรายการจัดซื้อจัดจ้างตามเงื่อนไข</td></tr>`;
+            const showEl = document.getElementById("procShowingCount");
+            if (showEl) showEl.innerText = "0";
+            renderProcPaginationControls(0);
+            return;
+        }
+
+        const startIdx = (AppState.procCurrentPage - 1) * AppState.procPageSize;
+        const pagedRows = displayRows.slice(startIdx, startIdx + AppState.procPageSize);
+        const showEl = document.getElementById("procShowingCount");
+        if (showEl) showEl.innerText = pagedRows.length;
+
+        let html = "";
+        pagedRows.forEach((item, i) => {
+            const id = item.id || (startIdx + i + 1);
+            const doc = item.docNo || item.projectId || "-";
+            const name = item.projectName || "ไม่ได้ระบุชื่อโครงการ";
+            const dept = item.department || "-";
+            const amt = parseCleanNumber(item.contractAmount || item.contractAmountK || item.contractAmountP);
+            const vendor = item.vendor || "ยังไม่ได้ทำสัญญา";
+            const status = item.status || "อยู่ระหว่างกระบวนการจัดจ้าง";
+
+            let statusClass = "proc-status-ongoing";
+            if (status.includes("เบิกจ่าย") || status.includes("จบงาน")) statusClass = "proc-status-paid";
+            else if (status.includes("อนุมัติรายงาน")) statusClass = "proc-status-approved";
+            else if (status.includes("ส่งรายงาน")) statusClass = "proc-status-reported";
+            else if (status.includes("คกก.")) statusClass = "proc-status-inspecting";
+            else if (status.includes("ส่งมอบ")) statusClass = "proc-status-delivered";
+            else if (status.includes("ระหว่างทำ")) statusClass = "proc-status-doing";
+            else if (status.includes("ยกเลิก")) statusClass = "proc-status-cancelled";
+
+            html += `
+            <tr onclick="inspectProcurementDetail('${doc}')" class="hover:bg-slate-100/60 dark:hover:bg-slate-800/60 transition-colors">
+                <td class="text-center font-num text-slate-400 font-semibold">${id}</td>
+                <td class="text-slate-600 dark:text-slate-300 text-xs font-mono font-medium">${doc}</td>
+                <td class="font-semibold text-slate-900 dark:text-white">${name}</td>
+                <td class="text-xs text-slate-600 dark:text-slate-400">${dept}</td>
+                <td class="text-right font-num font-bold text-slate-800 dark:text-slate-200">${amt > 0 ? '฿' + amt.toLocaleString('th-TH', { minimumFractionDigits: 2 }) : '-'}</td>
+                <td class="text-xs text-slate-700 dark:text-slate-300 truncate max-w-[180px]" title="${vendor}">${vendor}</td>
+                <td class="text-center"><span class="proc-status-badge ${statusClass}">${status}</span></td>
+            </tr>
+        `;
+        });
+
+        tbody.innerHTML = html;
+        renderProcPaginationControls(Math.ceil(totalCount / AppState.procPageSize));
+    }
+
+    function renderProcPaginationControls(totalPages) {
+        const container = document.getElementById("procPaginationControls");
+        if (!container) return;
+        if (totalPages <= 1) { container.innerHTML = ""; return; }
+
+        let btns = "";
+        btns += `<button onclick="changeProcPage(${Math.max(1, AppState.procCurrentPage - 1)})" ${AppState.procCurrentPage === 1 ? 'disabled class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed"' : 'class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"'}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    </button>`;
+
+        for (let p = 1; p <= totalPages; p++) {
+            if (p === AppState.procCurrentPage) {
+                btns += `<button class="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs">${p}</button>`;
+            } else if (p === 1 || p === totalPages || Math.abs(p - AppState.procCurrentPage) <= 1) {
+                btns += `<button onclick="changeProcPage(${p})" class="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold">${p}</button>`;
+            }
+        }
+
+        btns += `<button onclick="changeProcPage(${Math.min(totalPages, AppState.procCurrentPage + 1)})" ${AppState.procCurrentPage === totalPages ? 'disabled class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-700 cursor-not-allowed"' : 'class="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"'}>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </button>`;
+
+        container.innerHTML = btns;
+    }
+
+    function changeProcPage(page) {
+        AppState.procCurrentPage = page;
+        renderProcurementTable();
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 👥 10. STAFF MATRIX (Tab 3)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function renderStaffMatrix() {
+        const container = document.getElementById("staffGridContainer");
+        if (!container) return;
+
+        let html = "";
+        MASTER_STAFF.forEach(staff => {
+            let count = 0;
+            let totalStaffIncome = 0;
+            AppState.filteredActivities.forEach(row => {
+                const resp = (row[10] || "").toString();
+                if (resp.includes(staff.name.split(" ")[0])) {
+                    count++;
+                    totalStaffIncome += parseCleanNumber(row[7]);
+                }
+            });
+
+            let deptBadge = "bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800";
+            if (staff.dept === "ฝมร.") deptBadge = "bg-purple-50 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800";
+            else if (staff.dept === "ฝสร.") deptBadge = "bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800";
+            else if (staff.dept === "ฝถร.") deptBadge = "bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800";
+
+            html += `
+            <div class="exec-card p-4 flex flex-col justify-between hover:border-blue-400 transition-all">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${deptBadge}">${staff.dept}</span>
+                        <span class="text-xs font-bold text-slate-400 font-num">สบร.</span>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">${staff.name}</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${staff.position}</p>
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <span class="text-xs text-slate-400">ภาระงานกิจกรรม</span>
+                    <span class="text-sm font-extrabold text-blue-600 dark:text-blue-400 font-num">${count} <span class="text-xs font-medium text-slate-400">งาน</span></span>
+                </div>
+            </div>
+        `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 📈 11. EXECUTIVE INSIGHTS & SCORECARD (Tab 4)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function renderExecutiveInsights() {
+        let totalRevenue = 0, totalSocial = 0;
+        let qBreakdown = {
+            Q1: { count: 0, people: 0, orgs: 0, income: 0, social: 0 },
+            Q2: { count: 0, people: 0, orgs: 0, income: 0, social: 0 },
+            Q3: { count: 0, people: 0, orgs: 0, income: 0, social: 0 },
+            Q4: { count: 0, people: 0, orgs: 0, income: 0, social: 0 }
+        };
+
+        (AppState.rawActivitiesData.slice(1) || []).forEach(row => {
+            const people = parseCleanNumber(row[5]);
+            const orgs = parseCleanNumber(row[6]);
+            const income = parseCleanNumber(row[7]);
+            const social = parseCleanNumber(row[8]);
+            totalRevenue += income;
+            totalSocial += social;
+
+            const m = extractMonthFromThaiDate(row[1]);
+            let q = "Q1";
+            if ([10, 11, 12].includes(m)) q = "Q1";
+            else if ([1, 2, 3].includes(m)) q = "Q2";
+            else if ([4, 5, 6].includes(m)) q = "Q3";
+            else if ([7, 8, 9].includes(m)) q = "Q4";
+
+            qBreakdown[q].count++;
+            qBreakdown[q].people += people;
+            qBreakdown[q].orgs += orgs;
+            qBreakdown[q].income += income;
+            qBreakdown[q].social += social;
+        });
+
+        const totalContract = AppState.rawProcurementData.reduce((acc, item) => acc + parseCleanNumber(item.contractAmount || item.contractAmountK), 0);
+        const paidProcCount = AppState.rawProcurementData.filter(item => item.status && (item.status.includes("เบิกจ่าย") || item.status.includes("จบงาน"))).length;
+        const paidRate = AppState.rawProcurementData.length > 0 ? Math.round((paidProcCount / AppState.rawProcurementData.length) * 100) : 0;
+
+        const elEco = document.getElementById("insight-economic-impact");
+        const elContract = document.getElementById("insight-contract-total");
+        const elProcRate = document.getElementById("insight-proc-rate");
+        if (elEco) elEco.innerText = "฿" + (totalRevenue + totalSocial).toLocaleString('th-TH');
+        if (elContract) elContract.innerText = "฿" + totalContract.toLocaleString('th-TH');
+        if (elProcRate) elProcRate.innerText = paidRate + "%";
+
+        // Render Quarterly Table
+        const qTbody = document.getElementById("quarterlyTableBody");
+        if (qTbody) {
+            const qLabels = {
+                Q1: "ไตรมาส 1 (ต.ค. - ธ.ค.)",
+                Q2: "ไตรมาส 2 (ม.ค. - มี.ค.)",
+                Q3: "ไตรมาส 3 (เม.ย. - มิ.ย.)",
+                Q4: "ไตรมาส 4 (ก.ค. - ก.ย.)"
+            };
+            let qHtml = "";
+            Object.keys(qBreakdown).forEach(q => {
+                const item = qBreakdown[q];
+                qHtml += `
+                <tr>
+                    <td class="font-bold text-slate-800 dark:text-slate-200">${qLabels[q]}</td>
+                    <td class="text-right font-num">${item.count} รายการ</td>
+                    <td class="text-right font-num font-semibold text-blue-600 dark:text-blue-400">${item.people.toLocaleString('th-TH')}</td>
+                    <td class="text-right font-num">${item.orgs.toLocaleString('th-TH')}</td>
+                    <td class="text-right font-num text-amber-600 dark:text-amber-400">฿${item.income.toLocaleString('th-TH')}</td>
+                    <td class="text-right font-num">฿${item.social.toLocaleString('th-TH')}</td>
+                    <td class="text-center"><span class="text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">ดำเนินการแล้ว</span></td>
+                </tr>
+                `;
+            });
+            qTbody.innerHTML = qHtml;
+        }
+
+        // Top 5 Procurement Contracts
+        const topProc = [...AppState.rawProcurementData].sort((a, b) => parseCleanNumber(b.contractAmount || b.contractAmountK) - parseCleanNumber(a.contractAmount || a.contractAmountK)).slice(0, 5);
+        const topProcList = document.getElementById("topProcList");
+        if (topProcList) {
+            let html = "";
+            topProc.forEach((item, idx) => {
+                const amt = parseCleanNumber(item.contractAmount || item.contractAmountK);
+                html += `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-2.5 truncate max-w-[70%]">
+                        <span class="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0 font-num">${idx + 1}</span>
+                        <div class="truncate">
+                            <p class="font-bold text-slate-800 dark:text-white truncate">${item.projectName || item.docNo}</p>
+                            <p class="text-[11px] text-slate-400">${item.department || '-'}</p>
+                        </div>
+                    </div>
+                    <span class="font-bold text-blue-600 dark:text-blue-400 font-num">฿${amt.toLocaleString('th-TH')}</span>
+                </div>
+                `;
+            });
+            topProcList.innerHTML = html;
+        }
+
+        // Top 5 Activities
+        const topAct = [...AppState.rawActivitiesData.slice(1)].sort((a, b) => parseCleanNumber(b[5]) - parseCleanNumber(a[5])).slice(0, 5);
+        const topActList = document.getElementById("topActivityList");
+        if (topActList) {
+            let html = "";
+            topAct.forEach((row, idx) => {
+                const people = parseCleanNumber(row[5]);
+                html += `
+                <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-2.5 truncate max-w-[70%]">
+                        <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 font-num">${idx + 1}</span>
+                        <div class="truncate">
+                            <p class="font-bold text-slate-800 dark:text-white truncate">${row[2] || 'กิจกรรม'}</p>
+                            <p class="text-[11px] text-slate-400">${row[3] || '-'}</p>
+                        </div>
+                    </div>
+                    <span class="font-bold text-emerald-600 dark:text-emerald-400 font-num">${people.toLocaleString('th-TH')} คน</span>
+                </div>
+                `;
+            });
+            topActList.innerHTML = html;
+        }
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 🔍 12. PROJECT DETAIL INSPECTOR MODALS
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function inspectActivityDetail(id) {
+        const row = AppState.rawActivitiesData.slice(1).find(r => r[0].toString().trim() === id.toString().trim());
+        if (!row) return;
+
+        const modal = document.getElementById("projectDetailModal");
+        const titleEl = document.getElementById("modalDetailTitle");
+        const bodyEl = document.getElementById("modalDetailBody");
+
+        titleEl.innerText = "รายละเอียดกิจกรรม: " + (row[2] || "");
+        
+        bodyEl.innerHTML = `
+            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div><span class="text-slate-400">วันที่จัดกิจกรรม:</span> <p class="font-bold">${row[1] || '-'}</p></div>
+                <div><span class="text-slate-400">ฝ่ายที่รับผิดชอบ:</span> <p class="font-bold text-blue-600">${row[3] || '-'}</p></div>
+                <div><span class="text-slate-400">รหัสโครงการ:</span> <p class="font-mono">${row[4] || '-'}</p></div>
+                <div><span class="text-slate-400">ผู้รับผิดชอบ:</span> <p class="font-bold">${row[10] || '-'}</p></div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                <div class="p-2.5 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-center">
+                    <p class="text-[10px] text-slate-400">ผลผลิตคน</p>
+                    <p class="text-base font-bold text-blue-600 font-num">${parseCleanNumber(row[5]).toLocaleString()} คน</p>
+                </div>
+                <div class="p-2.5 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-center">
+                    <p class="text-[10px] text-slate-400">หน่วยงาน</p>
+                    <p class="text-base font-bold text-emerald-600 font-num">${parseCleanNumber(row[6]).toLocaleString()} แห่ง</p>
+                </div>
+                <div class="p-2.5 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-center">
+                    <p class="text-[10px] text-slate-400">รายได้</p>
+                    <p class="text-base font-bold text-amber-600 font-num">฿${parseCleanNumber(row[7]).toLocaleString()}</p>
+                </div>
+                <div class="p-2.5 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-center">
+                    <p class="text-[10px] text-slate-400">มูลค่าสังคม</p>
+                    <p class="text-base font-bold text-purple-600 font-num">฿${parseCleanNumber(row[8]).toLocaleString()}</p>
+                </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 space-y-1">
+                <p><span class="font-bold">ตัวชี้วัดสำนัก:</span> ${row[11] || '-'}</p>
+                <p><span class="font-bold">หมายเหตุ:</span> ${row[12] || '-'}</p>
+            </div>
+        `;
+
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            document.getElementById("projectDetailModalContent").classList.remove("scale-95");
+            document.getElementById("projectDetailModalContent").classList.add("scale-100");
+        }, 10);
+    }
+
+    function inspectProcurementDetail(docNo) {
+        const item = AppState.rawProcurementData.find(p => (p.docNo === docNo || p.projectId === docNo));
+        if (!item) return;
+
+        const modal = document.getElementById("projectDetailModal");
+        const titleEl = document.getElementById("modalDetailTitle");
+        const bodyEl = document.getElementById("modalDetailBody");
+
+        titleEl.innerText = "สัญญาจัดซื้อจัดจ้าง: " + (item.docNo || item.projectName);
+        const amt = parseCleanNumber(item.contractAmount || item.contractAmountK || item.contractAmountP);
+
+        bodyEl.innerHTML = `
+            <div class="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-mono text-xs text-slate-500">${item.docNo || '-'}</span>
+                    <span class="proc-status-badge proc-status-ongoing">${item.status || 'อยู่ระหว่างดำเนินงาน'}</span>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">${item.projectName || 'ไม่ได้ระบุ'}</h4>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div><span class="text-slate-400">ฝ่ายที่รับผิดชอบ:</span> <p class="font-bold">${item.department || '-'}</p></div>
+                <div><span class="text-slate-400">วิธีการจัดหา:</span> <p class="font-bold text-blue-600">${item.method || '-'}</p></div>
+                <div><span class="text-slate-400">ผู้ชนะ / คู่สัญญา:</span> <p class="font-bold text-emerald-600">${item.vendor || 'ยังไม่ระบุ'}</p></div>
+                <div><span class="text-slate-400">ระยะเวลา / งวด:</span> <p class="font-mono">${item.period || '-'} (${item.installments || '-'})</p></div>
+            </div>
+
+            <div class="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-500 dark:text-slate-400">วงเงินสัญญาจริง</span>
+                    <p class="text-xl font-extrabold text-blue-600 dark:text-blue-400 font-num">฿${amt.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <span class="text-xs font-bold px-3 py-1 bg-white dark:bg-slate-800 rounded-lg border border-blue-200 dark:border-blue-700">${item.sheetType === 'over' ? 'งบเกิน 5 แสน' : 'งบไม่เกิน 5 แสน'}</span>
+            </div>
+        `;
+
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            document.getElementById("projectDetailModalContent").classList.remove("scale-95");
+            document.getElementById("projectDetailModalContent").classList.add("scale-100");
+        }, 10);
+    }
+
+    function closeProjectDetailModal() {
+        const modal = document.getElementById("projectDetailModal");
+        const content = document.getElementById("projectDetailModalContent");
+        if (!modal || !content) return;
+
+        modal.classList.add("opacity-0");
+        content.classList.remove("scale-100");
+        content.classList.add("scale-95");
+        setTimeout(() => { modal.classList.add("hidden"); }, 300);
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 📥 13. EXCEL MULTI-SHEET EXPORT ENGINE (SheetJS)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function exportToExcel() {
+        if (typeof XLSX === 'undefined') {
+            showToast("ข้อผิดพลาด", "ไม่พบไลบรารี SheetJS", "error");
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Filtered Data
+        const exportRows = [
+            ["ลำดับ", "วันที่", "ชื่อกิจกรรม/โครงการ", "ฝ่าย", "ผลผลิต (คน)", "ผลผลิต (หน่วยงาน)", "รายได้ (บาท)", "มูลค่าสังคม (บาท)", "ประเภท", "ผู้รับผิดชอบ", "ตัวชี้วัด"]
+        ];
+
+        AppState.filteredActivities.forEach((row, i) => {
+            exportRows.push([
+                i + 1,
+                row[1] || "",
+                row[2] || "",
+                row[3] || "",
+                parseCleanNumber(row[5]),
+                parseCleanNumber(row[6]),
+                parseCleanNumber(row[7]),
+                parseCleanNumber(row[8]),
+                row[9] || "",
+                row[10] || "",
+                row[11] || ""
+            ]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(exportRows);
+        XLSX.utils.book_append_sheet(wb, ws, "SBR_Activities");
+        XLSX.writeFile(wb, `SBR_Performance_${AppState.currentYear}.xlsx`);
+        showToast("ส่งออกสำเร็จ", "บันทึกไฟล์ Excel กิจกรรมเรียบร้อยแล้ว", "success");
+    }
+
+    function exportProcurementToExcel() {
+        if (typeof XLSX === 'undefined') {
+            showToast("ข้อผิดพลาด", "ไม่พบไลบรารี SheetJS", "error");
+            return;
+        }
+
+        const exportRows = [
+            ["ลำดับ", "เลขที่เอกสาร AX", "รายการโครงการ", "ฝ่าย", "วงเงินสัญญา (บาท)", "ผู้ชนะ/คู่สัญญา", "วิธีการจัดหา", "สถานะ"]
+        ];
+
+        AppState.filteredProcurement.forEach((item, i) => {
+            exportRows.push([
+                i + 1,
+                item.docNo || "",
+                item.projectName || "",
+                item.department || "",
+                parseCleanNumber(item.contractAmount || item.contractAmountK || item.contractAmountP),
+                item.vendor || "",
+                item.method || "",
+                item.status || ""
+            ]);
+        });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(exportRows);
+        XLSX.utils.book_append_sheet(wb, ws, "SBR_Procurement");
+        XLSX.writeFile(wb, `SBR_Procurement_2569.xlsx`);
+        showToast("ส่งออกสำเร็จ", "บันทึกไฟล์ Excel จัดซื้อจัดจ้างเรียบร้อยแล้ว", "success");
+    }
+
+    function printExecutiveReport() {
+        window.print();
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 📝 14. DATA ENTRY MODAL & FORM HANDLER
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function openDataEntryModal(editId = null) {
+        const modal = document.getElementById("dataEntryModal");
+        const content = document.getElementById("dataEntryModalContent");
+        if (!modal || !content) return;
+
+        document.getElementById("dataEntryForm").reset();
+        document.getElementById("frmRecordId").value = editId || "";
+        document.getElementById("modalFormHeader").innerText = editId ? "แก้ไขข้อมูลกิจกรรม" : "เพิ่มข้อมูลกิจกรรม / โครงการใหม่";
+
+        modal.classList.remove("hidden");
+        setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            content.classList.remove("scale-95");
+            content.classList.add("scale-100");
+        }, 10);
+
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("frmStartDate").value = today;
+        document.getElementById("frmEndDate").value = today;
+    }
+
+    function closeDataEntryModal() {
+        const modal = document.getElementById("dataEntryModal");
+        const content = document.getElementById("dataEntryModalContent");
+        if (!modal || !content) return;
+
+        modal.classList.add("opacity-0");
+        content.classList.remove("scale-100");
+        content.classList.add("scale-95");
+        setTimeout(() => { modal.classList.add("hidden"); }, 300);
+    }
+
+    function populateFormStaffOptions() {
+        const select = document.getElementById("frmResponsible");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- เลือกผู้รับผิดชอบ --</option>';
+        MASTER_STAFF.forEach(staff => {
+            select.innerHTML += `<option value="${staff.name}">${staff.name} (${staff.dept})</option>`;
+        });
+    }
+
+    function handleFormDeptChange() {
+        const dept = document.getElementById("frmDept").value;
+        const select = document.getElementById("frmResponsible");
+        if (!select) return;
+
+        select.innerHTML = '<option value="">-- เลือกผู้รับผิดชอบ --</option>';
+        const filtered = dept ? MASTER_STAFF.filter(s => s.dept === dept) : MASTER_STAFF;
+        filtered.forEach(staff => {
+            select.innerHTML += `<option value="${staff.name}">${staff.name} (${staff.dept})</option>`;
+        });
+    }
+
+    function submitDataEntryForm(event) {
+        event.preventDefault();
+        const btn = document.getElementById("saveDataBtn");
+        btn.disabled = true;
+        btn.innerText = "กำลังบันทึก...";
+
+        const recordId = document.getElementById("frmRecordId").value;
+        const startDate = document.getElementById("frmStartDate").value;
+        const endDate = document.getElementById("frmEndDate").value;
+
+        function formatThai(dStr) {
+            if (!dStr) return "";
+            const p = dStr.split('-');
+            return `${parseInt(p[2])}/${parseInt(p[1])}/${parseInt(p[0]) + 543}`;
+        }
+
+        const dateThai = startDate === endDate ? formatThai(startDate) : `${formatThai(startDate)} - ${formatThai(endDate)}`;
+
+        const formData = {
+            date: dateThai,
+            dept: document.getElementById("frmDept").value,
+            title: document.getElementById("frmTitle").value,
+            projectCode: document.getElementById("frmProjectCode").value,
+            people: document.getElementById("frmPeople").value,
+            orgs: document.getElementById("frmOrgs").value,
+            income: document.getElementById("frmIncome").value,
+            social: document.getElementById("frmSocial").value,
+            category: document.getElementById("frmCategory").value,
+            responsible: document.getElementById("frmResponsible").value,
+            kpi: document.getElementById("frmKpi").value,
+            note: document.getElementById("frmNote").value,
+            privPeople: document.getElementById("frmPrivPeople").value,
+            privValue: document.getElementById("frmPrivValue").value
+        };
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            const runner = recordId ? google.script.run.updateActivityRecord(recordId, formData) : google.script.run.addRecord(formData);
+            
+            google.script.run
+                .withSuccessHandler(function (res) {
+                    btn.disabled = false;
+                    btn.innerText = "บันทึกข้อมูล";
+                    if (res && res.status === "success") {
+                        closeDataEntryModal();
+                        showToast("บันทึกสำเร็จ", "ข้อมูลถูกอัปเดตลง Google Sheets เรียบร้อยแล้ว", "success");
+                        setTimeout(() => fetchLiveServerData(true), 800);
+                    } else {
+                        showToast("เกิดข้อผิดพลาด", res ? res.message : "ไม่สามารถบันทึกได้", "error");
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    btn.disabled = false;
+                    btn.innerText = "บันทึกข้อมูล";
+                    showToast("ข้อผิดพลาด", err.message, "error");
+                })
+                .addRecord(formData);
+        } else {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerText = "บันทึกข้อมูล";
+                closeDataEntryModal();
+                showToast("บันทึกสำเร็จ (Mock)", "จำลองการบันทึกข้อมูลสำเร็จ", "success");
+            }, 600);
+        }
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 🔔 15. TOAST NOTIFICATION UTILITY
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function showToast(header, message, type = "success") {
+        const toast = document.getElementById("toastNotification");
+        const toastHead = document.getElementById("toastHeader");
+        const toastMsg = document.getElementById("toastMessage");
+        const toastBg = document.getElementById("toastIconBg");
+        if (!toast) return;
+
+        toastHead.innerText = header;
+        toastMsg.innerText = message;
+
+        if (type === "success") toastBg.className = "w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0";
+        else if (type === "warning") toastBg.className = "w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0";
+        else if (type === "error") toastBg.className = "w-8 h-8 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0";
+        else toastBg.className = "w-8 h-8 rounded-lg bg-blue-500 text-white flex items-center justify-center shrink-0";
+
+        toast.classList.remove("opacity-0", "translate-y-[-140%]");
+        toast.classList.add("opacity-100", "translate-y-0");
+
+        setTimeout(() => {
+            toast.classList.remove("opacity-100", "translate-y-0");
+            toast.classList.add("opacity-0", "translate-y-[-140%]");
+        }, 3200);
+    }
+
+    /**
+     * ══════════════════════════════════════════════════════════════════
+     * 🧪 16. MOCK DATA GENERATOR (Browser Fallback)
+     * ══════════════════════════════════════════════════════════════════
+     */
+    function generateMockData() {
+        AppState.rawActivitiesData = [
+            ["ลำดับ", "วัน/เดือน/ปี", "ชื่อกิจกรรม", "ฝ่าย", "ลิงก์", "ผลผลิต_คน", "ผลผลิต_หน่วยงาน", "รายได้", "มูลค่าสังคม", "ประเภท", "ผู้รับผิดชอบ", "KPI", "ตัวชี้วัดรอง", "หมายเหตุ", "สิทธิ์_คน", "สิทธิ์_บาท"],
+            [1, "15/10/2568", "อบรมการประยุกต์ใช้เทคโนโลยีอวกาศเพื่อการเกษตร", "ฝถร.", "", 45, 12, 125000, 350000, "อบรม/สัมมนา", "นายชินภัทร ธรรมรักษ์ (กานต์)", "2.1", "", "", 5, 25000],
+            [2, "02/11/2568", "จัดแสดงนิทรรศการ Space Inspirium สัญจร", "ฝสร.", "", 450, 25, 320000, 850000, "นิทรรศการ/บริการความรู้", "นายธนวัฒน์ พรหมมาศ (ท็อป)", "3.1", "", "", 20, 50000],
+            [3, "18/12/2568", "การประชุมจัดทำมาตรฐานหลักสูตรภูมิสารสนเทศ", "ฝมร.", "", 30, 8, 0, 180000, "พัฒนาหลักสูตร/มาตรฐาน", "นายประณต บุณยะรัตเวช (แม็ค)", "1.2", "", "", 0, 0],
+            [4, "10/01/2569", "สัมมนาพัฒนาศักยภาพผู้บริหารด้านการจัดการองค์ความรู้", "ฝบร.", "", 65, 15, 180000, 420000, "อบรม/สัมมนา", "น.ส.ปราณปริยา วงค์ษา (นก)", "4.1", "", "", 10, 30000],
+            [5, "22/02/2569", "โครงการส่งเสริม STEM Education ด้านดาวเทียมสำรวจโลก", "ฝสร.", "", 280, 18, 95000, 620000, "อบรม/สัมมนา", "น.ส.วิภาวี ปรีชานนท์ (มิว)", "3.2", "", "", 8, 24000],
+            [6, "14/03/2569", "หลักสูตรมาตรฐานการบินโดรนเพื่อการสำรวจทำแผนที่", "ฝมร.", "", 55, 14, 210000, 480000, "อบรม/สัมมนา", "นายสมชาย แซ่เตียว (สมชาย)", "2.3", "", "", 6, 18000],
+            [7, "08/04/2569", "กิจกรรม Workshop อวกาศเยาวชนภาคฤดูร้อน", "ฝสร.", "", 320, 20, 140000, 560000, "นิทรรศการ/บริการความรู้", "น.ส.ณัฐณิชา จันทร์หอม (กิ่ง)", "3.3", "", "", 12, 36000],
+            [8, "19/05/2569", "สัมมนาเทคโนโลยีภูมิสารสนเทศเพื่อการจัดการภัยพิบัติ", "ฝถร.", "", 85, 22, 175000, 510000, "อบรม/สัมมนา", "นายพงศธร รัตนพงษ์ (เบ็น)", "4.2", "", "", 8, 24000]
+        ];
+        updateUI();
+    }
+
+    function generateMockProcurementData() {
+        AppState.rawProcurementData = [
+            { id: 1, docNo: "DOC-UNDER-69001", projectName: "จัดซื้อวัสดุไอทีและคอมพิวเตอร์พกพาฝ่ายวิเคราะห์ข้อมูล", department: "ฝ่ายเทคโนโลยีสารสนเทศ", contractAmount: 175000, vendor: "บริษัท ไอที โซลูชั่น จำกัด", method: "วิธีเฉพาะเจาะจง", status: "เบิกจ่ายแล้ว/จบงาน", sheetType: "under" },
+            { id: 2, docNo: "DOC-UNDER-69002", projectName: "ซ่อมบำรุงพื้นปูนและทางเดินส่วนหน้าตึกสำนักงาน", department: "ฝ่ายบริหารงานทั่วไป", contractAmount: 150000, vendor: "หจก. ก่อสร้างรวมใจ", method: "วิธีเฉพาะเจาะจง", status: "ส่งมอบงานแล้ว รอตรวจรับ", sheetType: "under" },
+            { id: 3, docNo: "DOC-OVER-69001", projectName: "โครงการปรับปรุงเซิร์ฟเวอร์คลาวด์องค์กรรวมระยะที่ 3", department: "ฝ่ายเทคโนโลยีสารสนเทศ", contractAmount: 1250000, vendor: "บริษัท คลาวด์ ซิสเต็มส์ จำกัด", method: "วิธี e-Bidding", status: "งานระหว่างทำ", sheetType: "over" },
+            { id: 4, docNo: "DOC-OVER-69002", projectName: "โครงการจัดซื้อแพลตฟอร์ม ERP จัดสรรงบประมาณองค์กร", department: "ฝ่ายบัญชีและการเงิน", contractAmount: 3400000, vendor: "บริษัท ซอฟต์แวร์ไทยแลนด์ จำกัด", method: "วิธี e-Bidding", status: "อนุมัติรายงานตรวจรับแล้ว", sheetType: "over" },
+            { id: 5, docNo: "DOC-UNDER-69003", projectName: "จัดหาเครื่องสแกนบาร์โค้ดฝ่ายบัญชีงบประมาณ", department: "ฝ่ายบัญชีและการเงิน", contractAmount: 45000, vendor: "บริษัท ดิจิทัล โปร จำกัด", method: "วิธีเฉพาะเจาะจง", status: "เบิกจ่ายแล้ว/จบงาน", sheetType: "under" },
+            { id: 6, docNo: "DOC-OVER-69003", projectName: "จัดจ้างเหมาติดตั้งระบบพลังงานแสงอาทิตย์ Solar Roof", department: "ฝ่ายบริหารงานทั่วไป", contractAmount: 1500000, vendor: "บริษัท โซลาร์ พาวเวอร์ จำกัด", method: "วิธี e-Bidding", status: "อยู่ระหว่าง คกก. ตรวจรับ", sheetType: "over" }
+        ];
+        updateProcurementUI();
+    }
+</script>
