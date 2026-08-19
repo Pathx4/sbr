@@ -37,6 +37,11 @@ export const FieldTripForm: React.FC<Props> = ({ formData, setFormData }) => {
           ข้อมูลการออกเดินทางภาคสนาม
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="md:col-span-2">
+            <label className={labelClass} htmlFor="projectName">ชื่อโครงการ / กิจกรรมลงพื้นที่ภาคสนาม</label>
+            <input type="text" id="projectName" value={formData.projectName} onChange={handleChange} className={inputClass} placeholder="ระบุชื่อโครงการ หรือกิจกรรมลงพื้นที่..." />
+          </div>
+
           <div>
             <label className={labelClass} htmlFor="date">วันที่</label>
             <input type="date" id="date" value={formData.date} onChange={handleChange} className={inputClass} />
@@ -44,6 +49,11 @@ export const FieldTripForm: React.FC<Props> = ({ formData, setFormData }) => {
           <div>
             <label className={labelClass} htmlFor="days">จำนวนวันเดินทาง</label>
             <input type="number" id="days" value={formData.days} onChange={handleChange} className={inputClass} min="1" placeholder="ระบุจำนวนวัน..." />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className={labelClass} htmlFor="location">สถานที่ลงพื้นที่</label>
+            <input type="text" id="location" value={formData.location} onChange={handleChange} className={inputClass} placeholder="เช่น อ.ศรีราชา จ.ชลบุรี, พื้นที่โครงการ..." />
           </div>
         </div>
       </div>
