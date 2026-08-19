@@ -316,8 +316,9 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
   const [searchStaffTerm, setSearchStaffTerm] = React.useState('');
   const filteredStaff = staffData.filter(s => {
     const query = searchStaffTerm.toLowerCase();
+    const staffTitle = (s as any)?.title || (s as any)?.position || '';
     return (s?.name ? s.name.toLowerCase().includes(query) : false) || 
-           (s?.title ? s.title.toLowerCase().includes(query) : false);
+           (staffTitle ? staffTitle.toLowerCase().includes(query) : false);
   });
 
   // Filter Directors
@@ -746,7 +747,9 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                       <div className={`text-sm font-medium leading-snug ${formData.staffNames.includes(s.name) ? 'text-primary' : 'text-foreground'}`}>
                         {s.name} <span className="text-muted-foreground/50 text-xs ml-1">({s.gender === 'M' ? 'ชาย' : 'หญิง'})</span>
                       </div>
-                      {s.title && <div className="text-xs text-muted-foreground mt-0.5 truncate">{s.title}</div>}
+                      {((s as any).title || (s as any).position) && (
+                        <div className="text-xs text-muted-foreground mt-0.5 truncate">{(s as any).title || (s as any).position}</div>
+                      )}
                     </div>
                   </label>
                 ))}
