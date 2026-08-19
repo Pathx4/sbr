@@ -1,8 +1,9 @@
 import React from 'react';
-import { Users, FileText, UserCheck, Hotel, UserPlus, Plus, Eraser, RefreshCcw } from 'lucide-react';
+import { Users, FileText, UserCheck, Hotel, UserPlus, Plus, Eraser, RefreshCcw, Download } from 'lucide-react';
 import type { BudgetFormData } from '../../types';
 import { FoodSection } from './FoodSection';
 import { OtherExpensesSection } from './OtherExpensesSection';
+import { exportRoomingListToExcel } from '../../utils/exportExcel';
 import personnelData from '../../data/personnel.json';
 import staffData from '../../data/staff_sbr.json';
 import directorsData from '../../data/directors.json';
@@ -61,26 +62,18 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     };
   };
 
-  const generateRooms = (names: string[], otherNames: string[] = [], _dirNames?: string[]) => {
-    const allNames = [...names, ...otherNames];
+  const generateRooms = (names: string[], otherNames: string[] = [], dirNames: string[] = []) => {
+    // การฝึกอบรม: ผู้อำนวยการ (ผอ.) จัดพักห้องคู่ (2 คน/ห้อง) ร่วมกับเจ้าหน้าที่/ผู้เข้าอบรม โดยแยกชาย-หญิง (ไม่จัดห้องเดี่ยวอัตโนมัติ)
+    const allNames = [...names, ...otherNames, ...dirNames];
     const selectedStaff = allNames.map(name => getStaffInfo(name));
     
     const rooms: { id: string; person1: string; person2: string }[] = [];
     let roomCounter = 1;
 
-    // 1. Separate Directors (including selected GISTDA directors + SBR staff directors)
-    const staffDirs = selectedStaff.filter(s => s.title && (s.title.includes('ผู้อำนวยการ') || s.title.includes('ผอ.')));
-    const others = selectedStaff.filter(s => !(s.title && (s.title.includes('ผู้อำนวยการ') || s.title.includes('ผอ.'))));
+    const males = selectedStaff.filter(s => s.gender === 'M');
+    const females = selectedStaff.filter(s => s.gender === 'F');
 
-    staffDirs.forEach(d => {
-      rooms.push({ id: roomCounter.toString(), person1: d.name, person2: '' });
-      roomCounter++;
-    });
-
-    const males = others.filter(s => s.gender === 'M');
-    const females = others.filter(s => s.gender === 'F');
-
-    // Assign Males
+    // Assign Males (พักคู่ 2 คน/ห้อง)
     for (let i = 0; i < males.length; i += 2) {
       rooms.push({ 
         id: roomCounter.toString(), 
@@ -90,7 +83,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
       roomCounter++;
     }
 
-    // Assign Females
+    // Assign Females (พักคู่ 2 คน/ห้อง)
     for (let i = 0; i < females.length; i += 2) {
       rooms.push({ 
         id: roomCounter.toString(), 
@@ -249,7 +242,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
 
   const handleClearAllBeds = () => {
     setFormData(prev => {
-      const totalStaff = prev.staffNames.length + (prev.otherStaffNames || []).length;
+      const totalStaff = prev.staffNames.length + (prev.otherStaffNames || []).length + (prev.directorNames || []).length;
       const roomCount = Math.max(prev.staffRooms.length, Math.ceil(totalStaff / 2));
       const emptyRooms = Array.from({ length: roomCount }).map((_, i) => ({
         id: (i + 1).toString(),
@@ -287,7 +280,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
   };
 
   const getValidOptions = (currentName: string, otherSlotName: string) => {
-    const allNames = [...formData.staffNames, ...(formData.otherStaffNames || [])];
+    const allNames = [...formData.staffNames, ...(formData.otherStaffNames || []), ...(formData.directorNames || [])];
     return allNames.filter(name => {
       if (name === currentName) return true;
       if (!otherSlotName) return true;
@@ -295,10 +288,6 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
       const otherPerson = getStaffInfo(otherSlotName);
       const p = getStaffInfo(name);
       if (!otherPerson || !p) return true;
-      
-      const isOtherDirector = otherPerson.title?.includes('ผู้อำนวยการ') || directorsData.some(d => d.name === otherSlotName);
-      const isPDirector = p.title?.includes('ผู้อำนวยการ') || directorsData.some(d => d.name === name);
-      if (isOtherDirector || isPDirector) return false;
       
       return otherPerson.gender === p.gender;
     });
@@ -451,7 +440,22 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
       } else {
         newNames = newNames.filter(n => !filteredNames.includes(n));
       }
-      return { ...prev, directorNames: newNames };
+
+      const newRooms = generateRooms(prev.staffNames, prev.otherStaffNames || [], newNames);
+      let doubleRooms = 0;
+      let singleRooms = 0;
+      newRooms.forEach(room => {
+        if (room.person1 && room.person2) doubleRooms++;
+        else if (room.person1 || room.person2) singleRooms++;
+      });
+
+      return { 
+        ...prev, 
+        directorNames: newNames,
+        staffRooms: newRooms,
+        staffDoubleRooms: doubleRooms.toString(),
+        staffSingleRooms: singleRooms.toString()
+      };
     });
   };
 
@@ -890,28 +894,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
             )}
           </div>
 
-          {/* Director Accommodation */}
-          <div className={`border rounded-xl p-5 transition-all duration-300 ${formData.directorsNeedRoom ? 'border-primary/40 bg-primary/5' : 'border-border/50 bg-background'}`}>
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input type="checkbox" id="directorsNeedRoom" checked={formData.directorsNeedRoom} onChange={handleChange} className="peer sr-only" />
-                <div className="w-5 h-5 border-2 border-muted-foreground/30 rounded flex items-center justify-center peer-checked:bg-primary peer-checked:border-primary transition-all">
-                  {formData.directorsNeedRoom && <Hotel className="w-3.5 h-3.5 text-primary-foreground" />}
-                </div>
-              </div>
-              <span className={`text-sm font-semibold transition-colors ${formData.directorsNeedRoom ? 'text-primary' : 'text-foreground group-hover:text-primary/70'}`}>
-                ผู้อำนวยการต้องการที่พัก
-              </span>
-            </label>
-            {formData.directorsNeedRoom && (
-              <div className="mt-4 p-3 bg-white/60 rounded-lg border border-primary/10 text-sm text-muted-foreground">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-2 mb-0.5"></span>
-                ระบบจะคำนวณ <strong className="text-foreground">ห้องพักเดี่ยวจำนวน {formData.directorNames.length} ห้อง</strong> อัตโนมัติตามรายชื่อผู้อำนวยการที่เลือกไว้
-              </div>
-            )}
-          </div>
-
-          {/* Staff Accommodation */}
+          {/* Staff & Director Accommodation (ในการอบรม ผอ. และ จนท. พักคู่ตามระเบียบ) */}
           <div className={`border rounded-xl p-5 transition-all duration-300 ${formData.staffNeedsRoom ? 'border-primary/40 bg-primary/5' : 'border-border/50 bg-background'}`}>
             <label className="flex items-center gap-3 cursor-pointer group">
               <div className="relative flex items-center justify-center">
@@ -920,27 +903,54 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                   {formData.staffNeedsRoom && <Hotel className="w-3.5 h-3.5 text-primary-foreground" />}
                 </div>
               </div>
-              <span className={`text-sm font-semibold transition-colors ${formData.staffNeedsRoom ? 'text-primary' : 'text-foreground group-hover:text-primary/70'}`}>
-                เจ้าหน้าที่ต้องการที่พัก
-              </span>
+              <div>
+                <span className={`text-sm font-semibold transition-colors ${formData.staffNeedsRoom ? 'text-primary' : 'text-foreground group-hover:text-primary/70'}`}>
+                  เจ้าหน้าที่และผู้อำนวยการต้องการที่พัก
+                </span>
+                <span className="block text-xs text-muted-foreground mt-0.5">
+                  (ตามระเบียบการฝึกอบรม ผู้อำนวยการและเจ้าหน้าที่จัดพักห้องคู่ 2 ท่าน/ห้อง แยกชาย-หญิง)
+                </span>
+              </div>
             </label>
 
             {formData.staffNeedsRoom && (
               <div className="mt-4 space-y-4">
-                <div className="p-3 bg-white/60 rounded-lg border border-primary/10 text-sm text-muted-foreground">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-2 mb-0.5"></span>
-                  ระบบจะคำนวณ <strong className="text-foreground">ห้องพักคู่จำนวน {formData.staffDoubleRooms || '0'} ห้อง</strong> และ <strong className="text-foreground">ห้องพักเดี่ยวจำนวน {formData.staffSingleRooms || '0'} ห้อง</strong> อัตโนมัติ (แยกชาย-หญิง) ตามรายชื่อเจ้าหน้าที่ที่เลือกไว้
+                <div className="p-3.5 bg-blue-50/60 border border-blue-200/50 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mt-1 shrink-0"></span>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-blue-950">เกณฑ์การจัดห้องพักฝึกอบรม:</p>
+                    <p>ผู้อำนวยการสำนักและเจ้าหน้าที่จัดพัก <strong>ห้องคู่ (2 ท่าน/ห้อง)</strong> โดยแยกชาย-หญิง (หากมีเศษ 1 คน ระบบจะคำนวณเป็นห้องเดี่ยวให้อัตโนมัติ)</p>
+                    <p className="pt-1 text-blue-800">
+                      สรุปปัจจุบัน: <strong className="text-blue-950">ห้องพักคู่ {formData.staffDoubleRooms || '0'} ห้อง</strong> และ <strong className="text-blue-950">ห้องพักเดี่ยว {formData.staffSingleRooms || '0'} ห้อง</strong>
+                    </p>
+                  </div>
                 </div>
                 
-                {(formData.staffNames.length > 0 || (formData.otherStaffNames || []).length > 0) && (
-                  <div className="bg-background rounded-lg border border-border/50 overflow-hidden">
-                    <div className="bg-muted/50 px-4 py-2 border-b border-border/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      รายชื่อการจับคู่ห้องพัก
+                {(formData.staffNames.length > 0 || (formData.otherStaffNames || []).length > 0 || (formData.directorNames || []).length > 0) && (
+                  <div className="bg-background rounded-xl border border-border/60 shadow-sm overflow-hidden">
+                    <div className="bg-muted/60 px-4 py-3 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-bold text-foreground uppercase tracking-wider">
+                          ผังรายชื่อการจัดห้องพัก (Rooming List)
+                        </span>
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => exportRoomingListToExcel(formData)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all self-start sm:self-auto"
+                        title="ดาวน์โหลดไฟล์ Excel ผังรายชื่อแต่ละห้อง"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        ดาวน์โหลดผังห้องพัก (Excel)
+                      </button>
                     </div>
-                    <div className="divide-y divide-border/50">
+
+                    <div className="divide-y divide-border/50 max-h-[460px] overflow-y-auto">
                       {formData.staffRooms.map((room) => (
-                        <div key={room.id} className="p-3 flex flex-col md:flex-row md:items-center gap-4 hover:bg-muted/30 transition-colors">
-                          <div className={`flex items-center justify-center w-14 h-8 rounded text-xs font-bold shrink-0 ${(room.person1 && room.person2) ? 'bg-primary/10 text-primary' : 'bg-orange-500/10 text-orange-600'}`}>
+                        <div key={room.id} className="p-3.5 flex flex-col md:flex-row md:items-center gap-4 hover:bg-muted/30 transition-colors">
+                          <div className={`flex items-center justify-center w-16 h-8 rounded-lg text-xs font-bold shrink-0 ${(room.person1 && room.person2) ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-orange-500/10 text-orange-600 border border-orange-500/20'}`}>
                             ห้อง {room.id}
                           </div>
                           
@@ -950,7 +960,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                               onChange={(e) => handleSlotChange(room.id, 1, e.target.value)}
                               className="text-sm border border-slate-200/10 rounded-xl px-3 py-2 bg-slate-100/40 shadow-neumorph-inset focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] w-full transition-all"
                             >
-                              <option value="" className="text-muted-foreground">- เตียงว่าง -</option>
+                              <option value="" className="text-muted-foreground">- เตียง 1 (ว่าง) -</option>
                               {getValidOptions(room.person1 || '', room.person2 || '').map(name => {
                                 const p = getStaffInfo(name);
                                 const tag = p?.title?.includes('ผู้อำนวยการ') ? 'ผอ.' : (p?.gender === 'M' ? 'ชาย' : 'หญิง');
@@ -963,7 +973,7 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                               onChange={(e) => handleSlotChange(room.id, 2, e.target.value)}
                               className="text-sm border border-slate-200/10 rounded-xl px-3 py-2 bg-slate-100/40 shadow-neumorph-inset focus:ring-2 focus:ring-accent/50 focus:bg-[#fbfcfd] w-full transition-all"
                             >
-                              <option value="" className="text-muted-foreground">- เตียงว่าง -</option>
+                              <option value="" className="text-muted-foreground">- เตียง 2 (ว่าง) -</option>
                               {getValidOptions(room.person2 || '', room.person1 || '').map(name => {
                                 const p = getStaffInfo(name);
                                 const tag = p?.title?.includes('ผู้อำนวยการ') ? 'ผอ.' : (p?.gender === 'M' ? 'ชาย' : 'หญิง');
@@ -974,27 +984,39 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
                         </div>
                       ))}
                     </div>
-                    <div className="bg-muted/30 p-3 border-t border-border/50 flex flex-wrap items-center justify-center gap-2">
-                      <button 
-                        type="button" 
-                        onClick={handleAddRoom} 
-                        className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1.5 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-md transition-colors"
+
+                    <div className="bg-muted/40 p-3 border-t border-border/50 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button 
+                          type="button" 
+                          onClick={handleAddRoom} 
+                          className="text-xs font-medium text-primary hover:text-primary/80 flex items-center gap-1.5 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 transition-colors"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> เพิ่มห้องใหม่
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={handleClearAllBeds} 
+                          className="text-xs font-medium text-destructive hover:text-destructive/80 flex items-center gap-1.5 bg-destructive/5 hover:bg-destructive/10 px-3 py-1.5 rounded-lg border border-destructive/20 transition-colors"
+                        >
+                          <Eraser className="w-3.5 h-3.5" /> ล้างเตียงทั้งหมด
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={handleAutoAssignRooms} 
+                          className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg border border-blue-200 transition-colors"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" /> จัดห้องอัตโนมัติ
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => exportRoomingListToExcel(formData)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all"
                       >
-                        <Plus className="w-3.5 h-3.5" /> เพิ่มห้องใหม่
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={handleClearAllBeds} 
-                        className="text-xs font-medium text-destructive hover:text-destructive/80 flex items-center gap-1.5 bg-destructive/5 hover:bg-destructive/10 px-3 py-1.5 rounded-md transition-colors"
-                      >
-                        <Eraser className="w-3.5 h-3.5" /> ล้างเตียงทั้งหมด
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={handleAutoAssignRooms} 
-                        className="text-xs font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors"
-                      >
-                        <RefreshCcw className="w-3.5 h-3.5" /> จัดห้องอัตโนมัติ
+                        <Download className="w-3.5 h-3.5" />
+                        โหลดผังห้องพัก (Excel)
                       </button>
                     </div>
                   </div>

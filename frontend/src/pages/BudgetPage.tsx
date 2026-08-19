@@ -199,7 +199,7 @@ function BudgetPage() {
         const roomCost = ((dRooms * rates.staffRoomDouble) + (sRooms * rates.staffRoomSingle)) * nights;
         if (roomCost > 0) {
           result.breakdown.push({
-            label: 'ค่าที่พักเจ้าหน้าที่',
+            label: 'ค่าที่พักเจ้าหน้าที่และผู้อำนวยการ',
             amount: roomCost,
             detail: `${dRooms} ห้องพักคู่, ${sRooms} ห้องพักเดี่ยว (${nights} คืน)`
           });
@@ -223,7 +223,7 @@ function BudgetPage() {
         result.totalCost += dirAllowance;
       }
 
-      if (formData.directorsNeedRoom && directorsCount > 0 && nights > 0) {
+      if (formData.activityType !== 'training' && formData.directorsNeedRoom && directorsCount > 0 && nights > 0) {
         const roomCost = directorsCount * rates.execRoom * nights;
         result.breakdown.push({
           label: 'ค่าที่พักผู้อำนวยการ',

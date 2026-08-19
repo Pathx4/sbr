@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import type { BudgetFormData } from '../types';
 import personnel from '../data/personnel.json';
 import staffSbr from '../data/staff_sbr.json';
 import contacts from '../data/contacts.json';
@@ -480,10 +481,10 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
     const dRooms = parseInt(formData.staffDoubleRooms) || 0;
     const sRooms = parseInt(formData.staffSingleRooms) || 0;
     const execRooms = executivesNeedRoom ? executiveNames.length : 0;
-    const dirRooms = directorsNeedRoom ? directorNames.length : 0;
+    const dirRooms = (formData.activityType !== 'training' && directorsNeedRoom) ? directorNames.length : 0;
     const spkRooms = totalSpeakers; // Assume speakers need individual rooms
 
-    if (nightsCount > 0 && (staffNeedsRoom || executivesNeedRoom || directorsNeedRoom || totalSpeakers > 0)) {
+    if (nightsCount > 0 && (staffNeedsRoom || executivesNeedRoom || dirRooms > 0 || totalSpeakers > 0)) {
       const item3StartRow = rIndex;
       worksheet.getRow(rIndex).height = 22;
       worksheet.getCell(`A${rIndex}`).value = itemTotalRowRefs.length + 1;
@@ -554,7 +555,7 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
           }
         }
 
-        // Director Lodging
+        // Director Lodging (เฉพาะการประชุม หรือที่ไม่ใช่การอบรม)
         if (dirRooms > 0) {
           const row = rIndex++;
           worksheet.getRow(row).height = 22;
@@ -573,16 +574,16 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
           }
         }
 
-        // Staff Twin/Double Lodging
+        // Staff & Director Double Lodging
         if (staffNeedsRoom && dRooms > 0) {
           const row = rIndex++;
           worksheet.getRow(row).height = 22;
-          worksheet.getCell(`B${row}`).value = ' - ค่าที่พักเจ้าหน้าที่ (ห้องคู่)';
+          worksheet.getCell(`B${row}`).value = ' - ค่าที่พักเจ้าหน้าที่/ผู้อำนวยการ (ห้องคู่)';
           worksheet.getCell(`C${row}`).value = `(${rates.staffRoomDouble.toLocaleString()}บาท*${dRooms}ห้อง*1คืน)`;
           worksheet.getCell(`D${row}`).value = '=';
           worksheet.getCell(`E${row}`).value = { formula: `${rates.staffRoomDouble}*${dRooms}*1` };
           worksheet.getCell(`F${row}`).value = 'บาท';
-          worksheet.getCell(`K${row}`).value = 'พักคู่';
+          worksheet.getCell(`K${row}`).value = 'พักคู่ (2 ท่าน/ห้อง)';
 
           for (let c = 1; c <= 11; c++) {
             const cell = worksheet.getCell(row, c);
@@ -592,16 +593,16 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
           }
         }
 
-        // Staff Single Lodging
+        // Staff & Director Single Lodging
         if (staffNeedsRoom && sRooms > 0) {
           const row = rIndex++;
           worksheet.getRow(row).height = 22;
-          worksheet.getCell(`B${row}`).value = ' - ค่าที่พักเจ้าหน้าที่ (ห้องเดี่ยว)';
+          worksheet.getCell(`B${row}`).value = ' - ค่าที่พักเจ้าหน้าที่/ผู้อำนวยการ (ห้องเดี่ยว)';
           worksheet.getCell(`C${row}`).value = `(${rates.staffRoomSingle.toLocaleString()}บาท*${sRooms}ห้อง*1คืน)`;
           worksheet.getCell(`D${row}`).value = '=';
           worksheet.getCell(`E${row}`).value = { formula: `${rates.staffRoomSingle}*${sRooms}*1` };
           worksheet.getCell(`F${row}`).value = 'บาท';
-          worksheet.getCell(`K${row}`).value = 'พักเดี่ยว';
+          worksheet.getCell(`K${row}`).value = 'พักเดี่ยว (เศษคน)';
 
           for (let c = 1; c <= 11; c++) {
             const cell = worksheet.getCell(row, c);
@@ -1535,4 +1536,198 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
   const buffer = await workbook.xlsx.writeBuffer();
   const fileBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   saveAs(fileBlob, `ประมาณการงบประมาณ_${projectName || 'อบรม'}.xlsx`);
+};
+
+// ==========================================
+// ROOMING LIST EXPORT (ดาวน์โหลดผังรายชื่อผู้เข้าพักแต่ละห้อง)
+// ==========================================
+export const getPersonDetails = (name: string) => {
+  if (!name) return null;
+  const s = staffSbr.find(x => x.name === name);
+  if (s) {
+    const c = contacts.find(x => x.name === name);
+    return {
+      name: s.name,
+      position: (s as any).title || (s as any).position || 'เจ้าหน้าที่ สบร.',
+      section: '7. สบร.',
+      gender: s.gender || (name.startsWith('นาย') ? 'M' : 'F'),
+      mobile: c?.mobile || '',
+      desk: c?.desk || '',
+      email: c?.email || ''
+    };
+  }
+  const d = directors.find(x => x.name === name);
+  if (d) {
+    const c = contacts.find(x => x.name === name);
+    return {
+      name: d.name,
+      position: d.title || 'ผู้อำนวยการสำนัก',
+      section: d.sheet || 'สทอภ.',
+      gender: d.gender || (name.startsWith('นาย') ? 'M' : 'F'),
+      mobile: c?.mobile || '',
+      desk: c?.desk || '',
+      email: c?.email || ''
+    };
+  }
+  const p = personnel.find(x => x.name === name);
+  if (p) {
+    const c = contacts.find(x => x.name === name);
+    return {
+      name: p.name,
+      position: p.title || 'ผู้บริหาร',
+      section: '1. กลุ่มอำนวยการ',
+      gender: (name.startsWith('นาย') ? 'M' : 'F'),
+      mobile: c?.mobile || '',
+      desk: c?.desk || '',
+      email: c?.email || ''
+    };
+  }
+  const c = contacts.find(x => x.name === name);
+  if (c) {
+    return {
+      name: c.name,
+      position: c.position || 'เจ้าหน้าที่',
+      section: c.section || 'สทอภ.',
+      gender: c.gender || (name.startsWith('นาย') ? 'M' : 'F'),
+      mobile: c.mobile || '',
+      desk: c.desk || '',
+      email: c.email || ''
+    };
+  }
+  return {
+    name,
+    position: 'เจ้าหน้าที่',
+    section: '',
+    gender: (name.startsWith('นาย') ? 'M' : 'F'),
+    mobile: '',
+    desk: '',
+    email: ''
+  };
+};
+
+export const exportRoomingListToExcel = async (formData: BudgetFormData) => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('ผังห้องพัก (Rooming List)', {
+    pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
+  });
+
+  worksheet.views = [{ showGridLines: true }];
+
+  worksheet.columns = [
+    { key: 'col1', width: 12 },
+    { key: 'col2', width: 22 },
+    { key: 'col3', width: 10 },
+    { key: 'col4', width: 34 },
+    { key: 'col5', width: 30 },
+    { key: 'col6', width: 20 },
+    { key: 'col7', width: 34 },
+    { key: 'col8', width: 30 },
+    { key: 'col9', width: 20 },
+    { key: 'col10', width: 22 }
+  ];
+
+  const applyRoomCellStyle = (cell: ExcelJS.Cell, size = 15, bold = false, align: 'left' | 'center' | 'right' = 'left') => {
+    cell.font = {
+      name: 'TH Sarabun New',
+      size: size,
+      bold: bold
+    };
+    cell.alignment = {
+      vertical: 'middle',
+      horizontal: align,
+      wrapText: true
+    };
+  };
+
+  const applyRoomBorders = (cell: ExcelJS.Cell) => {
+    const thinBorder: any = { style: 'thin', color: { argb: 'FFB0B0B0' } };
+    cell.border = {
+      top: thinBorder,
+      left: thinBorder,
+      bottom: thinBorder,
+      right: thinBorder
+    };
+  };
+
+  // Header 1
+  worksheet.mergeCells('A1:J1');
+  const titleCell = worksheet.getCell('A1');
+  titleCell.value = 'แบบฟอร์มการจัดห้องพักผู้เข้าร่วมโครงการ / เจ้าหน้าที่ (Rooming List)';
+  applyRoomCellStyle(titleCell, 18, true, 'center');
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9EFF8' } };
+
+  // Header 2
+  worksheet.mergeCells('A2:J2');
+  const subCell = worksheet.getCell('A2');
+  const projectName = formData.projectName || 'โครงการฝึกอบรม';
+  subCell.value = `โครงการ: ${projectName} | วันที่: ${formData.date || '-'} (${formData.days || 1} วัน) | สถานที่: ${formData.location || '-'}`;
+  applyRoomCellStyle(subCell, 14, false, 'center');
+
+  // Headers
+  const headerRow = worksheet.getRow(4);
+  headerRow.height = 28;
+  const colTitles = ['ห้องที่', 'ประเภทห้อง', 'เพศ', 'เตียง 1 (ชื่อ-สกุล)', 'ตำแหน่ง / สังกัด', 'เบอร์ติดต่อ', 'เตียง 2 (ชื่อ-สกุล)', 'ตำแหน่ง / สังกัด', 'เบอร์ติดต่อ', 'หมายเหตุ'];
+  colTitles.forEach((title, i) => {
+    const cell = headerRow.getCell(i + 1);
+    cell.value = title;
+    applyRoomCellStyle(cell, 15, true, 'center');
+    applyRoomBorders(cell);
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+  });
+
+  let rIdx = 5;
+  const rooms = formData.staffRooms || [];
+
+  rooms.forEach((room: any) => {
+    const row = worksheet.getRow(rIdx);
+    row.height = 24;
+
+    const p1 = room.person1 ? getPersonDetails(room.person1) : null;
+    const p2 = room.person2 ? getPersonDetails(room.person2) : null;
+    
+    const isDouble = Boolean(room.person1 && room.person2);
+    const roomTypeStr = isDouble ? 'ห้องพักคู่ (2 เตียง)' : 'ห้องพักเดี่ยว (1 เตียง)';
+    const genderStr = (p1?.gender === 'F' || p2?.gender === 'F') ? 'หญิง' : 'ชาย';
+
+    row.getCell(1).value = `ห้อง ${room.id}`;
+    row.getCell(2).value = roomTypeStr;
+    row.getCell(3).value = genderStr;
+    row.getCell(4).value = p1?.name || '- ว่าง -';
+    row.getCell(5).value = p1 ? `${p1.position || ''} ${p1.section ? `(${p1.section})` : ''}` : '-';
+    row.getCell(6).value = p1?.mobile || p1?.desk || '-';
+    row.getCell(7).value = p2?.name || '- ว่าง -';
+    row.getCell(8).value = p2 ? `${p2.position || ''} ${p2.section ? `(${p2.section})` : ''}` : '-';
+    row.getCell(9).value = p2?.mobile || p2?.desk || '-';
+    row.getCell(10).value = isDouble ? 'พักคู่' : 'พักเดี่ยว (เศษคน)';
+
+    for (let c = 1; c <= 10; c++) {
+      const cell = row.getCell(c);
+      const align = (c <= 3 || c === 10) ? 'center' : (c === 6 || c === 9 ? 'center' : 'left');
+      applyRoomCellStyle(cell, 14, false, align as any);
+      applyRoomBorders(cell);
+    }
+
+    rIdx++;
+  });
+
+  // Summary Row
+  const summaryRow = worksheet.getRow(rIdx);
+  summaryRow.height = 25;
+  worksheet.mergeCells(`A${rIdx}:C${rIdx}`);
+  const sumCell = worksheet.getCell(`A${rIdx}`);
+  const doubleCount = rooms.filter((r: any) => r.person1 && r.person2).length;
+  const singleCount = rooms.filter((r: any) => (r.person1 && !r.person2) || (!r.person1 && r.person2)).length;
+  sumCell.value = `รวมทั้งหมด ${rooms.length} ห้อง`;
+  applyRoomCellStyle(sumCell, 14, true, 'center');
+  for (let c = 1; c <= 3; c++) applyRoomBorders(worksheet.getCell(rIdx, c));
+
+  worksheet.mergeCells(`D${rIdx}:J${rIdx}`);
+  const sumDetailCell = worksheet.getCell(`D${rIdx}`);
+  sumDetailCell.value = `ห้องคู่: ${doubleCount} ห้อง | ห้องเดี่ยว: ${singleCount} ห้อง | รวมผู้เข้าพัก: ${doubleCount * 2 + singleCount} ท่าน`;
+  applyRoomCellStyle(sumDetailCell, 14, true, 'left');
+  for (let c = 4; c <= 10; c++) applyRoomBorders(worksheet.getCell(rIdx, c));
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const fileBlob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  saveAs(fileBlob, `ผังห้องพัก_${(projectName || 'โครงการ').replace(/[/\\?%*:|"<>]/g, '_')}.xlsx`);
 };
