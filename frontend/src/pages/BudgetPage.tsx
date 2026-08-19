@@ -9,6 +9,7 @@ import type { BudgetFormData } from '../types';
 import { TrainingForm } from '../components/forms/TrainingForm';
 import { MeetingForm } from '../components/forms/MeetingForm';
 import { FieldTripForm } from '../components/forms/FieldTripForm';
+import { DraftsManager } from '../components/common/DraftsManager';
 import { exportToExcel } from '../utils/exportExcel';
 import personnel from '../data/personnel.json';
 import staffSbr from '../data/staff_sbr.json';
@@ -24,7 +25,17 @@ const fadeInUp = {
 };
 
 function BudgetPage() {
-  const [formData, setFormData] = useState<BudgetFormData>(initialFormData);
+  const [formData, setFormData] = useState<BudgetFormData>(() => {
+    try {
+      const saved = localStorage.getItem('sbr_budget_active_draft');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load active draft', e);
+    }
+    return initialFormData;
+  });
   const [showResult, setShowResult] = useState(false);
   const [calculationResult, setCalculationResult] = useState<any>(null);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -482,6 +493,16 @@ function BudgetPage() {
             transition={{ duration: 0.5 }}
             className={`space-y-8 ${showResult && calculationResult ? 'xl:col-span-8' : 'w-full'}`}
           >
+            {/* Saved Drafts & Presets Control Bar */}
+            <DraftsManager 
+              formData={formData} 
+              setFormData={setFormData} 
+              onReset={() => {
+                setCalculationResult(null);
+                setShowResult(false);
+              }}
+            />
+
             {/* Step 1: Regulation */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-4">
