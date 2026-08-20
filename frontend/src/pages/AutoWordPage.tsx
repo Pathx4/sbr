@@ -769,14 +769,22 @@ export default function AutoWordPage() {
 
       {/* Scanning Status Loader Banner */}
       {isScanning && (
-        <div className="p-4 rounded-2xl bg-white border border-blue-200 text-blue-900 flex flex-col space-y-2.5 shadow-sm laser-scanner">
-          <div className="flex items-center gap-3 text-xs font-bold">
-            <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
-            <span className="text-slate-800">{scanStatus || 'กำลังประมวลผลสแกนอ่านใบกำกับภาษี...'}</span>
+        <div className="p-4 rounded-2xl bg-white border border-blue-200/80 shadow-xs flex flex-col space-y-2.5">
+          <div className="flex items-center justify-between gap-3 text-xs font-bold text-slate-800">
+            <div className="flex items-center gap-2.5">
+              <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
+              <span>{scanStatus || 'กำลังประมวลผลสแกนอ่านใบกำกับภาษี...'}</span>
+            </div>
+            {scanProgress > 0 && (
+              <span className="font-mono text-blue-600 font-bold text-xs">{scanProgress}%</span>
+            )}
           </div>
           {scanProgress > 0 && (
-            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/60 p-0.5">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-300 shimmer-effect" style={{ width: `${scanProgress}%` }} />
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/60">
+              <div
+                className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out"
+                style={{ width: `${scanProgress}%` }}
+              />
             </div>
           )}
         </div>

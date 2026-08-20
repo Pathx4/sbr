@@ -85,23 +85,6 @@
     animation: shimmer 2s infinite;
   }
 
-  .laser-scanner {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .laser-scanner::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #3b82f6, #6366f1, transparent);
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.8);
-    animation: laserScan 2.2s ease-in-out infinite;
-  }
-
   .status-pulse {
     animation: softPulse 2.5s infinite ease-in-out;
   }
@@ -110,12 +93,6 @@
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
-}
-
-@keyframes laserScan {
-  0% { top: 0%; opacity: 0.2; }
-  50% { top: 96%; opacity: 1; }
-  100% { top: 0%; opacity: 0.2; }
 }
 
 @keyframes softPulse {
