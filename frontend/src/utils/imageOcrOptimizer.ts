@@ -417,13 +417,18 @@ export function fuzzyCorrectVendorName(rawVendor: string): string {
 
 function cleanThaiText(str: string): string {
   let cleaned = str
-    .replace(/^([!\?\.\-\|\+:งv\s\d]*\d{1,2}\s*[v\|\.\-\:\)\s]+)/gi, '')
-    .replace(/^[!\?\.\-\|\+:งv\s\d]+/gi, '')
+    .replace(/^([!\?\.\-\|\+:งv\s]*\d{1,2}\s*[v\|\.\-\:\)\s]+)/gi, '')
+    .replace(/^[!\?\.\-\|\+:งv\s]+/gi, '')
     .replace(/[ฒณ|\[\]{}]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  
-  return correctTechnicalThaiAndEnglishText(cleaned);
+
+  let text = correctTechnicalThaiAndEnglishText(cleaned);
+
+  // Strip garbled OCR prefix noise attached to known Thai words
+  text = text.replace(/^[0-9A-Za-z\u0e00-\u0e7f]{2,10}(?=ปลั๊ก|สายไฟ|สวิตช์|แผ่น|โมดูล|ตู้)/i, '');
+
+  return text.replace(/\s+/g, ' ').trim();
 }
 
 export function correctTechnicalThaiAndEnglishText(str: string): string {
@@ -431,36 +436,39 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
 
   // 1. Clean leading junk characters on item description (#, /, -, ((, etc.)
   text = text
-    .replace(/^[#\/\-\*\+\:\.\s]+/g, '')
+    .replace(/^[#\/\-\*\+\:\.\s\|]+/g, '')
     .replace(/^\(\s*\(/g, '(')
     .replace(/\)\s*\)/g, ')');
 
-  // 2. Protect AWG Specs & Wire SKUs (e.g. A0325, 22AWG)
+  // 2. Protect AWG Specs & Wire SKUs (e.g. 22AWG, 18AWG)
   text = text
-    .replace(/(\d{1,2})\s*A[W\s]*G/gi, '$1AWG')
+    .replace(/(\d{1,2})\s*[\/ลผเเผเพดa-zA-Z]*\s*WG\b/gi, '$1AWG ')
+    .replace(/(\d{1,2})\s*[\/ลผเเผเพด]{2,4}\s*(?=สายไฟ)/gi, '$1AWG ')
+    .replace(/\b(\d{1,2})[\/ลผเเผเพด]{2,4}(?=สายไฟ|\s)/gi, '$1AWG ')
+    .replace(/\b22\s*aWG|22\/เพด/gi, '22AWG')
+    .replace(/\b18\s*เผด|18ลเพ/gi, '18AWG')
     .replace(/\bA0(\d{3})\b/gi, 'A0$1')
     .replace(/\bA(\d{4})\b/gi, 'A$1');
 
-  // 3. Strip garbled OCR prefix noise BEFORE known Thai words
-  //    e.g. "ฟฟแผ0ปลั๊ก" → "ปลั๊ก", "ผมพ0ปลั๊ก" → "ปลั๊ก", "หมเ0สาย" → "สาย"
-  //    Pattern: 2-6 Thai consonants/digits that don't form a real word, followed by a recognizable word
+  // 3. Strip garbled OCR prefix noise BEFORE known Thai words (e.g. '7105หเผ0ปลั๊ก' -> 'ปลั๊ก')
   const knownWordStarts = [
-    'ปลั๊ก', 'สาย', 'แผ่น', 'สวิตช์', 'โมดูล', 'เซนเซอร์', 'รีเลย์', 'อะแดปเตอร์',
-    'หม้อแปลง', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'คอนเนคเตอร์', 'เคเบิ้ล',
-    'กาว', 'คัตเตอร์', 'น็อต', 'สกรู', 'พาวเวอร์', 'แบตเตอรี่', 'ชุดอุปกรณ์',
+    'ปลั๊ก', 'สายไฟ', 'สาย', 'แผ่น', 'สวิตช์', 'โมดูล', 'เซนเซอร์', 'รีเลย์', 'อะแดปเตอร์',
+    'หม้อแปลง', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'คอนเนคเตอร์', 'เคเบิ้ล', 'เคเบิลแกลนด์',
+    'กาวแท่ง', 'กาว', 'คัตเตอร์', 'น็อต', 'สกรู', 'พาวเวอร์', 'แบตเตอรี่', 'ชุดอุปกรณ์',
     'บอร์ด', 'Board', 'Module', 'Sensor', 'Relay', 'LED', 'LCD', 'USB', 'Arduino',
     'ESP', 'Raspberry', 'Converter', 'Adapter', 'Cable', 'Wire', 'Ultrasonic',
-    'Development', 'Waterproof', 'Solar', 'Battery', 'Power', 'Step',
-    'DIY', 'อิเล็กทรอนิกส์', 'ฉนวน', 'ท่อ', 'ลวด', 'เทป', 'กระดาษ'
+    'Development', 'Waterproof', 'Solar', 'Battery', 'Power', 'Step', 'Camera',
+    'DIY', 'อิเล็กทรอนิกส์', 'ฉนวน', 'ท่อตรง', 'ท่อหด', 'ท่อ', 'ลวด', 'เทป', 'กระดาษ',
+    'หัวแร้ง', 'ตะกั่ว', 'ตู้กันน้ำ', 'ตู้กันนํ้า', 'ปืนยิงกาว'
   ];
+
   for (const word of knownWordStarts) {
     const idx = text.indexOf(word);
-    if (idx > 0 && idx <= 8) {
-      const prefix = text.substring(0, idx);
-      // If the prefix is mostly garbled (consonants+digits without proper vowels), strip it
-      const thaiVowelCount = (prefix.match(/[ะาิีึืุูเแโใไำ]/g) || []).length;
-      const prefixLen = prefix.replace(/\s/g, '').length;
-      if (prefixLen > 0 && thaiVowelCount <= 1 && prefixLen <= 6) {
+    if (idx > 0 && idx <= 12) {
+      const prefix = text.substring(0, idx).trim();
+      const isGarbledNoise = /^\d{2,6}[ก-ฮ\d]+$/i.test(prefix) || (/^[ก-ฮ\d\/\.\-]{1,6}$/i.test(prefix) && !/[ะาิีึืุูเแโใไ]/i.test(prefix));
+      const isPureEnglish = /^[A-Za-z0-9\-\.\s]+$/i.test(prefix) && !/^\d{4,}[A-Za-z]+/.test(prefix);
+      if (isGarbledNoise && !isPureEnglish) {
         text = text.substring(idx);
         break;
       }
@@ -479,18 +487,25 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/\bDevelopment\s+Bo\b/gi, 'Development Board')
     .replace(/\bDevelopn\b/gi, 'Development Board')
     .replace(/\bESP-WROOM-32\b/gi, 'ESP-WROOM-32')
-    .replace(/\bSIM7600A-H\b/gi, 'SIM7600A-H');
+    .replace(/\bSIM7600A-H\b/gi, 'SIM7600A-H')
+    .replace(/JSN-SROAT/gi, 'JSN-SR04T')
+    .replace(/4\.2ง\b/gi, '4.2V')
+    .replace(/121\s*24\b/gi, '12-24V');
 
   // 5. Thai Technical & Hardware Word Corrections (SAFE only — no destructive blanket replacements)
   text = text
+    .replace(/ด้ามบืน/g, 'ด้ามปืน')
+    .replace(/TQ-85\s*สัม|สีสัม|(?:^|\s)สัม(?:\s|$)/g, ' สีส้ม ')
+    .replace(/PL\s*69\s*[\-\s]*ด[ำา\u0e4d\u0e32]*/gi, 'PL PG9-BK ดำ')
+    .replace(/69\s*[\-\s]*ด[ำา\u0e4d\u0e32]*/gi, 'PG9-BK ดำ')
     .replace(/ปลิ๊ก|ปลื๊ก|ปลัก(?!ๆ)/g, 'ปลั๊ก')
     .replace(/ใส้เต็ม/g, 'ไส้เต็ม')
-    .replace(/สสีดํา|สสีดำ/g, 'สีดำ')
-    .replace(/กันนํา|กันนำ/g, 'กันน้ำ')
+    .replace(/สสี/g, 'สี')
+    .replace(/สสีด[ำา\u0e4d\u0e32]*/g, 'สีดำ')
+    .replace(/อ่อนสี/g, 'อ่อน สี')
+    .replace(/กันน[ำา\u0e4d\u0e32]*/g, 'กันน้ำ')
     .replace(/ป้องดัน/g, 'ป้องกัน')
-    .replace(/ลิเรียม/g, 'ลิเธียม')
-    .replace(/ลิเธย(?!ม)/g, 'ลิเธียม')
-    .replace(/ลิเธยม/g, 'ลิเธียม')
+    .replace(/ลิเรียม|ลิเธย(?!ม)|ลิเธยม/g, 'ลิเธียม')
     .replace(/แบตเตอรี(?!่)/g, 'แบตเตอรี่')
     .replace(/โซลาร(?!์)/g, 'โซลาร์')
     .replace(/เชลล์/g, 'เซลล์')
@@ -499,8 +514,6 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/บหาชน/g, 'มหาชน')
     .replace(/จำกัค|จำกัต/g, 'จำกัด')
     .replace(/1\s*fou/gi, '1 ก้อน')
-    .replace(/22\s*aWG|22\/เพด/gi, '22AWG')
-    .replace(/18\s*เผด|18ลเพ/gi, '18AWG')
     .replace(/ใหม่\s*พร้/g, 'พร้อม')
     .replace(/พร้อมอ:/g, 'พร้อม');
 
@@ -518,12 +531,18 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
   text = correctedWords.join(' ');
 
   // 8. Strip trailing numeric junk that looks like leaked price data & VAT codes
-  //    e.g. "สีขาว 3ม. 1.000 559.000 559.00 V" → "สีขาว 3ม."
   text = text
     .replace(/[\s|]+[VvNtX]\s*$/g, '')
     .replace(/(\s+[\d,]+(\.\d{1,3})?)+[\s|]*[VvNtX]?\s*$/g, '')
     .replace(/\s+\d+\.\d{1,3}\s*\d*[\s|]*[VvNtX]?\s*$/g, '')
     .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '');
+
+  // 9. Restore balanced parentheses for technical specs like (JSN-SR04T) or (Global Version)
+  const openCount = (text.match(/\(/g) || []).length;
+  const closeCount = (text.match(/\)/g) || []).length;
+  if (openCount > closeCount) {
+    text = text + ')'.repeat(openCount - closeCount);
+  }
 
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -630,7 +649,7 @@ export function cleanItemDescription(desc: string): string {
     .replace(/เอกสารออกเป็นชุด.*/gi, '')
     .replace(/หน้าที่\s*\d+\/\d+.*/gi, '')
     .replace(/Page\s*\d+\s*of\s*\d+.*/gi, '')
-    .replace(/[\(«»“”"’'\?]/g, ' ')
+    .replace(/[«»“”"’'\?]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   return cleaned;
@@ -901,13 +920,13 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     }
 
-    const textDateMatch = line.match(/(\d{1,2})\s*([ก-ฮ\.]{2,10})\s*(\d{2,4})/);
+    const textDateMatch = line.match(/(?:วันที่\s*)?(\d{1,2})\s*([ก-๙a-zA-Z\.\s]{2,15}?)\s*(\d{2,4})/);
     if (textDateMatch) {
       const d = parseInt(textDateMatch[1], 10);
-      const monthStr = textDateMatch[2];
+      const monthStr = textDateMatch[2].trim();
       let y = parseInt(textDateMatch[3], 10);
 
-      if (d >= 1 && d <= 31) {
+      if (d >= 1 && d <= 31 && monthStr.length >= 2) {
         if (y < 100) {
           if (y >= 60 && y <= 99) y += 2500;
           else if (y >= 20 && y <= 50) y += 2500;
@@ -960,7 +979,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const rawLine = lines[i];
 
     if (
-      /(?:สินค้าที่เสียภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม|Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์|ผู้จัดทำ|การคำนวณ|ใช้ราคาขายตาม|กรมสรรพสามิต|เต็มรูปแทน)/i.test(rawLine)
+      /(?:sou\s*[\d,]+|รวม\s*[\d,]+|ราคารวม\s*VAT|สินค้าที่ไม่มีภาษี|สินค้าที่มีภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม|Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์|ผู้จัดทำ|การคำนวณ|ใช้ราคาขายตาม|กรมสรรพสามิต|เต็มรูปแทน|ศศ\s*TS|คล้า\s*จิก้)/i.test(rawLine)
     ) {
       reachedFooter = true;
     }
@@ -1173,22 +1192,8 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
   }
 
-  // 6. Deduplicate items ONLY if item_code, description, and price are 100% identical
-  const dedupedItems: ParsedReceipt['items'] = [];
-  for (const item of items) {
-    const isDuplicate = dedupedItems.some(existing => {
-      if (existing.item_code && item.item_code && existing.item_code === item.item_code && existing.description === item.description && existing.unit_price === item.unit_price) {
-        return true;
-      }
-      return false;
-    });
-    if (!isDuplicate) {
-      dedupedItems.push(item);
-    }
-  }
-
-  // 7. Mathematical Reconciliation for Whole Invoice
-  const calculatedSubtotal = dedupedItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+  // 6. Mathematical Reconciliation for Whole Invoice
+  const calculatedSubtotal = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
   let inferredDiscount = 0;
 
   if (total_amount <= 0 && calculatedSubtotal > 0) {
@@ -1206,7 +1211,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     invoice_date: invoice_date || '',
     discount: inferredDiscount,
     total_amount,
-    items: dedupedItems,
+    items,
     reconciliation: {
       subtotal: calculatedSubtotal,
       totalAmount: total_amount,
