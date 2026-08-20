@@ -1,9 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, ArrowRight, CheckCircle2, ClipboardList, Building, Car, Presentation } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
 import { initialFormData } from '../types';
 import type { BudgetFormData } from '../types';
 import { TrainingForm } from '../components/forms/TrainingForm';
@@ -467,8 +464,11 @@ function BudgetPage() {
           variants={stagger}
           className="mb-10 max-w-4xl"
         >
-          <motion.div variants={fadeInUp} className="mb-6">
-            <Badge pulse>Budget Allocation System v2.0</Badge>
+          <motion.div variants={fadeInUp} className="mb-4">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              Budget Allocation System v2.0
+            </span>
           </motion.div>
           <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.15] mb-4">
             ระบบประมาณค่าใช้จ่าย<br />
@@ -506,82 +506,89 @@ function BudgetPage() {
             />
 
             {/* Step 1: Regulation */}
-            <Card className="border-border/50 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-bold">1</span>
-                  เลือกฐานระเบียบอ้างอิง
-                </CardTitle>
-                <CardDescription>เลือกระเบียบที่ต้องการใช้ในการคำนวณงบประมาณ</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {['ระเบียบสำนักงบประมาณ', 'ระเบียบ สทอภ. (GISTDA)'].map((reg) => (
-                    <div
-                      key={reg}
-                      onClick={() => setFormData({ ...formData, regulation: reg })}
-                      className={`
-                        relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
-                        ${formData.regulation === reg
-                          ? 'border-primary bg-primary/5 text-primary shadow-[0_0_15px_rgba(0,82,255,0.1)]'
-                          : 'border-border bg-card hover:border-primary/30 hover:bg-accent/10'}
-                      `}
-                    >
-                      <div className="flex items-center gap-3">
-                        <ClipboardList className={`w-5 h-5 shrink-0 ${formData.regulation === reg ? 'text-primary' : 'text-muted-foreground'}`} />
-                        <span className="font-medium text-sm md:text-base">{reg}</span>
-                      </div>
-                      {formData.regulation === reg && (
-                        <CheckCircle2 className="w-5 h-5 shrink-0 ml-auto text-primary" />
-                      )}
-                    </div>
-                  ))}
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4 hover:border-slate-300 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black">1</span>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800">เลือกฐานระเบียบอ้างอิง</h3>
+                  <p className="text-xs text-slate-500">เลือกระเบียบที่ต้องการใช้ในการคำนวณงบประมาณ</p>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                {['ระเบียบสำนักงบประมาณ', 'ระเบียบ สทอภ. (GISTDA)'].map((reg) => (
+                  <motion.div
+                    key={reg}
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.99 }}
+                    onClick={() => setFormData({ ...formData, regulation: reg })}
+                    className={`
+                      relative flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200
+                      ${formData.regulation === reg
+                        ? 'border-blue-600 bg-blue-50/60 text-blue-700 shadow-xs font-bold'
+                        : 'border-slate-200/80 bg-slate-50/40 text-slate-700 hover:border-blue-200 hover:bg-slate-50 font-medium'}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <ClipboardList className={`w-5 h-5 shrink-0 ${formData.regulation === reg ? 'text-blue-600' : 'text-slate-400'}`} />
+                      <span className="text-sm">{reg}</span>
+                    </div>
+                    {formData.regulation === reg && (
+                      <CheckCircle2 className="w-5 h-5 shrink-0 text-blue-600" />
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
 
             {/* Step 2: Activity Type */}
             <AnimatePresence>
               {formData.regulation && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25 }}
+                  className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4 hover:border-slate-300 transition-colors"
                 >
-                  <Card className="border-border/50 shadow-sm">
-                    <CardHeader className="pb-4">
-                      <CardTitle className="flex items-center gap-2 text-xl">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-bold">2</span>
-                        เลือกประเภทกิจกรรม
-                      </CardTitle>
-                      <CardDescription>รูปแบบฟอร์มจะเปลี่ยนไปตามประเภทกิจกรรมที่เลือก</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div
-                          onClick={() => setFormData({ ...formData, activityType: 'training' })}
-                          className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-all ${formData.activityType === 'training' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black">2</span>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800">เลือกประเภทกิจกรรม</h3>
+                      <p className="text-xs text-slate-500">รูปแบบฟอร์มจะเปลี่ยนไปตามประเภทกิจกรรมที่เลือก</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    {[
+                      { type: 'training', label: 'อบรม / สัมมนา', icon: Presentation, color: 'text-purple-600 bg-purple-50' },
+                      { type: 'meeting', label: 'การประชุม', icon: Building, color: 'text-blue-600 bg-blue-50' },
+                      { type: 'field_trip', label: 'ออกเดินทางภาคสนาม', icon: Car, color: 'text-emerald-600 bg-emerald-50' }
+                    ].map(act => {
+                      const Icon = act.icon;
+                      const isSelected = formData.activityType === act.type;
+                      return (
+                        <motion.div
+                          key={act.type}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setFormData({ ...formData, activityType: act.type as any })}
+                          className={`p-4 rounded-2xl border-2 cursor-pointer text-center transition-all duration-200 ${
+                            isSelected
+                              ? 'border-indigo-600 bg-indigo-50/60 shadow-xs'
+                              : 'border-slate-200/80 bg-slate-50/40 hover:border-indigo-200 hover:bg-slate-50'
+                          }`}
                         >
-                          <Presentation className="w-6 h-6 mx-auto mb-2" />
-                          <span className="font-medium">อบรม</span>
-                        </div>
-                        <div
-                          onClick={() => setFormData({ ...formData, activityType: 'meeting' })}
-                          className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-all ${formData.activityType === 'meeting' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
-                        >
-                          <Building className="w-6 h-6 mx-auto mb-2" />
-                          <span className="font-medium">ประชุม</span>
-                        </div>
-                        <div
-                          onClick={() => setFormData({ ...formData, activityType: 'field_trip' })}
-                          className={`p-3 rounded-lg border-2 cursor-pointer text-center transition-all ${formData.activityType === 'field_trip' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
-                        >
-                          <Car className="w-6 h-6 mx-auto mb-2" />
-                          <span className="font-medium">ออกเดินทางภาคสนาม</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                          <div className={`w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${act.color} shadow-xs`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <span className={`text-xs sm:text-sm font-bold block ${isSelected ? 'text-indigo-700' : 'text-slate-700'}`}>
+                            {act.label}
+                          </span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -594,35 +601,39 @@ function BudgetPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-6 hover:border-slate-300 transition-colors"
                 >
-                  <Card className="border-border/50 shadow-sm relative overflow-hidden">
-                    <CardHeader className="pb-6">
-                      <CardTitle className="flex items-center gap-2 text-xl">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-bold">3</span>
-                        กรอกข้อมูลโครงการ
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {formData.activityType === 'training' && <TrainingForm formData={formData} setFormData={setFormData} />}
-                      {formData.activityType === 'meeting' && <MeetingForm formData={formData} setFormData={setFormData} />}
-                      {formData.activityType === 'field_trip' && <FieldTripForm formData={formData} setFormData={setFormData} />}
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black">3</span>
+                    <div>
+                      <h3 className="text-base font-bold text-slate-800">กรอกข้อมูลรายละเอียดโครงการ</h3>
+                      <p className="text-xs text-slate-500">ระบุจำนวนคน ระยะเวลา และค่าใช้จ่ายต่างๆ</p>
+                    </div>
+                  </div>
 
-                      <motion.div
-                        whileHover={{ scale: isFormValid() ? 1.01 : 1, y: isFormValid() ? -2 : 0 }}
-                        whileTap={{ scale: isFormValid() ? 0.98 : 1 }}
-                      >
-                        <Button
-                          className={`w-full mt-8 h-14 text-lg rounded-2xl transition-all duration-500 border-0 ${isFormValid() ? 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-500/90 shadow-xl shadow-primary/30 text-white cursor-pointer' : 'bg-accent/20 text-accent/50 shadow-none'}`}
-                          onClick={handleCalculate}
-                          disabled={!isFormValid()}
-                        >
-                          <Calculator className="mr-2 w-6 h-6" />
-                          <span className="font-bold tracking-wide">คำนวณงบประมาณ</span>
-                          <ArrowRight className="ml-2 w-6 h-6" />
-                        </Button>
-                      </motion.div>
-                    </CardContent>
-                  </Card>
+                  {formData.activityType === 'training' && <TrainingForm formData={formData} setFormData={setFormData} />}
+                  {formData.activityType === 'meeting' && <MeetingForm formData={formData} setFormData={setFormData} />}
+                  {formData.activityType === 'field_trip' && <FieldTripForm formData={formData} setFormData={setFormData} />}
+
+                  <motion.div
+                    whileHover={{ scale: isFormValid() ? 1.01 : 1, y: isFormValid() ? -2 : 0 }}
+                    whileTap={{ scale: isFormValid() ? 0.98 : 1 }}
+                  >
+                    <button
+                      className={`w-full mt-4 h-14 text-sm sm:text-base font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 ${
+                        isFormValid() 
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] cursor-pointer' 
+                          : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      }`}
+                      onClick={handleCalculate}
+                      disabled={!isFormValid()}
+                    >
+                      <Calculator className="w-5 h-5" />
+                      <span>คำนวณงบประมาณอัตโนมัติ</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -634,43 +645,48 @@ function BudgetPage() {
               {/* Visual Category Breakdown & Multi-segment bar */}
               <BudgetAnalyticsCard formData={formData} calculationResult={calculationResult} />
 
-              <Card variant="featured" className="h-full shadow-lg border-primary/20">
-                <CardHeader>
-                  <Badge className="w-fit mb-4">Results Computed</Badge>
-                  <CardTitle className="text-2xl sm:text-3xl font-bold">สรุปงบประมาณ</CardTitle>
-                  <CardDescription>อ้างอิงจาก {formData.regulation}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    {calculationResult.breakdown.map((item: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center border-b pb-3 gap-3">
-                        <div className="min-w-0">
-                          <span className="text-muted-foreground block text-sm font-medium">{item.label}</span>
-                          <span className="text-xs text-muted-foreground/70 line-clamp-2">{item.detail}</span>
-                        </div>
-                        <span className="font-mono text-base sm:text-lg font-semibold text-foreground shrink-0">
-                          ฿ {item.amount.toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-md space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div>
+                    <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold text-[11px] rounded-lg border border-emerald-200 inline-block mb-1.5">
+                      ✓ คำนวณเรียบร้อย
+                    </span>
+                    <h3 className="text-xl font-bold text-slate-900">สรุปงบประมาณโครงการ</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">อ้างอิงจาก {formData.regulation}</p>
                   </div>
+                </div>
 
-                  <div className="pt-4 border-t-2 border-border/50">
-                    <div className="flex justify-between items-end gap-2">
-                      <span className="text-base sm:text-lg font-bold">ยอดรวมทั้งสิ้น</span>
-                      <span className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-secondary">
-                        ฿ {calculationResult.totalCost.toLocaleString()}
+                <div className="space-y-3.5">
+                  {calculationResult.breakdown.map((item: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center border-b border-slate-100 pb-3 gap-3">
+                      <div className="min-w-0">
+                        <span className="text-slate-800 block text-xs font-bold">{item.label}</span>
+                        <span className="text-[11px] text-slate-500 line-clamp-2">{item.detail}</span>
+                      </div>
+                      <span className="font-mono text-sm sm:text-base font-bold text-slate-900 shrink-0">
+                        ฿ {item.amount.toLocaleString()}
                       </span>
                     </div>
-                  </div>
+                  ))}
+                </div>
 
-                  <div className="flex gap-4 mt-8">
-                    <Button variant="outline" className="w-full bg-transparent border-primary/50 hover:bg-primary/5 text-primary py-6 text-sm font-bold" onClick={handleExportExcel}>
-                      📥 Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)
-                    </Button>
+                <div className="pt-4 border-t-2 border-slate-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 p-4 rounded-2xl border">
+                  <div className="flex justify-between items-end gap-2">
+                    <span className="text-sm font-bold text-slate-700">ยอดรวมทั้งสิ้น</span>
+                    <span className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-mono">
+                      ฿ {calculationResult.totalCost.toLocaleString()}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleExportExcel}
+                  className="w-full flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98]"
+                >
+                  <span>📥 Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)</span>
+                </button>
+              </div>
             </div>
           )}
 
