@@ -950,12 +950,27 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   }
 
   // 5. Extract Item Lines, SKUs, and Multi-Line Continuation Descriptions
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  let reachedFooter = false;
 
-    if (excludeKeywords.some(kw => line.toUpperCase().includes(kw.toUpperCase()))) {
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+
+    if (
+      /^(?:สินค้าที่เสียภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม)/i.test(rawLine) ||
+      /Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์/i.test(rawLine)
+    ) {
+      reachedFooter = true;
+    }
+
+    if (excludeKeywords.some(kw => rawLine.toUpperCase().includes(kw.toUpperCase()))) {
       continue;
     }
+
+    // Clean table border characters at end of line (e.g. ")", "|", "}")
+    let line = rawLine
+      .replace(/[\s|\]\)\}\!]+$/g, '')
+      .replace(/[\s|]+[VvNtX]\s*$/g, '')
+      .trim();
 
     // 1. Check if line starts with row index e.g. "1.", "2.", "15." or "1)", "2)"
     const hasRowIndex = /^\s*\d{1,2}[\.\)\s]+/.test(line);
@@ -971,28 +986,27 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/\.-/, '.00').replace(/,/g, ''))).filter(p => p > 0) : [];
     let itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
 
-    // 4. Address line detection — lines with address keywords are NEVER product items
-    const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(line);
+    const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(rawLine);
+    const isTableHeader = /^\s*SKU\b/i.test(rawLine) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(rawLine) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(rawLine) || /จำนวน.*หน่วยละ.*จำนวนเงิน|จำนวน.*หน่วย.*ราคา|หน่วยละ\(บาท\)|ราคาต่อหน่วย.*จำนวนเงิน/i.test(rawLine);
 
-    // 5. Table header detection — lines with column labels
-    const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(line) || /จำนวน.*หน่วยละ.*จำนวนเงิน|จำนวน.*หน่วย.*ราคา|หน่วยละ\(บาท\)/i.test(line);
+    if (isAddressLine || isTableHeader) continue;
 
-    // 6. Direct Column Pattern Matchers:
-    // Pattern A: Standard Thai Table 3-Column line: [Description] [Quantity] [UnitPrice] [TotalPrice]
-    // e.g. "กล่องแยกสายไฟ 3 170.00 510.00" or "ตู้ไฟสวิตช์บอร์ด 3 360.00 1,080.00"
-    const standard3ColMatch = !isAddressLine && !isTableHeader ? line.match(/^(.+?)\s+(\d{1,4})\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+    // Pattern 1: Thai Watsadu 4-column [Qty] [UnitPrice] [Discount] [TotalPrice]
+    const thaiWatsadu4Col = line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/);
 
-    // Pattern B: Standard Thai Table 2-Price line (qty implicit 1): [Description] [UnitPrice] [TotalPrice]
-    // e.g. "หัวแร้งบัดกรี 2,150.00 2,150.00" or "ปลั๊กไฟ 285.00 285.00"
-    const standard2PriceMatch = !isAddressLine && !isTableHeader && !standard3ColMatch ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+    // Pattern 2: Standard 3-column [Qty] [UnitPrice] [TotalPrice] (supports pipe or bracket separators between columns)
+    const standard3Col = !thaiWatsadu4Col ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2}|\.-|\|\s*[\d,]+(?:\.\d{2}|\.-)))\s*\|\s*([\d,]+(?:\.\d{2}|\.-))\s*$/)
+                                        || line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
 
-    // 7. Lookahead 2-line POS Parser:
-    // If current line has description/barcode but NO price, check if next line i+1 has price/qty
+    // Pattern 3: Standard 2-price [UnitPrice] [TotalPrice] (qty = 1)
+    const standard2Price = !thaiWatsadu4Col && !standard3Col ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+
+    // Pattern 4: Lookahead 2-line POS Parser:
     let lookaheadMatched = false;
     let nextLinePrices: number[] = [];
     let nextLineQty = 1;
 
-    if (!isAddressLine && !isTableHeader && !standard3ColMatch && !standard2PriceMatch && itemPrice === 0 && i + 1 < lines.length) {
+    if (!thaiWatsadu4Col && !standard3Col && !standard2Price && itemPrice === 0 && i + 1 < lines.length) {
       const nextLine = lines[i + 1];
       const nextPriceMatches = nextLine.match(/([\d,]+(?:\.\d{2}|\.-))/g) || nextLine.match(/\s+(\d{1,6})\s*$/);
       if (nextPriceMatches && nextPriceMatches.length >= 1) {
@@ -1006,8 +1020,8 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     }
 
-    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, valid price, column match, or lookahead match
-    const isNewItemRow = !isAddressLine && !isTableHeader && (Boolean(standard3ColMatch) || Boolean(standard2PriceMatch) || hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount) || lookaheadMatched);
+    // A line is a NEW ITEM ROW if it has any matched pattern or price
+    const isNewItemRow = Boolean(thaiWatsadu4Col) || Boolean(standard3Col) || Boolean(standard2Price) || hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount) || lookaheadMatched;
 
     if (isNewItemRow) {
       let cleanDesc = line;
@@ -1026,18 +1040,23 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '')
         .trim();
 
+      // Strip leading table row prefix: e.g. "1 | v [", "2 | v |", "3 | ง |", "4 | ฯ |", "1. ", "14. |"
+      cleanDesc = cleanDesc.replace(/^\s*\d{1,3}\s*[\|\/\\]\s*[vVงฯnNโoO\s]*[\|\/\\\[\{\(\]]*\s*/, '');
+      cleanDesc = cleanDesc.replace(/^\s*\d{1,3}[\.\)\s\|]+/, '');
+
       // Extract SKU / Barcode / Item Code if available (EAN-13, ART., ITEM:, CODE:, bracket codes)
       let item_code = '';
 
       // Check leading 8-14 digit barcode (e.g. 8859298504132 หรือ 2000603173741)
-      const leadingBarcodeMatch = cleanDesc.match(/^\s*(\d{8,14})\s+(.+)$/);
+      const leadingBarcodeMatch = cleanDesc.match(/^\s*(\d{8,14})\s*(.+)$/);
       if (leadingBarcodeMatch) {
         item_code = leadingBarcodeMatch[1];
         cleanDesc = leadingBarcodeMatch[2].trim();
       }
 
       if (!item_code) {
-        const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
+        const skuMatch = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Z0-9\-ก-ฮ]{3,15})[\)\]\}\|]\s*(.+)$/i)
+                      || cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
         if (skuMatch) {
           let rawCode = skuMatch[1] || '';
           rawCode = rawCode
@@ -1046,18 +1065,21 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
             .replace(/^แห/gi, 'H')
             .replace(/^pJ/i, 'P0')
             .replace(/^501/i, 'S01')
+            .replace(/^903/i, 'S03')
             .replace(/^603/i, 'G03')
-            .replace(/^604/i, 'G04');
+            .replace(/^604/i, 'G04')
+            .replace(/^M15371$/i, 'M1537');
 
-          if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
+          if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV|ORDER)$/i.test(rawCode)) {
             item_code = rawCode;
-            cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
+            cleanDesc = skuMatch[2] ? skuMatch[2].trim() : cleanDesc.replace(skuMatch[0], '').trim();
           }
         }
       }
 
-      // Clean leading row numbers e.g. "1.", "2.", "15."
-      cleanDesc = cleanThaiText(cleanDesc.replace(/^\d{1,3}[\.\)\s]+/, ''));
+      // Clean leading row numbers and punctuation
+      cleanDesc = cleanDesc.replace(/^[\|\/\\\[\]\(\)\{\}\!\?\s\-\.:]+/g, '').trim();
+      cleanDesc = cleanThaiText(cleanDesc);
       // Clean any embedded legal/disclaimer junk inside description
       cleanDesc = cleanItemDescription(cleanDesc);
 
@@ -1066,16 +1088,25 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       let unit_price = itemPrice;
       let total_price_final = itemPrice;
 
-      if (standard3ColMatch) {
-        cleanDesc = standard3ColMatch[1];
-        quantity = parseInt(standard3ColMatch[2], 10) || 1;
-        unit_price = parseFloat(standard3ColMatch[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-        total_price_final = parseFloat(standard3ColMatch[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-      } else if (standard2PriceMatch) {
-        cleanDesc = standard2PriceMatch[1];
+      if (thaiWatsadu4Col) {
+        cleanDesc = thaiWatsadu4Col[1];
+        cleanDesc = cleanDesc.replace(/^\s*\d{1,3}\s*[\|\/\\]\s*[vVงฯnNโoO\s]*[\|\/\\\[\{\(\]]*\s*/, '');
+        const bc = cleanDesc.match(/^\s*(\d{8,14})\s*(.+)$/);
+        if (bc) { item_code = bc[1]; cleanDesc = bc[2].trim(); }
+        cleanDesc = cleanThaiText(cleanDesc);
+        cleanDesc = cleanItemDescription(cleanDesc);
+        quantity = parseFloat(thaiWatsadu4Col[2]) || 1;
+        unit_price = parseFloat(thaiWatsadu4Col[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(thaiWatsadu4Col[5].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (standard3Col) {
+        quantity = parseFloat(standard3Col[2]) || 1;
+        const uStr = standard3Col[3].replace(/\|/g, '').replace(/\.-/, '.00').replace(/,/g, '').trim();
+        unit_price = parseFloat(uStr) || 0;
+        total_price_final = parseFloat(standard3Col[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (standard2Price) {
         quantity = 1;
-        unit_price = parseFloat(standard2PriceMatch[2].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-        total_price_final = parseFloat(standard2PriceMatch[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        unit_price = parseFloat(standard2Price[2].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(standard2Price[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
       } else if (lookaheadMatched && nextLinePrices.length >= 2) {
         unit_price = nextLinePrices[0];
         total_price_final = nextLinePrices[nextLinePrices.length - 1];
@@ -1176,19 +1207,20 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     } else {
       // Continuation Line: Line does NOT have index/SKU/price!
-      // Append ONLY if we have a previous item AND it's not a header/footer/disclaimer
-      if (items.length > 0) {
+      // Append ONLY if table has not reached footer and line is not a disclaimer/footer
+      if (
+        !reachedFooter &&
+        items.length > 0 &&
+        line.length >= 2 &&
+        !isFooterOrDisclaimerLine(line) &&
+        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|โปรด|เงื่อนไข|RPP|SE|ศศ)/i.test(line) &&
+        !/^\d+\s*รายการ/i.test(line) &&
+        !isGarbledThaiGibberish(line)
+      ) {
         const lastItem = items[items.length - 1];
         let cleanContinuation = cleanThaiText(line);
         cleanContinuation = cleanItemDescription(cleanContinuation);
-
-        if (
-          cleanContinuation.length >= 2 &&
-          !isFooterOrDisclaimerLine(cleanContinuation) &&
-          !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|โปรด|เงื่อนไข)/i.test(cleanContinuation) &&
-          !/^\d+\s*รายการ/i.test(cleanContinuation) &&
-          !isGarbledThaiGibberish(cleanContinuation)
-        ) {
+        if (cleanContinuation.length >= 2) {
           lastItem.description = (lastItem.description + ' ' + cleanContinuation).replace(/\s+/g, ' ').trim();
         }
       }
