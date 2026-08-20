@@ -640,19 +640,23 @@ export function cleanItemDescription(desc: string): string {
  * Clean trailing branch / tax ID details and garbled noise off company name string
  */
 export function cleanCompanyName(name: string): string {
-  // Pre-fix common OCR misreads in vendor names
-  let cleaned = name
+  // Pre-fix common OCR misreads in vendor names & decomposed vowels
+  let cleaned = cleanThaiText(name)
     .replace(/บหาชน/g, 'มหาชน')
     .replace(/จำกัค/g, 'จำกัด')
-    .replace(/จำกัต/g, 'จำกัด');
+    .replace(/จำกัต/g, 'จำกัด')
+    .replace(/จํากัด/g, 'จำกัด');
 
   // If line contains company prefix (บริษัท, หจก, ร้าน, ห้าง), strip any leading OCR noise before it
   if (/(?:บริษัท|หจก\.|หจก|ร้าน|ห้างหุ้นส่วน|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.)/i.test(cleaned)) {
     cleaned = cleaned.replace(/^.*?(?=(?:บริษัท|หจก|ร้าน|ห้าง|ศูนย์|สำนักงาน|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.))/i, '');
   }
 
+  // Truncate trailing invoice/receipt headers attached to company line (e.g. "บริษัท ... จำกัด ใ รีอรับเงิน / ใบกําก้")
+  cleaned = cleaned.replace(/[\s\(\[\{]*(?:ใบกำกับ|ใบเสร็จ|ใบกําก|รีอรับ|รับเงิน|Tax\s*Invoice|Receipt).*/i, '').trim();
+
   // Fuzzy match for "จำกัด" variants — hard truncate after it
-  const jamkatMatch = cleaned.match(/(จำกั[ดคตกัดุ])/i);
+  const jamkatMatch = cleaned.match(/(จำกั[ดคตกัดุ]|จํากัด)/i);
   if (jamkatMatch) {
     const idx = cleaned.indexOf(jamkatMatch[1]);
     if (idx >= 0) {
