@@ -201,8 +201,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         </div>
 
         {/* Modal Body: Exact A4 Word Page Replica */}
-        <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-slate-100 flex justify-center">
-          <div className="w-full max-w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-xl p-10 sm:p-14 font-sans border border-slate-200 text-base leading-relaxed space-y-4">
+        <div className="p-3 sm:p-8 overflow-y-auto flex-1 bg-slate-200/80 flex flex-col items-center">
+          <div className="w-full max-w-[210mm] min-h-[297mm] h-auto shrink-0 bg-white text-slate-900 shadow-2xl p-8 sm:p-14 pb-16 my-2 sm:my-6 font-sans border border-slate-300/80 text-base leading-relaxed space-y-4 rounded-xs break-words">
             
             {/* 1. Header Title: บันทึกข้อความ (Bold 29pt) */}
             <div className="border-b-2 border-slate-900 pb-2">
