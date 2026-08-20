@@ -579,6 +579,7 @@ export interface ParsedReceipt {
   vendor_name: string;
   invoice_number: string;
   invoice_date: string;
+  discount?: number;
   total_amount: number;
   items: Array<{
     item_code: string;
@@ -588,6 +589,53 @@ export interface ParsedReceipt {
     unit_price: number;
     total_price: number;
   }>;
+  reconciliation?: {
+    subtotal: number;
+    totalAmount: number;
+    discount: number;
+    isMatched: boolean;
+    discrepancy: number;
+  };
+}
+
+/**
+ * Checks whether a line is a legal disclaimer, digital signature, e-tax invoice note, or table footer
+ */
+export function isFooterOrDisclaimerLine(line: string): boolean {
+  const clean = line.trim();
+  if (!clean) return false;
+  return (
+    /Digitally\s*signed\s*by/i.test(clean) ||
+    /ใบกำกับภาษีอิเล็กทรอนิกส์|e-Tax\s*Invoice|e-Receipt/i.test(clean) ||
+    /สินค้าสั่งพิเศษ|ไม่สามารถเปลี่ยน\/คืน|ไม่รับเปลี่ยน|คืนสินค้าภายใน/i.test(clean) ||
+    /บริษัทขอสงวนสิทธิ์|ขอสงวนสิทธิ์|สงวนสิทธิ์ในการรับเปลี่ยน/i.test(clean) ||
+    /บงภาษี|ยกเว้นภาษี|รวมยอดขาย|อัตราภาษี|มูลค่าฐานภาษี|มูลค่าสินค้าตามใบกำกับ/i.test(clean) ||
+    /เอกสารออกเป็นชุด|ต้นฉบับ|สำเนา|หน้าที่\s*\d+|Page\s*\d+\s*of/i.test(clean) ||
+    /ผู้รับของ|ผู้ส่งของ|ผู้รับเงิน|ผู้จ่ายเงิน|ผู้รับมอบอำนาจ|ลายมือชื่อ|ลงชื่อ.*ผู้/i.test(clean) ||
+    /ข้าพเจ้าได้รับ|ได้รับสินค้า|ในสภาพเรียบร้อย|ครบถ้วนถูกต้อง/i.test(clean) ||
+    /ข้อตกลง|เงื่อนไขการชำระเงิน|กำหนดชำระ/i.test(clean) ||
+    /^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|เงินทอน|บัตร|สมาชิก|สาขา|จำนวนเงิน|ยอดเงิน|หักส่วนลด)/i.test(clean)
+  );
+}
+
+/**
+ * Strips embedded legal clauses, digital signature notices, or tax footers that may be merged into product descriptions
+ */
+export function cleanItemDescription(desc: string): string {
+  let cleaned = desc;
+  cleaned = cleaned
+    .replace(/Digitally\s*signed\s*by.*/gi, '')
+    .replace(/สินค้าสั่งพิเศษ.*?(?:เปลี่ยน\/คืน|คืนสินค้า|\d+\s*วัน|$)/gi, '')
+    .replace(/บริษัทขอสงวนสิทธิ์.*?(?:เปลี่ยน\/คืน|คืนสินค้า|\d+\s*วัน|$)/gi, '')
+    .replace(/บงภาษี[\.\s]*มง.*?รวมยอดขาย.*?(?:[a-zA-Z0-9\s”"“’]*)?/gi, '')
+    .replace(/ยกเว้นภาษี\s*รวมยอดขาย.*/gi, '')
+    .replace(/เอกสารออกเป็นชุด.*/gi, '')
+    .replace(/หน้าที่\s*\d+\/\d+.*/gi, '')
+    .replace(/Page\s*\d+\s*of\s*\d+.*/gi, '')
+    .replace(/[\(«»“”"’'\?]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned;
 }
 
 /**
@@ -904,7 +952,16 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   }
 
   // 5. Extract Item Lines, SKUs, and Multi-Line Continuation Descriptions
+  // Track table ended state so footer/disclaimer text is never appended to items
+  let isTableEnded = false;
+
   lines.forEach((line) => {
+    // If line matches footer/disclaimer pattern, mark table as ended
+    if (isFooterOrDisclaimerLine(line)) {
+      isTableEnded = true;
+      return;
+    }
+
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw.toUpperCase()))) {
       return;
     }
@@ -912,10 +969,9 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     // 1. Check if line starts with row index e.g. "1.", "2.", "15." or "1)", "2)"
     const hasRowIndex = /^\s*\d{1,2}[\.\)\s]+/.test(line);
 
-    // 2. Check if line starts with SKU / Barcode bracket code e.g. "[P0002]", "[M0103]"
-    // BUT reject literal 'SKU' text (that's a table header, not a product code)
-    const skuTest = /^\s*\[?([A-Z0-9\-]{3,13})\]?/i.exec(line);
-    const hasSkuPrefix = skuTest && /P\d|M\d|A\d|PJ\d|SIM\d|INV|DOC|\d{8,13}/i.test(line)
+    // 2. Check if line starts with SKU / Barcode bracket code e.g. "[P0002]", "[M0103]" or 8-14 digit barcode
+    const skuTest = /^\s*\[?([A-Z0-9\-]{3,14})\]?/i.exec(line);
+    const hasSkuPrefix = skuTest && (/P\d|M\d|A\d|PJ\d|SIM\d|INV|DOC|\d{8,14}/i.test(line) || /^\d{8,14}\b/.test(line))
       && !/^\s*SKU\b/i.test(line);
 
     // 3. Check if line has price numbers at the end (e.g. "285.00" or "285.-" or "285")
@@ -931,10 +987,12 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(line);
 
     // A line is a NEW ITEM ROW if it has a row index, SKU prefix, or valid price
-    // BUT NOT if it's an address line or table header
     const isNewItemRow = !isAddressLine && !isTableHeader && (hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount));
 
     if (isNewItemRow) {
+      // Re-enable table items in case it was temporarily flagged
+      isTableEnded = false;
+
       let cleanDesc = line;
 
       // If line is reconstructed with 2D column gap spacing (3+ spaces), isolate leftmost column for description
@@ -953,27 +1011,38 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
       // Extract SKU / Barcode / Item Code if available (EAN-13, ART., ITEM:, CODE:, bracket codes)
       let item_code = '';
-      const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
-      if (skuMatch) {
-        let rawCode = skuMatch[1] || '';
-        // Fix Thai OCR misreads in bracket codes (e.g. ม0204 -> M0204, 50164 -> S0164, pJ033 -> P0033)
-        rawCode = rawCode
-          .replace(/^ม/gi, 'M')
-          .replace(/^พ/gi, 'P')
-          .replace(/^แห/gi, 'H')
-          .replace(/^pJ/i, 'P0')
-          .replace(/^501/i, 'S01')
-          .replace(/^603/i, 'G03')
-          .replace(/^604/i, 'G04');
 
-        if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
-          item_code = rawCode;
-          cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
+      // Check leading 8-14 digit barcode (e.g. 8859298504132 หรือ 2000603173741)
+      const leadingBarcodeMatch = cleanDesc.match(/^\s*(\d{8,14})\s+(.+)$/);
+      if (leadingBarcodeMatch) {
+        item_code = leadingBarcodeMatch[1];
+        cleanDesc = leadingBarcodeMatch[2].trim();
+      }
+
+      if (!item_code) {
+        const skuMatch = cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
+        if (skuMatch) {
+          let rawCode = skuMatch[1] || '';
+          rawCode = rawCode
+            .replace(/^ม/gi, 'M')
+            .replace(/^พ/gi, 'P')
+            .replace(/^แห/gi, 'H')
+            .replace(/^pJ/i, 'P0')
+            .replace(/^501/i, 'S01')
+            .replace(/^603/i, 'G03')
+            .replace(/^604/i, 'G04');
+
+          if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV)$/i.test(rawCode)) {
+            item_code = rawCode;
+            cleanDesc = cleanDesc.replace(skuMatch[0], '').replace(/[\(\[\{\)\]\}]/g, '').trim();
+          }
         }
       }
 
       // Clean leading row numbers e.g. "1.", "2.", "15."
       cleanDesc = cleanThaiText(cleanDesc.replace(/^\d{1,3}[\.\)\s]+/, ''));
+      // Clean any embedded legal/disclaimer junk inside description
+      cleanDesc = cleanItemDescription(cleanDesc);
 
       // Detect quantity if present — look in column segments if available
       let quantity = 1;
@@ -982,18 +1051,14 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       
       // If we have column segments, try to extract quantity and prices from them
       if (colSegments.length >= 3) {
-        // Typical receipt column layout: Description | Qty | Unit | UnitPrice | TotalPrice
-        // Or: Description | Qty | UnitPrice | TotalPrice
         const numericSegments = colSegments.slice(1).map(s => s.trim()).filter(s => /[\d,]+/.test(s));
         
         if (numericSegments.length >= 2) {
-          // Try to extract quantity from first numeric segment (usually small integer)
           const qtyCandidate = parseFloat(numericSegments[0].replace(/[^\d.]/g, ''));
           if (!isNaN(qtyCandidate) && qtyCandidate >= 1 && qtyCandidate <= 9999 && qtyCandidate === Math.floor(qtyCandidate)) {
             quantity = qtyCandidate;
           }
           
-          // Extract prices from last two numeric segments
           const prices = numericSegments
             .map(s => {
               const m = s.match(/([\d,]+(?:\.\d{2}|\.\-))/);
@@ -1002,15 +1067,14 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
             .filter(p => p > 0);
           
           if (prices.length >= 2) {
-            unit_price = prices[prices.length - 2]; // Second to last = unit price
-            total_price_final = prices[prices.length - 1]; // Last = total price
+            unit_price = prices[prices.length - 2];
+            total_price_final = prices[prices.length - 1];
           } else if (prices.length === 1) {
             unit_price = prices[0];
             total_price_final = prices[0] * quantity;
           }
         }
       } else {
-        // Fallback: try regex-based quantity extraction from the raw line
         const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+(?:\.\d{2}|\.-)/)
                        || line.match(/\s+(\d+)\s+(?:ชิ้น|อัน|แผ่น|เมตร|ม\.|แท่ง|ม้วน|กล่อง|แพ็ค|ชุด|ด้าม|ตัว|คู่|ถุง|ขวด|หลอด|ซอง|ก้อน|เล่ม|รีม|แกลลอน|ถัง|เส้น|กก\.|กิโลกรัม|เครื่อง)/i);
         if (qtyMatch && qtyMatch[1]) {
@@ -1019,9 +1083,15 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         total_price_final = unit_price * quantity;
       }
 
-      // High-precision Thai unit detection — check column segments first, then description text
+      // Mathematical Auto-Reconciliation for item row
+      if (quantity > 0 && unit_price > 0 && (total_price_final === 0 || Math.abs(total_price_final - (quantity * unit_price)) > 0.05)) {
+        total_price_final = Math.round(quantity * unit_price * 100) / 100;
+      } else if (total_price_final > 0 && quantity > 0 && unit_price === 0) {
+        unit_price = Math.round((total_price_final / quantity) * 100) / 100;
+      }
+
+      // High-precision Thai unit detection
       let unit = 'ชิ้น';
-      // Check if unit text appears in any column segment
       const allText = colSegments.length > 1 ? colSegments.join(' ') : cleanDesc;
 
       if (/กล่อง/i.test(allText)) unit = 'กล่อง';
@@ -1056,9 +1126,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         !THAI_MONTH_PATTERNS.test(cleanDesc) &&
         !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ)/i.test(cleanDesc) &&
         !/^\d+\s*รายการ/i.test(cleanDesc) &&
-        // Reject garbled OCR noise — descriptions that are mostly symbols/punctuation
         /[ก-ฮa-zA-Z]{2,}/i.test(cleanDesc) &&
-        // Reject lines that are clearly address lines or date/signature lines
         !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ผู้รับเงิน|ผู้ส่งของ|ลงชื่อ|อนุมัติ|หมายเหตุ/i.test(cleanDesc) &&
         !isGarbledThaiGibberish(cleanDesc)
       ) {
@@ -1073,13 +1141,15 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     } else {
       // Continuation Line: Line does NOT have index/SKU/price!
-      // Append ONLY if we have a previous item AND it's not a header/footer
-      if (items.length > 0) {
+      // Only append if table has NOT ended and line is not a disclaimer/footer
+      if (items.length > 0 && !isTableEnded) {
         const lastItem = items[items.length - 1];
-        const cleanContinuation = cleanThaiText(line);
+        let cleanContinuation = cleanThaiText(line);
+        cleanContinuation = cleanItemDescription(cleanContinuation);
 
         if (
           cleanContinuation.length >= 2 &&
+          !isFooterOrDisclaimerLine(cleanContinuation) &&
           !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|โปรด|เงื่อนไข)/i.test(cleanContinuation) &&
           !/^\d+\s*รายการ/i.test(cleanContinuation) &&
           !isGarbledThaiGibberish(cleanContinuation)
@@ -1104,11 +1174,32 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
   }
 
+  // 7. Mathematical Reconciliation for Whole Invoice
+  const calculatedSubtotal = dedupedItems.reduce((sum, item) => sum + (item.total_price || 0), 0);
+  let inferredDiscount = 0;
+
+  if (total_amount <= 0 && calculatedSubtotal > 0) {
+    total_amount = calculatedSubtotal;
+  } else if (total_amount > 0 && calculatedSubtotal > total_amount) {
+    inferredDiscount = Math.round((calculatedSubtotal - total_amount) * 100) / 100;
+  }
+
+  const isMatched = Math.abs((calculatedSubtotal - inferredDiscount) - total_amount) < 0.05;
+  const discrepancy = Math.round((calculatedSubtotal - total_amount) * 100) / 100;
+
   return {
     vendor_name: vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
     invoice_number: invoice_number || '',
     invoice_date: invoice_date || '',
+    discount: inferredDiscount,
     total_amount,
-    items: dedupedItems
+    items: dedupedItems,
+    reconciliation: {
+      subtotal: calculatedSubtotal,
+      totalAmount: total_amount,
+      discount: inferredDiscount,
+      isMatched,
+      discrepancy
+    }
   };
 }

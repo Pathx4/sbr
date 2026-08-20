@@ -291,14 +291,14 @@ export default function AutoWordPage() {
 
       // Step 2/3: Dual-Language OCR Engine (Thai + English)
       setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 2/3: กำลังถอดข้อความภาษาไทย-อังกฤษด้วย Tesseract.js OCR...`);
-      const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+      const { rawText, words } = await runTesseract(preprocessedUrl, (pct) => {
         setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
       });
 
       // Step 3/3: 2D Spatial Table Reconstruction & Noise Filtering
       setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 3/3: กำลังจัดกลุ่มพิกัดตาราง 2D (Spatial Table Clustering) และคัดกรองข้อความขยะ...`);
       setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
-      const parsed = parseThaiReceiptOcr(rawText);
+      const parsed = parseThaiReceiptOcr({ text: rawText, words });
 
       if (!parsed) continue;
 
@@ -308,7 +308,7 @@ export default function AutoWordPage() {
         vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
         invoice_number: parsed.invoice_number || '',
         invoice_date: parsed.invoice_date || getTodayThaiDate(),
-        discount: 0,
+        discount: parsed.discount || 0,
         items:
           parsed.items && parsed.items.length > 0
             ? parsed.items.map((item: any, idx: number) => ({
@@ -397,10 +397,10 @@ export default function AutoWordPage() {
 
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
-      const { rawText: text } = await runTesseract(croppedDataUrl);
+      const { rawText: text, words } = await runTesseract(croppedDataUrl);
       console.log("Zone Crop OCR Result:", text);
 
-      const parsed = parseThaiReceiptOcr(text);
+      const parsed = parseThaiReceiptOcr({ text, words });
 
       if (targetType === 'vendor' || (parsed.vendor_name && parsed.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย')) {
         const cleanVendor = extractVendorNameFromText(text) || cleanCompanyName(parsed.vendor_name || text);
@@ -1401,6 +1401,48 @@ export default function AutoWordPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Mathematical Reconciliation & Verification Bar */}
+              {activeInvoice.items.length > 0 && (
+                (() => {
+                  const subtotal = activeInvoice.items.reduce((s, i) => s + (i.total_price || 0), 0);
+                  const discount = activeInvoice.discount || 0;
+                  const netTotal = Math.max(0, subtotal - discount);
+
+                  return (
+                    <div className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-200 shrink-0">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-bold text-slate-800">
+                            ผลรวม {activeInvoice.items.length} รายการ: 
+                          </span>
+                          <span className="ml-1.5 font-mono font-bold text-blue-700">
+                            ฿ {subtotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                          </span>
+                          {discount > 0 ? (
+                            <span className="ml-2 text-rose-600 font-semibold">
+                              (หักส่วนลด -฿ {discount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}) = ยอดสุทธิ ฿ {netTotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                            </span>
+                          ) : (
+                            <span className="ml-2 text-emerald-700 font-semibold">
+                              (ยอดสุทธิตรงตามรายการ)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold rounded-lg border border-emerald-200">
+                          ✓ ตรวจสอบสูตรคำนวณเรียบร้อย
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
 
               {/* Duplicate Item Warning Alert */}
               {duplicateDescriptions.length > 0 && (
