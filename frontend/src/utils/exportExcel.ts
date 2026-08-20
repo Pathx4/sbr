@@ -5,6 +5,7 @@ import personnel from '../data/personnel.json';
 import staffSbr from '../data/staff_sbr.json';
 import contacts from '../data/contacts.json';
 import directors from '../data/directors.json';
+import { formatThaiDateRange, getThaiDayDates } from './dateUtils';
 
 // Helper to get person's title and rate under GISTDA
 const getGistdaAllowanceRate = (name: string, isExecutive: boolean, isDirector = false) => {
@@ -35,36 +36,7 @@ const getGovAllowanceRate = (_name: string, isExecutive: boolean) => {
   }
 };
 
-// Helper to parse date string or return a list of days
-const getThaiDayDates = (startDateStr: string, daysCount: number) => {
-  const daysOfWeek = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
-  const months = [
-    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-  ];
 
-  const datesList: string[] = [];
-  const baseDate = new Date(startDateStr);
-
-  if (!isNaN(baseDate.getTime())) {
-    for (let i = 0; i < daysCount; i++) {
-      const targetDate = new Date(baseDate);
-      targetDate.setDate(baseDate.getDate() + i);
-
-      const dayName = daysOfWeek[targetDate.getDay()];
-      const dayNum = targetDate.getDate();
-      const monthName = months[targetDate.getMonth()];
-      const yearTh = targetDate.getFullYear() + 543;
-
-      datesList.push(`${dayName}ที่ ${dayNum} ${monthName} ${yearTh}`);
-    }
-  } else {
-    for (let i = 1; i <= daysCount; i++) {
-      datesList.push(`วันปฏิบัติการวันที่ ${i}`);
-    }
-  }
-  return datesList;
-};
 
 export const exportToExcel = async (formData: any, _calculationResult: any) => {
   const workbook = new ExcelJS.Workbook();
@@ -198,7 +170,8 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
 
   const daysCount = parseInt(formData.days) || 1;
   const projectName = formData.projectName || (formData.activityType === 'meeting' ? 'การประชุม' : formData.activityType === 'field_trip' ? 'การลงพื้นที่ภาคสนาม' : 'โครงการฝึกอบรม');
-  const dateRangeStr = formData.date ? `${formData.date}` : 'ตลอดระยะเวลาโครงการ';
+  const startDateStr = formData.startDate || formData.date;
+  const dateRangeStr = formatThaiDateRange(startDateStr, formData.endDate, daysCount);
   const activityTitlePrefix = formData.activityType === 'meeting' ? 'การประชุม' : formData.activityType === 'field_trip' ? 'การลงพื้นที่ภาคสนาม' : 'การอบรมเชิงปฏิบัติการ';
 
   subtitleCell.value = `${activityTitlePrefix} ${projectName}\n${dateRangeStr} (รวมระยะเวลา ${daysCount} วัน)\nณ ${formData.location || ''}`;
@@ -237,7 +210,7 @@ export const exportToExcel = async (formData: any, _calculationResult: any) => {
     speakerRoom: isGistda ? 1400 : 1400
   };
 
-  const datesTh = getThaiDayDates(formData.date, daysCount);
+  const datesTh = getThaiDayDates(startDateStr, daysCount);
   let rIndex = 4; // Data rows start at 4
   const itemTotalRowRefs: string[] = []; // Stores cell references for Grand Total
 
@@ -1660,7 +1633,9 @@ export const exportRoomingListToExcel = async (formData: BudgetFormData) => {
   worksheet.mergeCells('A2:J2');
   const subCell = worksheet.getCell('A2');
   const projectName = formData.projectName || 'โครงการฝึกอบรม';
-  subCell.value = `โครงการ: ${projectName} | วันที่: ${formData.date || '-'} (${formData.days || 1} วัน) | สถานที่: ${formData.location || '-'}`;
+  const startDateStr = formData.startDate || formData.date;
+  const dateRangeStr = formatThaiDateRange(startDateStr, formData.endDate, parseInt(formData.days) || 1);
+  subCell.value = `โครงการ: ${projectName} | ${dateRangeStr} (${formData.days || 1} วัน) | สถานที่: ${formData.location || '-'}`;
   applyRoomCellStyle(subCell, 14, false, 'center');
 
   // Headers

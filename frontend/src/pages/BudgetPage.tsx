@@ -43,7 +43,8 @@ function BudgetPage() {
   const isFormValid = () => {
     if (!formData.regulation) return false;
     if (!formData.activityType) return false;
-    if (!formData.date || !formData.days) return false;
+    const hasDate = (formData.startDate && formData.endDate) || formData.startDate || formData.date;
+    if (!hasDate || !formData.days) return false;
     return true; // Basic validation
   };
 

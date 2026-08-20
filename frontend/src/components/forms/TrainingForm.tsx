@@ -8,6 +8,7 @@ import personnelData from '../../data/personnel.json';
 import staffData from '../../data/staff_sbr.json';
 import directorsData from '../../data/directors.json';
 import contactsData from '../../data/contacts.json';
+import { formatThaiDateRange, calculateDaysBetween, calculateEndDateFromDays } from '../../utils/dateUtils';
 
 interface Props {
   formData: BudgetFormData;
@@ -23,6 +24,75 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
     } else {
       setFormData(prev => ({ ...prev, [id]: value }));
     }
+  };
+
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newStart = e.target.value;
+    setFormData(prev => {
+      let newEnd = prev.endDate;
+      let newDays = prev.days;
+
+      if (newStart) {
+        if (!newEnd || newEnd < newStart) {
+          if (newDays && parseInt(newDays) > 1) {
+            newEnd = calculateEndDateFromDays(newStart, parseInt(newDays));
+          } else {
+            newEnd = newStart;
+            newDays = '1';
+          }
+        } else {
+          newDays = calculateDaysBetween(newStart, newEnd).toString();
+        }
+      }
+      return {
+        ...prev,
+        startDate: newStart,
+        date: newStart,
+        endDate: newEnd,
+        days: newDays
+      };
+    });
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEnd = e.target.value;
+    setFormData(prev => {
+      let newStart = prev.startDate || prev.date;
+      let newDays = prev.days;
+
+      if (newEnd) {
+        if (!newStart || newEnd < newStart) {
+          newStart = newEnd;
+          newDays = '1';
+        } else {
+          newDays = calculateDaysBetween(newStart, newEnd).toString();
+        }
+      }
+      return {
+        ...prev,
+        startDate: newStart,
+        date: newStart,
+        endDate: newEnd,
+        days: newDays
+      };
+    });
+  };
+
+  const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setFormData(prev => {
+      const numDays = parseInt(val);
+      let newEnd = prev.endDate;
+      const startStr = prev.startDate || prev.date;
+      if (startStr && !isNaN(numDays) && numDays > 0) {
+        newEnd = calculateEndDateFromDays(startStr, numDays);
+      }
+      return {
+        ...prev,
+        days: val,
+        endDate: newEnd
+      };
+    });
   };
 
   const parseGender = (name: string): 'M' | 'F' => {
@@ -471,23 +541,65 @@ export const TrainingForm: React.FC<Props> = ({ formData, setFormData }) => {
           ข้อมูลทั่วไป (General Information)
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="md:col-span-3">
             <label className={labelClass} htmlFor="projectName">ชื่อโครงการ / หลักสูตรฝึกอบรม</label>
             <input type="text" id="projectName" value={formData.projectName} onChange={handleChange} className={inputClass} placeholder="ระบุชื่อโครงการ..." />
           </div>
 
           <div>
-            <label className={labelClass} htmlFor="date">วันที่จัดกิจกรรม</label>
-            <input type="date" id="date" value={formData.date} onChange={handleChange} className={inputClass} />
+            <label className={labelClass} htmlFor="startDate">
+              วันที่เริ่มต้นจัดกิจกรรม <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              value={formData.startDate || formData.date || ''}
+              onChange={handleStartDateChange}
+              className={inputClass}
+            />
           </div>
 
           <div>
-            <label className={labelClass} htmlFor="days">จำนวนวันอบรม (วัน)</label>
-            <input type="number" id="days" value={formData.days} onChange={handleChange} className={inputClass} min="1" placeholder="ระบุจำนวนวัน..." />
+            <label className={labelClass} htmlFor="endDate">
+              วันที่สิ้นสุดจัดกิจกรรม <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              value={formData.endDate || ''}
+              min={formData.startDate || formData.date || ''}
+              onChange={handleEndDateChange}
+              className={inputClass}
+            />
           </div>
 
-          <div className="md:col-span-2">
+          <div>
+            <div className="flex items-center justify-between">
+              <label className={labelClass} htmlFor="days">จำนวนวันอบรม (วัน)</label>
+              <span className="text-[11px] text-muted-foreground font-normal mb-1">(คำนวณอัตโนมัติ)</span>
+            </div>
+            <input
+              type="number"
+              id="days"
+              value={formData.days}
+              onChange={handleDaysChange}
+              className={inputClass}
+              min="1"
+              placeholder="ระบุจำนวนวัน..."
+            />
+          </div>
+
+          {(formData.startDate || formData.date) && (
+            <div className="md:col-span-3 -mt-2">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
+                <span>📅 {formatThaiDateRange(formData.startDate || formData.date, formData.endDate, parseInt(formData.days) || 1)}</span>
+                <span className="text-primary/70 font-normal">({formData.days || 1} วัน)</span>
+              </div>
+            </div>
+          )}
+
+          <div className="md:col-span-3">
             <label className={labelClass} htmlFor="location">สถานที่จัดกิจกรรม</label>
             <input type="text" id="location" value={formData.location} onChange={handleChange} className={inputClass} placeholder="เช่น โรงแรม..., สทอภ., ศูนย์ราชการ..." />
           </div>

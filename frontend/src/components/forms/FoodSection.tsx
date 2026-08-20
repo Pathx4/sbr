@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle2, Coffee, Utensils, GlassWater } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { BudgetFormData } from '../../types';
+import { getThaiDayDates } from '../../utils/dateUtils';
 
 interface Props {
   formData: BudgetFormData;
@@ -123,11 +124,20 @@ export const FoodSection: React.FC<Props> = ({ formData, setFormData }) => {
           </h4>
           
           <div className="space-y-3">
-            {allDays.map(day => (
-              <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 p-4 bg-muted/30 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
-                <span className="font-semibold text-foreground w-20">วันที่ {day}</span>
-                
-                <div className="flex flex-wrap gap-4 flex-1">
+            {allDays.map(day => {
+              const datesTh = getThaiDayDates(formData.startDate || formData.date, totalDays);
+              const dayDateLabel = datesTh[day - 1];
+
+              return (
+                <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 p-4 bg-muted/30 rounded-xl border border-border/50 hover:border-primary/30 transition-colors">
+                  <div className="w-auto sm:w-56 shrink-0">
+                    <span className="font-semibold text-foreground block text-sm">วันที่ {day}</span>
+                    {dayDateLabel && !dayDateLabel.startsWith('วันปฏิบัติการ') && (
+                      <span className="text-xs text-muted-foreground">{dayDateLabel}</span>
+                    )}
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-4 flex-1">
                   {formData.foodBreakMorning && (
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input 
@@ -175,9 +185,10 @@ export const FoodSection: React.FC<Props> = ({ formData, setFormData }) => {
                       <span className="text-sm group-hover:text-primary transition-colors">อาหารรับรอง</span>
                     </label>
                   )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

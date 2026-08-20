@@ -11,6 +11,8 @@ export interface BudgetFormData {
   activityType: ActivityType;
   
   // Common
+  startDate: string;
+  endDate: string;
   date: string;
   days: string;
   
@@ -74,6 +76,8 @@ export interface BudgetFormData {
 export const initialFormData: BudgetFormData = {
   regulation: '',
   activityType: '',
+  startDate: '',
+  endDate: '',
   date: '',
   days: '',
   projectName: '',
