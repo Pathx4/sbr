@@ -607,14 +607,12 @@ export function isFooterOrDisclaimerLine(line: string): boolean {
   return (
     /Digitally\s*signed\s*by/i.test(clean) ||
     /ใบกำกับภาษีอิเล็กทรอนิกส์|e-Tax\s*Invoice|e-Receipt/i.test(clean) ||
-    /สินค้าสั่งพิเศษ|ไม่สามารถเปลี่ยน\/คืน|ไม่รับเปลี่ยน|คืนสินค้าภายใน/i.test(clean) ||
-    /บริษัทขอสงวนสิทธิ์|ขอสงวนสิทธิ์|สงวนสิทธิ์ในการรับเปลี่ยน/i.test(clean) ||
-    /บงภาษี|ยกเว้นภาษี|รวมยอดขาย|อัตราภาษี|มูลค่าฐานภาษี|มูลค่าสินค้าตามใบกำกับ/i.test(clean) ||
-    /เอกสารออกเป็นชุด|ต้นฉบับ|สำเนา|หน้าที่\s*\d+|Page\s*\d+\s*of/i.test(clean) ||
-    /ผู้รับของ|ผู้ส่งของ|ผู้รับเงิน|ผู้จ่ายเงิน|ผู้รับมอบอำนาจ|ลายมือชื่อ|ลงชื่อ.*ผู้/i.test(clean) ||
-    /ข้าพเจ้าได้รับ|ได้รับสินค้า|ในสภาพเรียบร้อย|ครบถ้วนถูกต้อง/i.test(clean) ||
-    /ข้อตกลง|เงื่อนไขการชำระเงิน|กำหนดชำระ/i.test(clean) ||
-    /^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|เงินทอน|บัตร|สมาชิก|สาขา|จำนวนเงิน|ยอดเงิน|หักส่วนลด)/i.test(clean)
+    /สินค้าสั่งพิเศษ|ไม่สามารถเปลี่ยน\/คืน|ไม่รับเปลี่ยน/i.test(clean) ||
+    /บริษัทขอสงวนสิทธิ์|ขอสงวนสิทธิ์ในการรับเปลี่ยน/i.test(clean) ||
+    /บงภาษี[\.\s]*มง|ยกเว้นภาษี\s*รวมยอดขาย/i.test(clean) ||
+    /เอกสารออกเป็นชุด|ต้นฉบับ.*คู่ฉบับ|สำเนา.*หน้าที่\s*\d+\/\d+|Page\s*\d+\s*of\s*\d+/i.test(clean) ||
+    /ผู้รับของ.*ผู้ส่งของ|ผู้รับเงิน.*ผู้จ่ายเงิน|ผู้รับมอบอำนาจ|ลงชื่อ.*ผู้รับ/i.test(clean) ||
+    /ข้าพเจ้าได้รับสินค้า|ในสภาพเรียบร้อย.*ครบถ้วน/i.test(clean)
   );
 }
 
@@ -818,14 +816,13 @@ export function reconstructTextFromBboxes(words: TesseractWord[]): string {
 }
 
 export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedReceipt {
-  // Check if ocrData contains Tesseract Bounding Boxes (words array)
   let text = '';
-  if (typeof ocrData === 'object' && ocrData.words && Array.isArray(ocrData.words)) {
-    console.log("Running 2D Spatial Table Reconstruction...");
-    text = reconstructTextFromBboxes(ocrData.words);
-    console.log("Reconstructed Text:", text);
-  } else {
-    text = typeof ocrData === 'string' ? ocrData : (ocrData?.text || '');
+  if (typeof ocrData === 'string') {
+    text = ocrData;
+  } else if (ocrData?.rawText) {
+    text = ocrData.rawText;
+  } else if (ocrData?.text) {
+    text = ocrData.text;
   }
 
   const headerText = typeof headerData === 'string' ? headerData : (headerData?.text || '');
@@ -952,15 +949,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   }
 
   // 5. Extract Item Lines, SKUs, and Multi-Line Continuation Descriptions
-  // Track table ended state so footer/disclaimer text is never appended to items
-  let isTableEnded = false;
-
   lines.forEach((line) => {
-    // If line matches footer/disclaimer pattern, mark table as ended
-    if (isFooterOrDisclaimerLine(line)) {
-      isTableEnded = true;
-      return;
-    }
 
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw.toUpperCase()))) {
       return;
@@ -990,9 +979,6 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const isNewItemRow = !isAddressLine && !isTableHeader && (hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount));
 
     if (isNewItemRow) {
-      // Re-enable table items in case it was temporarily flagged
-      isTableEnded = false;
-
       let cleanDesc = line;
 
       // If line is reconstructed with 2D column gap spacing (3+ spaces), isolate leftmost column for description
@@ -1141,8 +1127,8 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     } else {
       // Continuation Line: Line does NOT have index/SKU/price!
-      // Only append if table has NOT ended and line is not a disclaimer/footer
-      if (items.length > 0 && !isTableEnded) {
+      // Append ONLY if we have a previous item AND it's not a header/footer/disclaimer
+      if (items.length > 0) {
         const lastItem = items[items.length - 1];
         let cleanContinuation = cleanThaiText(line);
         cleanContinuation = cleanItemDescription(cleanContinuation);

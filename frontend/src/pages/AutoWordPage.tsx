@@ -291,14 +291,14 @@ export default function AutoWordPage() {
 
       // Step 2/3: Dual-Language OCR Engine (Thai + English)
       setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 2/3: กำลังถอดข้อความภาษาไทย-อังกฤษด้วย Tesseract.js OCR...`);
-      const { rawText, words } = await runTesseract(preprocessedUrl, (pct) => {
+      const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
         setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
       });
 
       // Step 3/3: 2D Spatial Table Reconstruction & Noise Filtering
       setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 3/3: กำลังจัดกลุ่มพิกัดตาราง 2D (Spatial Table Clustering) และคัดกรองข้อความขยะ...`);
       setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
-      const parsed = parseThaiReceiptOcr({ text: rawText, words });
+      const parsed = parseThaiReceiptOcr(rawText);
 
       if (!parsed) continue;
 
@@ -397,10 +397,10 @@ export default function AutoWordPage() {
 
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
-      const { rawText: text, words } = await runTesseract(croppedDataUrl);
+      const { rawText: text } = await runTesseract(croppedDataUrl);
       console.log("Zone Crop OCR Result:", text);
 
-      const parsed = parseThaiReceiptOcr({ text, words });
+      const parsed = parseThaiReceiptOcr(text);
 
       if (targetType === 'vendor' || (parsed.vendor_name && parsed.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย')) {
         const cleanVendor = extractVendorNameFromText(text) || cleanCompanyName(parsed.vendor_name || text);
