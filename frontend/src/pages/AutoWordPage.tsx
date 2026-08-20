@@ -10,6 +10,7 @@ import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
 import { preprocessImageForOcr, parseThaiReceiptOcr, extractVendorNameFromText, cleanCompanyName } from '../utils/imageOcrOptimizer';
 import { getStoredUser } from '../utils/auth';
+import { DocumentPreviewModal } from '../components/common/DocumentPreviewModal';
 
 interface Item {
   id: string;
@@ -152,6 +153,7 @@ export default function AutoWordPage() {
   const [isGeneratingDocx, setIsGeneratingDocx] = useState(false);
   const [isGeneratingExcel, setIsGeneratingExcel] = useState(false);
   const [isGeneratingIllus, setIsGeneratingIllus] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
 
@@ -1655,9 +1657,34 @@ export default function AutoWordPage() {
                 <span className="font-bold text-xs">ดาวน์โหลด Excel ภาพ (.xlsx)</span>
               </button>
             </div>
+
+            {/* Live Document Preview Button */}
+            <button
+              type="button"
+              onClick={() => setIsPreviewOpen(true)}
+              disabled={invoices.length === 0}
+              className="w-full flex items-center justify-center gap-2 p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-2xl border border-slate-200/80 transition disabled:opacity-40"
+            >
+              <Eye className="w-4 h-4 text-indigo-500" />
+              <span>ดูตัวอย่างเอกสารบันทึกข้อความราชการ (Live Preview)</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Document Live Preview Modal */}
+      <DocumentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        subject={introCourse || 'ขออนุมัติจัดซื้อจัดจ้างพัสดุเพื่อดำเนินงานโครงการ'}
+        requesterName={stripNickname(requesterName)}
+        requesterPosition={requesterPosition}
+        approverName={stripNickname(approverName)}
+        approverPosition={approverPosition}
+        items={invoices.flatMap(inv => inv.items)}
+        totalAmount={calculateGrandTotal()}
+        onDownload={handleGenerateWord}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import personnel from '../data/personnel.json';
 import staffSbr from '../data/staff_sbr.json';
 import contacts from '../data/contacts.json';
 import directors from '../data/directors.json';
+import { BudgetAnalyticsCard } from '../components/budget/BudgetAnalyticsCard';
 const stagger = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -629,7 +630,10 @@ function BudgetPage() {
 
           {/* Result Section */}
           {showResult && calculationResult && (
-            <div ref={resultRef} className="xl:col-span-4 xl:sticky xl:top-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div ref={resultRef} className="xl:col-span-4 xl:sticky xl:top-8 animate-in fade-in slide-in-from-right-4 duration-500 space-y-6">
+              {/* Visual Category Breakdown & Multi-segment bar */}
+              <BudgetAnalyticsCard formData={formData} calculationResult={calculationResult} />
+
               <Card variant="featured" className="h-full shadow-lg border-primary/20">
                 <CardHeader>
                   <Badge className="w-fit mb-4">Results Computed</Badge>
