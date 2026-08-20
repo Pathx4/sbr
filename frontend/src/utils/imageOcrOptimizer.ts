@@ -956,8 +956,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const rawLine = lines[i];
 
     if (
-      /^(?:สินค้าที่เสียภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม)/i.test(rawLine) ||
-      /Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์/i.test(rawLine)
+      /(?:สินค้าที่เสียภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม|Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์|ผู้จัดทำ|การคำนวณ|ใช้ราคาขายตาม|กรมสรรพสามิต|เต็มรูปแทน)/i.test(rawLine)
     ) {
       reachedFooter = true;
     }
@@ -972,65 +971,75 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       .replace(/[\s|]+[VvNtX]\s*$/g, '')
       .trim();
 
-    // 1. Check if line starts with row index e.g. "1.", "2.", "15." or "1)", "2)"
-    const hasRowIndex = /^\s*\d{1,2}[\.\)\s]+/.test(line);
+    // Check if line has numbered row prefix: e.g. "1.", "1 | v [", "14. |", "15. |"
+    const rowPrefixMatch = line.match(/^(\d{1,3})\s*(?:[\.\)\s\|]+|[\|\/\\]\s*[vVงฯnNโoO\s]*[\|\/\\\[\{\(\]]*)/);
+    const hasRowPrefix = Boolean(rowPrefixMatch);
 
     // 2. Check if line starts with SKU / Barcode bracket code e.g. "[P0002]", "[M0103]" or 8-14 digit barcode
-    const skuTest = /^\s*\[?([A-Z0-9\-]{3,14})\]?/i.exec(line);
-    const hasSkuPrefix = skuTest && (/P\d|M\d|A\d|PJ\d|SIM\d|INV|DOC|\d{8,14}/i.test(line) || /^\d{8,14}\b/.test(line))
-      && !/^\s*SKU\b/i.test(line);
-
-    // 3. Check if line has price numbers at the end (e.g. "285.00" or "285.-" or "285")
-    const priceMatches = line.match(/([\d,]+(?:\.\d{2}|\.-))/g) || line.match(/\s+(\d{1,6})\s*$/);
-    const hasPriceAtEnd = priceMatches && priceMatches.length >= 1;
-    const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/\.-/, '.00').replace(/,/g, ''))).filter(p => p > 0) : [];
-    let itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
+    const skuBracketTest = line.match(/^\s*[\|\(\[\{\/\\]*([A-Za-z0-9\-\u0e00-\u0e7f]{3,15})[\)\]\}\|]/i);
 
     const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(rawLine);
     const isTableHeader = /^\s*SKU\b/i.test(rawLine) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(rawLine) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(rawLine) || /จำนวน.*หน่วยละ.*จำนวนเงิน|จำนวน.*หน่วย.*ราคา|หน่วยละ\(บาท\)|ราคาต่อหน่วย.*จำนวนเงิน/i.test(rawLine);
 
     if (isAddressLine || isTableHeader) continue;
 
-    // Pattern 1: Thai Watsadu 4-column [Qty] [UnitPrice] [Discount] [TotalPrice]
-    const thaiWatsadu4Col = line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/);
+    // Pattern 1: Thai Watsadu / 4-column: [Desc] [Qty (e.g. 1 or 1.000)] [UnitPrice (e.g. 559.000)] [Discount (0.00)] [TotalPrice (559.00)]
+    const thaiWatsadu4Col = line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/);
 
-    // Pattern 2: Standard 3-column [Qty] [UnitPrice] [TotalPrice] (supports pipe or bracket separators between columns)
-    const standard3Col = !thaiWatsadu4Col ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2}|\.-|\|\s*[\d,]+(?:\.\d{2}|\.-)))\s*\|\s*([\d,]+(?:\.\d{2}|\.-))\s*$/)
-                                        || line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+    // Pattern 2: 7-Eleven / 3-column with 3 decimals: [Desc] [Qty (1.000)] [UnitPrice (559.000)] [TotalPrice (559.00)]
+    const threeColDecimals = !thaiWatsadu4Col ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/) : null;
 
-    // Pattern 3: Standard 2-price [UnitPrice] [TotalPrice] (qty = 1)
-    const standard2Price = !thaiWatsadu4Col && !standard3Col ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+    // Pattern 3: Standard 3-column with pipe separator: [Desc] [Qty] | [UnitPrice] | [TotalPrice]
+    const standard3Col = !thaiWatsadu4Col && !threeColDecimals ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-|\|\s*[\d,]+(?:\.\d{2,3}|\.-)))\s*\|\s*([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+                                        || line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/) : null;
 
-    // Pattern 4: Lookahead 2-line POS Parser:
-    let lookaheadMatched = false;
-    let nextLinePrices: number[] = [];
-    let nextLineQty = 1;
+    // Pattern 4: Standard 2-price [UnitPrice] [TotalPrice] (qty = 1)
+    const standard2Price = !thaiWatsadu4Col && !threeColDecimals && !standard3Col ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/) : null;
 
-    if (!thaiWatsadu4Col && !standard3Col && !standard2Price && itemPrice === 0 && i + 1 < lines.length) {
-      const nextLine = lines[i + 1];
-      const nextPriceMatches = nextLine.match(/([\d,]+(?:\.\d{2}|\.-))/g) || nextLine.match(/\s+(\d{1,6})\s*$/);
-      if (nextPriceMatches && nextPriceMatches.length >= 1) {
-        nextLinePrices = nextPriceMatches.map(p => parseFloat(p.replace(/\.-/, '.00').replace(/,/g, ''))).filter(p => p > 0);
-        if (nextLinePrices.length > 0) {
-          const nextQtyMatch = nextLine.match(/^\s*(\d+)\s+/) || nextLine.match(/\s+(\d+)\s+[\d,]+/);
-          if (nextQtyMatch) nextLineQty = parseInt(nextQtyMatch[1], 10) || 1;
-          lookaheadMatched = true;
-          itemPrice = nextLinePrices[nextLinePrices.length - 1];
-        }
-      }
-    }
+    // Pattern 5: Single Price at End (ONLY valid if line has a row prefix or SKU prefix!)
+    const singlePriceMatch = (!thaiWatsadu4Col && !threeColDecimals && !standard3Col && !standard2Price && (hasRowPrefix || Boolean(skuBracketTest)))
+      ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+      : null;
 
-    // A line is a NEW ITEM ROW if it has any matched pattern or price
-    const isNewItemRow = Boolean(thaiWatsadu4Col) || Boolean(standard3Col) || Boolean(standard2Price) || hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount) || lookaheadMatched;
+    // A line is a NEW ITEM ROW if it has any matched pattern or explicit row/SKU with price
+    const isNewItemRow = Boolean(thaiWatsadu4Col) || Boolean(threeColDecimals) || Boolean(standard3Col) || Boolean(standard2Price) || Boolean(singlePriceMatch);
 
     if (isNewItemRow) {
       let cleanDesc = line;
 
-      // If line is reconstructed with 2D column gap spacing (3+ spaces), isolate leftmost column for description
-      const colSegments = line.split(/\s{3,}/);
-      if (colSegments.length >= 2) {
-        cleanDesc = colSegments[0];
+      // Detect quantity and prices from matched patterns
+      let quantity = 1;
+      let unit_price = 0;
+      let total_price_final = 0;
+
+      if (thaiWatsadu4Col) {
+        cleanDesc = thaiWatsadu4Col[1];
+        quantity = parseFloat(thaiWatsadu4Col[2]) || 1;
+        unit_price = parseFloat(thaiWatsadu4Col[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(thaiWatsadu4Col[5].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (threeColDecimals) {
+        cleanDesc = threeColDecimals[1];
+        quantity = parseFloat(threeColDecimals[2]) || 1;
+        unit_price = parseFloat(threeColDecimals[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(threeColDecimals[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (standard3Col) {
+        cleanDesc = standard3Col[1];
+        quantity = parseFloat(standard3Col[2]) || 1;
+        const uStr = standard3Col[3].replace(/\|/g, '').replace(/\.-/, '.00').replace(/,/g, '').trim();
+        unit_price = parseFloat(uStr) || 0;
+        total_price_final = parseFloat(standard3Col[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (standard2Price) {
+        cleanDesc = standard2Price[1];
+        quantity = 1;
+        unit_price = parseFloat(standard2Price[2].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(standard2Price[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (singlePriceMatch) {
+        cleanDesc = singlePriceMatch[1];
+        total_price_final = parseFloat(singlePriceMatch[2].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        unit_price = total_price_final;
       }
+
+      if (total_price_final <= 0) continue; // Skip 0.00 price lines (like shipping fee 0.00)
 
       // Strip trailing numeric/price columns & VAT code indicators (e.g., "1.000 559.000 559.00 V" -> "")
       cleanDesc = cleanDesc
@@ -1052,14 +1061,11 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       if (leadingBarcodeMatch) {
         item_code = leadingBarcodeMatch[1];
         cleanDesc = leadingBarcodeMatch[2].trim();
-      }
-
-      if (!item_code) {
-        const skuMatch = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Z0-9\-ก-ฮ]{3,15})[\)\]\}\|]\s*(.+)$/i)
-                      || cleanDesc.match(/(?:ART\.?|ITEM:?|CODE:?|SKU:?|รหัส:?)?\s*[\(\[\{]?([0-9A-Z\-ก-ฮ]{3,15})[\)\]\}]?/i);
-        if (skuMatch) {
-          let rawCode = skuMatch[1] || '';
-          rawCode = rawCode
+      } else {
+        // Bracket SKU e.g. [P0002], [M0103], [50164], 50164], (P0420], |แห1688], [603251, |[M15371
+        const bracketSku = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Za-z0-9\-\u0e00-\u0e7f]{4,10}?)[\)\]\}\|1\s]\s*(.+)$/i);
+        if (bracketSku && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV|ORDER)$/i.test(bracketSku[1])) {
+          let code = bracketSku[1]
             .replace(/^ม/gi, 'M')
             .replace(/^พ/gi, 'P')
             .replace(/^แห/gi, 'H')
@@ -1069,10 +1075,9 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
             .replace(/^603/i, 'G03')
             .replace(/^604/i, 'G04')
             .replace(/^M15371$/i, 'M1537');
-
-          if (/^[A-Z0-9\-]{3,15}$/i.test(rawCode) && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV|ORDER)$/i.test(rawCode)) {
-            item_code = rawCode;
-            cleanDesc = skuMatch[2] ? skuMatch[2].trim() : cleanDesc.replace(skuMatch[0], '').trim();
+          if (/^[A-Z0-9\-]{3,15}$/i.test(code)) {
+            item_code = code;
+            cleanDesc = bracketSku[2].trim();
           }
         }
       }
@@ -1083,68 +1088,6 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       // Clean any embedded legal/disclaimer junk inside description
       cleanDesc = cleanItemDescription(cleanDesc);
 
-      // Detect quantity and prices from matched patterns
-      let quantity = 1;
-      let unit_price = itemPrice;
-      let total_price_final = itemPrice;
-
-      if (thaiWatsadu4Col) {
-        cleanDesc = thaiWatsadu4Col[1];
-        cleanDesc = cleanDesc.replace(/^\s*\d{1,3}\s*[\|\/\\]\s*[vVงฯnNโoO\s]*[\|\/\\\[\{\(\]]*\s*/, '');
-        const bc = cleanDesc.match(/^\s*(\d{8,14})\s*(.+)$/);
-        if (bc) { item_code = bc[1]; cleanDesc = bc[2].trim(); }
-        cleanDesc = cleanThaiText(cleanDesc);
-        cleanDesc = cleanItemDescription(cleanDesc);
-        quantity = parseFloat(thaiWatsadu4Col[2]) || 1;
-        unit_price = parseFloat(thaiWatsadu4Col[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-        total_price_final = parseFloat(thaiWatsadu4Col[5].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-      } else if (standard3Col) {
-        quantity = parseFloat(standard3Col[2]) || 1;
-        const uStr = standard3Col[3].replace(/\|/g, '').replace(/\.-/, '.00').replace(/,/g, '').trim();
-        unit_price = parseFloat(uStr) || 0;
-        total_price_final = parseFloat(standard3Col[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-      } else if (standard2Price) {
-        quantity = 1;
-        unit_price = parseFloat(standard2Price[2].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-        total_price_final = parseFloat(standard2Price[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
-      } else if (lookaheadMatched && nextLinePrices.length >= 2) {
-        unit_price = nextLinePrices[0];
-        total_price_final = nextLinePrices[nextLinePrices.length - 1];
-        quantity = nextLineQty;
-        i++; // Advance pointer because next line was consumed as price/qty row
-      } else if (colSegments.length >= 3) {
-        const numericSegments = colSegments.slice(1).map(s => s.trim()).filter(s => /[\d,]+/.test(s));
-        
-        if (numericSegments.length >= 2) {
-          const qtyCandidate = parseFloat(numericSegments[0].replace(/[^\d.]/g, ''));
-          if (!isNaN(qtyCandidate) && qtyCandidate >= 1 && qtyCandidate <= 9999 && qtyCandidate === Math.floor(qtyCandidate)) {
-            quantity = qtyCandidate;
-          }
-          
-          const prices = numericSegments
-            .map(s => {
-              const m = s.match(/([\d,]+(?:\.\d{2}|\.\-))/);
-              return m ? parseFloat(m[1].replace(/\.-/, '.00').replace(/,/g, '')) : 0;
-            })
-            .filter(p => p > 0);
-          
-          if (prices.length >= 2) {
-            unit_price = prices[prices.length - 2];
-            total_price_final = prices[prices.length - 1];
-          } else if (prices.length === 1) {
-            unit_price = prices[0];
-            total_price_final = prices[0] * quantity;
-          }
-        }
-      } else if (!lookaheadMatched) {
-        const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+(?:\.\d{2}|\.-)/)
-                       || line.match(/\s+(\d+)\s+(?:ชิ้น|อัน|แผ่น|เมตร|ม\.|แท่ง|ม้วน|กล่อง|แพ็ค|ชุด|ด้าม|ตัว|คู่|ถุง|ขวด|หลอด|ซอง|ก้อน|เล่ม|รีม|แกลลอน|ถัง|เส้น|กก\.|กิโลกรัม|เครื่อง)/i);
-        if (qtyMatch && qtyMatch[1]) {
-          quantity = parseInt(qtyMatch[1], 10) || 1;
-        }
-        total_price_final = unit_price * quantity;
-      }
-
       // Mathematical Auto-Reconciliation for item row
       if (quantity > 0 && unit_price > 0 && (total_price_final === 0 || Math.abs(total_price_final - (quantity * unit_price)) > 0.05)) {
         total_price_final = Math.round(quantity * unit_price * 100) / 100;
@@ -1154,7 +1097,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
       // High-precision Thai unit detection
       let unit = 'ชิ้น';
-      const allText = colSegments.length > 1 ? colSegments.join(' ') : cleanDesc;
+      const allText = cleanDesc;
 
       if (/กล่อง/i.test(allText)) unit = 'กล่อง';
       else if (/แพ็ค|แพค/i.test(allText)) unit = 'แพ็ค';
@@ -1212,8 +1155,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         !reachedFooter &&
         items.length > 0 &&
         line.length >= 2 &&
-        !isFooterOrDisclaimerLine(line) &&
-        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|โปรด|เงื่อนไข|RPP|SE|ศศ)/i.test(line) &&
+        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|ผู้จัดทำ|โปรด|เงื่อนไข|RPP|SE|ศศ|การคำนวณ|สรรพสามิต|เต็มรูป)/i.test(line) &&
         !/^\d+\s*รายการ/i.test(line) &&
         !isGarbledThaiGibberish(line)
       ) {
