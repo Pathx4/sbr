@@ -975,15 +975,24 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(line);
 
     // 5. Table header detection — lines with column labels
-    const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(line);
+    const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(line) || /จำนวน.*หน่วยละ.*จำนวนเงิน|จำนวน.*หน่วย.*ราคา|หน่วยละ\(บาท\)/i.test(line);
 
-    // 6. Lookahead 2-line POS Parser:
+    // 6. Direct Column Pattern Matchers:
+    // Pattern A: Standard Thai Table 3-Column line: [Description] [Quantity] [UnitPrice] [TotalPrice]
+    // e.g. "กล่องแยกสายไฟ 3 170.00 510.00" or "ตู้ไฟสวิตช์บอร์ด 3 360.00 1,080.00"
+    const standard3ColMatch = !isAddressLine && !isTableHeader ? line.match(/^(.+?)\s+(\d{1,4})\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+
+    // Pattern B: Standard Thai Table 2-Price line (qty implicit 1): [Description] [UnitPrice] [TotalPrice]
+    // e.g. "หัวแร้งบัดกรี 2,150.00 2,150.00" or "ปลั๊กไฟ 285.00 285.00"
+    const standard2PriceMatch = !isAddressLine && !isTableHeader && !standard3ColMatch ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2}|\.-))\s+([\d,]+(?:\.\d{2}|\.-))\s*$/) : null;
+
+    // 7. Lookahead 2-line POS Parser:
     // If current line has description/barcode but NO price, check if next line i+1 has price/qty
     let lookaheadMatched = false;
     let nextLinePrices: number[] = [];
     let nextLineQty = 1;
 
-    if (!isAddressLine && !isTableHeader && itemPrice === 0 && i + 1 < lines.length) {
+    if (!isAddressLine && !isTableHeader && !standard3ColMatch && !standard2PriceMatch && itemPrice === 0 && i + 1 < lines.length) {
       const nextLine = lines[i + 1];
       const nextPriceMatches = nextLine.match(/([\d,]+(?:\.\d{2}|\.-))/g) || nextLine.match(/\s+(\d{1,6})\s*$/);
       if (nextPriceMatches && nextPriceMatches.length >= 1) {
@@ -997,8 +1006,8 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     }
 
-    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, valid price, or lookahead match
-    const isNewItemRow = !isAddressLine && !isTableHeader && (hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount) || lookaheadMatched);
+    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, valid price, column match, or lookahead match
+    const isNewItemRow = !isAddressLine && !isTableHeader && (Boolean(standard3ColMatch) || Boolean(standard2PriceMatch) || hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount) || lookaheadMatched);
 
     if (isNewItemRow) {
       let cleanDesc = line;
@@ -1052,14 +1061,25 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       // Clean any embedded legal/disclaimer junk inside description
       cleanDesc = cleanItemDescription(cleanDesc);
 
-      // Detect quantity if present — look in column segments or lookahead
-      let quantity = lookaheadMatched ? nextLineQty : 1;
+      // Detect quantity and prices from matched patterns
+      let quantity = 1;
       let unit_price = itemPrice;
       let total_price_final = itemPrice;
-      
-      if (lookaheadMatched && nextLinePrices.length >= 2) {
+
+      if (standard3ColMatch) {
+        cleanDesc = standard3ColMatch[1];
+        quantity = parseInt(standard3ColMatch[2], 10) || 1;
+        unit_price = parseFloat(standard3ColMatch[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(standard3ColMatch[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (standard2PriceMatch) {
+        cleanDesc = standard2PriceMatch[1];
+        quantity = 1;
+        unit_price = parseFloat(standard2PriceMatch[2].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(standard2PriceMatch[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (lookaheadMatched && nextLinePrices.length >= 2) {
         unit_price = nextLinePrices[0];
         total_price_final = nextLinePrices[nextLinePrices.length - 1];
+        quantity = nextLineQty;
         i++; // Advance pointer because next line was consumed as price/qty row
       } else if (colSegments.length >= 3) {
         const numericSegments = colSegments.slice(1).map(s => s.trim()).filter(s => /[\d,]+/.test(s));
