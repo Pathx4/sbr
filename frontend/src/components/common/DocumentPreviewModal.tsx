@@ -1,8 +1,9 @@
 import React from 'react';
 import { X, Printer, Download, FileText } from 'lucide-react';
+import { bahttext } from 'bahttext';
 
-interface ItemRow {
-  id: string;
+interface Item {
+  item_code?: string;
   description: string;
   quantity: number;
   unit: string;
@@ -10,40 +11,140 @@ interface ItemRow {
   total_price: number;
 }
 
+interface Invoice {
+  vendor_name: string;
+  invoice_number: string;
+  invoice_date: string;
+  discount: number;
+  grand_total?: number;
+  items: Item[];
+}
+
 interface DocumentPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
-  docNumber?: string;
-  docDate?: string;
-  subject?: string;
+  department?: string;
+  introCourse?: string;
+  regulatoryText?: string;
   requesterName?: string;
   requesterPosition?: string;
+  requesterDate?: string;
   approverName?: string;
   approverPosition?: string;
-  items?: ItemRow[];
-  totalAmount?: number;
-  totalAmountText?: string;
+  approverDate?: string;
+  invoices?: Invoice[];
   onDownload?: () => void;
+}
+
+function formatPrice(val: number): string {
+  if (val % 1 === 0) {
+    return val.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  } else {
+    return val.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+}
+
+function formatVendorWithPrefix(vendor: string): string {
+  if (!vendor) return '';
+  const trimmed = vendor.trim();
+  if (
+    trimmed.startsWith('บริษัท') ||
+    trimmed.startsWith('ร้าน') ||
+    trimmed.startsWith('ห้างหุ้นส่วน') ||
+    trimmed.startsWith('หจก.') ||
+    trimmed.startsWith('บจก.')
+  ) {
+    return `จาก${trimmed}`;
+  }
+  return `จากบริษัท ${trimmed}`;
 }
 
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   isOpen,
   onClose,
-  title = 'ตัวอย่างเอกสารบันทึกข้อความ (Live Preview)',
-  docNumber = 'สทอภ (สบร) / 2568',
-  docDate = '20 สิงหาคม 2568',
-  subject = 'ขออนุมัติจัดซื้อจัดจ้างพัสดุ/บริการ',
-  requesterName = 'เจ้าหน้าที่ผู้ขอซื้อ',
-  requesterPosition = 'ปฏิบัติงาน',
-  approverName = 'ผู้อำนวยการสำนัก',
+  department = 'สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.)',
+  introCourse = 'จัดซื้อวัสดุสำหรับการจัดกิจกรรมและดำเนินงานโครงการ',
+  regulatoryText = 'หนังสือคณะกรรมการวินิจฉัยปัญหาการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ กรมบัญชีกลาง ด่วนที่สุด ที่ กค (กวจ) 0405.2/ว 119 ลงวันที่ 7 มีนาคม 2561 ตาราง 1 ลำดับที่ 3',
+  requesterName = 'นางสาวศิริพักตร์ เสมียนคิด',
+  requesterPosition = 'เจ้าหน้าที่ผู้รับผิดชอบ',
+  requesterDate = '   /            / 2568',
+  approverName = 'นางสาวปราณปริยา วงค์ษา',
   approverPosition = 'ผู้อำนวยการสำนักบริหารเครือข่ายและสร้างความตระหนัก',
-  items = [],
-  totalAmount = 0,
-  totalAmountText = '',
+  approverDate = '   /            / 2568',
+  invoices = [],
   onDownload,
 }) => {
   if (!isOpen) return null;
+
+  // Flatten all items across invoices exactly like docxGenerator
+  const flatItems: {
+    idx: number;
+    code: string;
+    description: string;
+    qty: number;
+    unit: string;
+    unitPrice: number;
+    totalPrice: number;
+    vendor: string;
+    invNum: string;
+    invDate: string;
+    invoiceIdx: number;
+  }[] = [];
+
+  const invoiceRanges: {
+    invoiceIdx: number;
+    start: number;
+    end: number;
+    subtotal: number;
+    discount: number;
+    grandTotal: number;
+  }[] = [];
+
+  let globalCounter = 1;
+
+  invoices.forEach((inv, invIdx) => {
+    const startIdx = globalCounter;
+    let invSubtotal = 0;
+
+    (inv.items || []).forEach(item => {
+      const desc = item.description || '';
+      const code = item.item_code || '';
+      invSubtotal += item.total_price || 0;
+
+      flatItems.push({
+        idx: globalCounter++,
+        code,
+        description: desc,
+        qty: item.quantity || 1,
+        unit: item.unit || 'ชิ้น',
+        unitPrice: item.unit_price || 0,
+        totalPrice: item.total_price || 0,
+        vendor: inv.vendor_name || 'ร้านค้า/บริษัทผู้ขาย',
+        invNum: inv.invoice_number || '-',
+        invDate: inv.invoice_date || '-',
+        invoiceIdx: invIdx,
+      });
+    });
+
+    const endIdx = globalCounter - 1;
+    const discount = Number(inv.discount || 0);
+    const grandTotal = Math.max(0, invSubtotal - discount);
+
+    invoiceRanges.push({
+      invoiceIdx: invIdx,
+      start: startIdx,
+      end: endIdx,
+      subtotal: invSubtotal,
+      discount,
+      grandTotal,
+    });
+  });
+
+  const totalItemsCount = flatItems.length;
+  const grandSubtotal = flatItems.reduce((sum, item) => sum + item.totalPrice, 0);
+  const totalDiscount = invoiceRanges.reduce((sum, r) => sum + r.discount, 0);
+  const grandTotalPaid = grandSubtotal - totalDiscount;
+  const thaiTextAmount = bahttext(grandTotalPaid);
 
   const handlePrint = () => {
     window.print();
@@ -53,14 +154,18 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full max-h-[92vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header Bar */}
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50">
+        <div className="p-4 sm:p-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-slate-50">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 shadow-sm">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">{title}</h3>
-              <p className="text-xs text-slate-500">พรีวิวเค้าโครงเอกสารราชการเสมือนจริงก่อนสั่งพิมพ์หรือส่งออก</p>
+              <h3 className="text-base font-bold text-slate-800">
+                ตัวอย่างบันทึกข้อความ (Word .docx Preview)
+              </h3>
+              <p className="text-xs text-slate-500">
+                แสดงผลตรงตามไฟล์ Word (.docx) ที่จะดาวน์โหลด 100%
+              </p>
             </div>
           </div>
 
@@ -69,10 +174,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               <button
                 type="button"
                 onClick={onDownload}
-                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all"
               >
                 <Download className="w-4 h-4" />
-                ดาวน์โหลดเอกสาร
+                ดาวน์โหลด Word (.docx)
               </button>
             )}
 
@@ -95,113 +200,128 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           </div>
         </div>
 
-        {/* Modal Body: A4 Paper Simulation */}
+        {/* Modal Body: Exact A4 Word Page Replica */}
         <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-slate-100 flex justify-center">
-          <div className="w-full max-w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-xl p-8 sm:p-12 font-sans border border-slate-200 text-sm leading-relaxed space-y-6">
-            {/* Garuda / Header Icon */}
-            <div className="text-center space-y-1">
-              <div className="w-14 h-14 mx-auto bg-slate-50 rounded-full flex items-center justify-center border border-slate-300 font-serif font-black text-xl text-slate-700">
-                ครุฑ
-              </div>
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">บันทึกข้อความ</h2>
+          <div className="w-full max-w-[210mm] min-h-[297mm] bg-white text-slate-900 shadow-xl p-10 sm:p-14 font-sans border border-slate-200 text-base leading-relaxed space-y-4">
+            
+            {/* 1. Header Title: บันทึกข้อความ (Bold 29pt) */}
+            <div className="border-b-2 border-slate-900 pb-2">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight font-serif">
+                บันทึกข้อความ
+              </h1>
             </div>
 
-            {/* Memo Header Fields */}
-            <div className="space-y-1.5 border-b border-slate-300 pb-4 text-xs sm:text-sm">
-              <div className="flex justify-between">
-                <p><strong>หน่วยงาน:</strong> สำนักบริหารเครือข่ายและสร้างความตระหนัก (สบร.) โทร. 1234</p>
-                <p><strong>ที่:</strong> {docNumber}</p>
-              </div>
-              <div className="flex justify-between">
-                <p><strong>วันที่:</strong> {docDate}</p>
-              </div>
+            {/* 2. ส่วนราชการ */}
+            <div className="text-base text-slate-900 leading-snug">
+              <span className="font-bold">ส่วนราชการ  </span>
+              <span>{department}  โทร. 033 005 833</span>
+            </div>
+
+            {/* 3. ที่ และ วันที่ */}
+            <div className="flex flex-wrap justify-between items-center text-base text-slate-900 leading-snug">
               <div>
-                <p><strong>เรื่อง:</strong> {subject}</p>
+                <span className="font-bold">ที่  </span>
+                <span>สคร.             /2568</span>
               </div>
-              <div>
-                <p><strong>เรียน:</strong> {approverName} ({approverPosition})</p>
+              <div className="mr-8">
+                <span className="font-bold">วันที่  </span>
+                <span>{requesterDate || '   /            / 2568'}</span>
               </div>
             </div>
 
-            {/* Memo Body Content */}
-            <div className="space-y-3 text-xs sm:text-sm">
-              <p className="indent-8 text-slate-800">
-                ด้วย สำนักบริหารเครือข่ายและสร้างความตระหนัก มีความประสงค์จะดำเนินการจัดซื้อ/จัดจ้างพัสดุเพื่อใช้ในการดำเนินกิจกรรมตามภารกิจโครงการ โดยมีรายละเอียดรายการพัสดุดังต่อไปนี้:
-              </p>
+            {/* 4. เรื่อง */}
+            <div className="text-base text-slate-900 leading-snug">
+              <span className="font-bold">เรื่อง  </span>
+              <span className="font-bold">รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง  จำนวน {totalItemsCount}  รายการ</span>
+            </div>
 
-              {/* Items Table */}
-              <div className="border border-slate-300 rounded-lg overflow-hidden my-4">
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 border-b border-slate-300 text-slate-700">
-                      <th className="p-2 border-r border-slate-300 text-center w-10">ลำดับ</th>
-                      <th className="p-2 border-r border-slate-300">รายการ</th>
-                      <th className="p-2 border-r border-slate-300 text-center w-16">จำนวน</th>
-                      <th className="p-2 border-r border-slate-300 text-center w-16">หน่วย</th>
-                      <th className="p-2 border-r border-slate-300 text-right w-24">ราคา/หน่วย</th>
-                      <th className="p-2 text-right w-28">จำนวนเงิน (บาท)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.length > 0 ? (
-                      items.map((item, idx) => (
-                        <tr key={item.id || idx} className="border-b border-slate-200">
-                          <td className="p-2 border-r border-slate-200 text-center text-slate-600">{idx + 1}</td>
-                          <td className="p-2 border-r border-slate-200 text-slate-800">{item.description}</td>
-                          <td className="p-2 border-r border-slate-200 text-center text-slate-700">{item.quantity}</td>
-                          <td className="p-2 border-r border-slate-200 text-center text-slate-700">{item.unit}</td>
-                          <td className="p-2 border-r border-slate-200 text-right font-mono text-slate-700">{item.unit_price.toLocaleString()}</td>
-                          <td className="p-2 text-right font-medium font-mono text-slate-900">{item.total_price.toLocaleString()}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="p-4 text-center text-slate-400">
-                          (ไม่มีรายการสินค้า)
-                        </td>
-                      </tr>
+            {/* 5. เรียน */}
+            <div className="text-base text-slate-900 leading-snug pb-2">
+              <span className="font-bold">เรียน  </span>
+              <span>{approverPosition || 'ผอ.สคร.'}  ผ่าน รก.หน.ฝถท.</span>
+            </div>
+
+            <div className="h-2" />
+
+            {/* 6. Intro Paragraph */}
+            <p className="text-base text-slate-900 text-justify indent-12 leading-relaxed">
+              ด้วย {department}  ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด  {introCourse}  จำนวน  {totalItemsCount}  รายการ  โดยใช้งบประมาณโครงการจัดกิจกรรมพัฒนาเครือข่ายและสร้างความตระหนัก  ซึ่งมีรายละเอียดดังต่อไปนี้
+            </p>
+
+            {/* 7. Numbered Items Paragraphs */}
+            <div className="space-y-2.5 pt-1">
+              {flatItems.map(item => {
+                const descText = item.code ? `${item.code} ${item.description}` : item.description;
+                const priceStr = formatPrice(item.totalPrice);
+                const matchingRange = invoiceRanges.find(r => r.end === item.idx && r.discount > 0);
+
+                return (
+                  <div key={item.idx} className="space-y-1">
+                    <p className="text-base text-slate-900 text-justify indent-8 leading-relaxed">
+                      <span>{item.idx}. ค่า </span>
+                      <span className="font-bold">{descText}</span>
+                      <span>  จำนวน  {item.qty}  {item.unit}  เป็นเงิน  {priceStr}  บาท  {formatVendorWithPrefix(item.vendor)}  ตามใบเสร็จรับเงิน/ใบกำกับภาษี เลขที่ {item.invNum} ลงวันที่ {item.invDate}</span>
+                    </p>
+
+                    {/* Discount note if present */}
+                    {matchingRange && (
+                      <p className="text-sm italic text-slate-600 indent-12">
+                        หมายเหตุ : รายการที่ {matchingRange.start}-{matchingRange.end} มีส่วนลดสุทธิ {formatPrice(matchingRange.discount)} บาท รวมเป็นเงินทั้งสิ้น {formatPrice(matchingRange.grandTotal)} บาท
+                      </p>
                     )}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-slate-50 font-bold border-t border-slate-300">
-                      <td colSpan={5} className="p-2.5 text-right border-r border-slate-300 text-slate-700">
-                        รวมเงินทั้งสิ้น {totalAmountText && `(${totalAmountText})`}
-                      </td>
-                      <td className="p-2.5 text-right text-indigo-700 font-mono font-bold">
-                        ฿ {totalAmount.toLocaleString()}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <p className="indent-8 text-slate-800">
-                จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ
-              </p>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Signature Area */}
-            <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs">
-              <div className="space-y-12">
-                <p className="text-transparent select-none">.</p>
-                <div className="space-y-1">
-                  <p className="text-slate-400">ลงชื่อ..........................................................</p>
-                  <p className="font-semibold text-slate-800">({requesterName})</p>
-                  <p className="text-slate-500">{requesterPosition}</p>
-                  <p className="text-slate-400 text-[11px]">ผู้ขออนุมัติ</p>
-                </div>
+            {/* 8. Total Summary Paragraph */}
+            <p className="text-base font-bold text-slate-900 text-justify indent-8 pt-2 leading-relaxed">
+              รวม {totalItemsCount} รายการ เป็นเงินทั้งสิ้น {formatPrice(grandTotalPaid)} บาท ({thaiTextAmount})
+            </p>
+
+            {/* 9. Regulatory Reference Paragraph */}
+            <p className="text-base text-slate-900 text-justify indent-8 leading-relaxed">
+              การจัดซื้อจัดจ้างดังกล่าว เป็นการดำเนินการตาม {regulatoryText}
+            </p>
+
+            <div className="h-2" />
+
+            {/* 10. Conclusion Paragraph */}
+            <p className="text-base text-slate-900 text-justify indent-8 leading-relaxed">
+              จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ
+            </p>
+
+            <div className="h-6" />
+
+            {/* Signature Blocks (Right Aligned matching Word template) */}
+            <div className="space-y-8 pr-4">
+              {/* Requester Signature Block */}
+              <div className="text-right space-y-1">
+                <p className="text-base font-bold text-slate-900">
+                  ( {requesterName || 'นางสาวศิริพักตร์  เสมียนคิด'} )
+                </p>
+                <p className="text-sm text-slate-700">
+                  {requesterPosition || 'เจ้าหน้าที่ผู้รับผิดชอบ'}
+                </p>
+                <p className="text-sm text-slate-500">
+                  {requesterDate || '   /            / 2568'}
+                </p>
               </div>
 
-              <div className="space-y-12">
-                <p className="text-transparent select-none">.</p>
-                <div className="space-y-1">
-                  <p className="text-slate-400">ลงชื่อ..........................................................</p>
-                  <p className="font-semibold text-slate-800">({approverName})</p>
-                  <p className="text-slate-500">{approverPosition}</p>
-                  <p className="text-slate-400 text-[11px]">ผู้อนุมัติ</p>
-                </div>
+              {/* Approver Signature Block */}
+              <div className="text-right space-y-1 pt-4">
+                <p className="text-base font-bold text-slate-900">
+                  ( {approverName || 'นางสาวปราณปริยา   วงค์ษา'} )
+                </p>
+                <p className="text-sm text-slate-700">
+                  {approverPosition || 'ผอ.สคร.'}
+                </p>
+                <p className="text-sm text-slate-500">
+                  {approverDate || '   /            / 2568'}
+                </p>
               </div>
             </div>
+
           </div>
         </div>
       </div>

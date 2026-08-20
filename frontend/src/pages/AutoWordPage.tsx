@@ -1676,13 +1676,16 @@ export default function AutoWordPage() {
       <DocumentPreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        subject={introCourse || 'ขออนุมัติจัดซื้อจัดจ้างพัสดุเพื่อดำเนินงานโครงการ'}
+        department={department}
+        introCourse={introCourse}
+        regulatoryText={regulatoryText}
         requesterName={stripNickname(requesterName)}
         requesterPosition={requesterPosition}
+        requesterDate={requesterDate}
         approverName={stripNickname(approverName)}
         approverPosition={approverPosition}
-        items={invoices.flatMap(inv => inv.items)}
-        totalAmount={calculateGrandTotal()}
+        approverDate={approverDate}
+        invoices={invoices}
         onDownload={handleGenerateWord}
       />
     </div>
