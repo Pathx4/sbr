@@ -843,15 +843,16 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     'CHANGE', 'SUBTOTAL', 'GRAND TOTAL', 'TOTAL', 'ยอดรวม', 'ราคารวม', 'รวมทั้งสิ้น', 'รวมทั้งสิ้นบาท', 'รวมเงิน',
     'ภาษีมูลค่าเพิ่ม', 'VAT', 'TAX ID', 'TAX NO', 'THANK YOU', 'ขอบคุณ', 'ยินดีต้อนรับ', 'WELCOME',
     'สาขา', 'POS', 'MEMBER', 'สมาชิก', 'หน้าที่', 'ต้นฉบับ', 'สำเนา', 'เอกสารออกเป็นชุด', 'บาท', 'BAHT',
-    'สินค้าที่มีภาษี', 'สินค้าที่ยกเว้น', 'สินค้าที่เสีย', 'มูลค่าสินค้า', 'มูลค่าภาษี', 'ภาษี 7%', 'ภาษี7%',
+    'สินค้าที่มีภาษี', 'สินค้าที่ไม่มีภาษี', 'สินค้าไม่มีภาษี', 'สินค้าที่ยกเว้น', 'สินค้าที่เสีย', 'สินค้าที่ได้รับยกเว้น', 'มูลค่าสินค้า', 'มูลค่าภาษี', 'ภาษี 7%', 'ภาษี7%',
     'จำนวนรวม', 'รวมรายการ', 'ราคาสินค้า', 'ส่วนลด', 'DISCOUNT', 'พนักงานขาย', 'CASHIER', 'เวลา', 'TIME',
     'โทร', 'TEL', 'FAX', 'EMAIL', 'อีเมล', 'เว็บไซต์', 'WWW', 'HTTP', 'NET TOTAL', 'NET AMOUNT',
     // Address & Company Info keywords — these are NEVER product items
     'ที่อยู่', 'ผู้ซื้อ', 'ผู้ขาย', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ถนน', 'ซอย', 'แขวง', 'เขต', 'รหัสไปรษณีย์',
-    'เลขประจำตัวผู้เสียภาษี', 'สำนักงานใหญ่', 'เลขที่ใบเสร็จ', 'เลขที่ใบกำกับ', 'วันที่', 'DATE',
-    // Table header keywords — column labels, not product items
+    'เลขประจำตัวผู้เสียภาษี', 'สำนักงานใหญ่', 'เลขที่ใบเสร็จ', 'เลขที่ใบกำกับ', 'วันที่', 'DATE', 'แบสลี',
+    // Table header & Tax summary keywords
     'รายละเอียด', 'ราคา/หน่วย', 'รวม (บาท)', 'รหัสสินค้า', 'จำนวน', 'หน่วยละ', 'จำนวนเงิน', 'DESCRIPTION', 'QTY', 'PRICE', 'AMOUNT', 'ITEM',
     'ORDER NO', 'ORDER', 'ลำดับ', 'รายการ', 'ชื่อสินค้า', 'รายละเอียดสินค้า', 'NO.', 'รหัส', 'หน่วย', 'มูลค่า', 'ส่วนลด',
+    'รวมยอดขาย', 'มูลค่าฐานภาษี', 'มูลค่าตามใบกำกับภาษี', 'ยอดขาย', 'ยอดสุทธิ',
     // Invoice/receipt keywords
     'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'Tax Invoice', 'Receipt', 'INVOICE', 'DOCUMENT'
   ];
@@ -1126,15 +1127,19 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       else if (/คู่/i.test(allText)) unit = 'คู่';
       else if (/แกลลอน/i.test(allText)) unit = 'แกลลอน';
       else if (/กิโลกรัม|กก\./i.test(allText)) unit = 'กิโลกรัม';
-      else if (/เมตร|ม\./i.test(allText)) unit = 'เมตร';
+      else if (/(?:^|\s)เมตร(?:\s|$)|หน่วย.*เมตร|ยาว.*เมตร/i.test(allText)) unit = 'เมตร';
 
       const isZeroPriceJunk = unit_price === 0 && !item_code && cleanDesc.length < 5;
+      const isLowPriceGarbage = total_price_final <= 1.05 && !item_code && cleanDesc.length < 15;
+      const isTaxSummaryJunk = /สินค้าที่ไม่มีภาษี|สินค้าไม่มีภาษี|สินค้าที่ได้รับยกเว้น|มูลค่าฐานภาษี|รวมยอดขาย|ยอดรวมภาษี|ยอดสุทธิ/i.test(cleanDesc);
 
       if (
         cleanDesc.length >= 3 &&
         !isZeroPriceJunk &&
+        !isLowPriceGarbage &&
+        !isTaxSummaryJunk &&
         !THAI_MONTH_PATTERNS.test(cleanDesc) &&
-        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ)/i.test(cleanDesc) &&
+        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ|แบสลี)/i.test(cleanDesc) &&
         !/^\d+\s*รายการ/i.test(cleanDesc) &&
         /[ก-ฮa-zA-Z]{2,}/i.test(cleanDesc) &&
         !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ผู้รับเงิน|ผู้ส่งของ|ลงชื่อ|อนุมัติ|หมายเหตุ/i.test(cleanDesc) &&
