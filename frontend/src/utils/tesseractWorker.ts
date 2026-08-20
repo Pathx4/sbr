@@ -79,7 +79,7 @@ export async function initWorker(lang: string = 'tha+eng') {
       } as any);
 
       await w.setParameters({
-        tessedit_pageseg_mode: PSM.AUTO as any,
+        tessedit_pageseg_mode: PSM.SINGLE_BLOCK as any,
         preserve_interword_spaces: '1',
         user_defined_dpi: '300',
       });

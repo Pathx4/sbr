@@ -65,10 +65,10 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'binari
         let width = img.width;
         let height = sourceHeight;
         
-        // High-DPI Upscaling to 3600px for crystal-clear character edges
-        if (width < 3600) {
-          const ratio = 3600 / width;
-          width = 3600;
+        // High-DPI Upscaling to 2400px (Optimal golden resolution for Tesseract OCR)
+        if (width < 2400) {
+          const ratio = 2400 / width;
+          width = 2400;
           height = Math.round(height * ratio);
         }
 
@@ -949,10 +949,11 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   }
 
   // 5. Extract Item Lines, SKUs, and Multi-Line Continuation Descriptions
-  lines.forEach((line) => {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
     if (excludeKeywords.some(kw => line.toUpperCase().includes(kw.toUpperCase()))) {
-      return;
+      continue;
     }
 
     // 1. Check if line starts with row index e.g. "1.", "2.", "15." or "1)", "2)"
@@ -967,7 +968,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     const priceMatches = line.match(/([\d,]+(?:\.\d{2}|\.-))/g) || line.match(/\s+(\d{1,6})\s*$/);
     const hasPriceAtEnd = priceMatches && priceMatches.length >= 1;
     const validPrices = hasPriceAtEnd ? priceMatches.map(p => parseFloat(p.replace(/\.-/, '.00').replace(/,/g, ''))).filter(p => p > 0) : [];
-    const itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
+    let itemPrice = validPrices.length > 0 ? (validPrices[validPrices.length > 1 ? validPrices.length - 2 : 0] || validPrices[0]) : 0;
 
     // 4. Address line detection — lines with address keywords are NEVER product items
     const isAddressLine = /ที่อยู่|ผู้ซื้อ|ผู้ขาย|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ถนน|ซอย|แขวง|เขต|รหัสไปรษณีย์/i.test(line);
@@ -975,8 +976,28 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     // 5. Table header detection — lines with column labels
     const isTableHeader = /^\s*SKU\b/i.test(line) || /รายละเอียด.*จำนวน|รหัสสินค้า.*ราคา/i.test(line) || /^(?:ลำดับ|ORDER|NO\.|ITEM|รหัส|ชื่อสินค้า|รายการ)/i.test(line);
 
-    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, or valid price
-    const isNewItemRow = !isAddressLine && !isTableHeader && (hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount));
+    // 6. Lookahead 2-line POS Parser:
+    // If current line has description/barcode but NO price, check if next line i+1 has price/qty
+    let lookaheadMatched = false;
+    let nextLinePrices: number[] = [];
+    let nextLineQty = 1;
+
+    if (!isAddressLine && !isTableHeader && itemPrice === 0 && i + 1 < lines.length) {
+      const nextLine = lines[i + 1];
+      const nextPriceMatches = nextLine.match(/([\d,]+(?:\.\d{2}|\.-))/g) || nextLine.match(/\s+(\d{1,6})\s*$/);
+      if (nextPriceMatches && nextPriceMatches.length >= 1) {
+        nextLinePrices = nextPriceMatches.map(p => parseFloat(p.replace(/\.-/, '.00').replace(/,/g, ''))).filter(p => p > 0);
+        if (nextLinePrices.length > 0) {
+          const nextQtyMatch = nextLine.match(/^\s*(\d+)\s+/) || nextLine.match(/\s+(\d+)\s+[\d,]+/);
+          if (nextQtyMatch) nextLineQty = parseInt(nextQtyMatch[1], 10) || 1;
+          lookaheadMatched = true;
+          itemPrice = nextLinePrices[nextLinePrices.length - 1];
+        }
+      }
+    }
+
+    // A line is a NEW ITEM ROW if it has a row index, SKU prefix, valid price, or lookahead match
+    const isNewItemRow = !isAddressLine && !isTableHeader && (hasRowIndex || hasSkuPrefix || (itemPrice > 0 && itemPrice !== total_amount) || lookaheadMatched);
 
     if (isNewItemRow) {
       let cleanDesc = line;
@@ -1030,13 +1051,16 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       // Clean any embedded legal/disclaimer junk inside description
       cleanDesc = cleanItemDescription(cleanDesc);
 
-      // Detect quantity if present — look in column segments if available
-      let quantity = 1;
+      // Detect quantity if present — look in column segments or lookahead
+      let quantity = lookaheadMatched ? nextLineQty : 1;
       let unit_price = itemPrice;
       let total_price_final = itemPrice;
       
-      // If we have column segments, try to extract quantity and prices from them
-      if (colSegments.length >= 3) {
+      if (lookaheadMatched && nextLinePrices.length >= 2) {
+        unit_price = nextLinePrices[0];
+        total_price_final = nextLinePrices[nextLinePrices.length - 1];
+        i++; // Advance pointer because next line was consumed as price/qty row
+      } else if (colSegments.length >= 3) {
         const numericSegments = colSegments.slice(1).map(s => s.trim()).filter(s => /[\d,]+/.test(s));
         
         if (numericSegments.length >= 2) {
@@ -1060,7 +1084,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
             total_price_final = prices[0] * quantity;
           }
         }
-      } else {
+      } else if (!lookaheadMatched) {
         const qtyMatch = line.match(/\s+(\d+)\s+[\d,]+(?:\.\d{2}|\.-)/)
                        || line.match(/\s+(\d+)\s+(?:ชิ้น|อัน|แผ่น|เมตร|ม\.|แท่ง|ม้วน|กล่อง|แพ็ค|ชุด|ด้าม|ตัว|คู่|ถุง|ขวด|หลอด|ซอง|ก้อน|เล่ม|รีม|แกลลอน|ถัง|เส้น|กก\.|กิโลกรัม|เครื่อง)/i);
         if (qtyMatch && qtyMatch[1]) {
@@ -1144,7 +1168,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         }
       }
     }
-  });
+  }
 
   // 6. Deduplicate items ONLY if item_code, description, and price are 100% identical
   const dedupedItems: ParsedReceipt['items'] = [];
