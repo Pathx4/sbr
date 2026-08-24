@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, ArrowRight, CheckCircle2, ClipboardList, Building, Car, Presentation } from 'lucide-react';
+import { 
+  Calculator, ArrowRight, CheckCircle2, ClipboardList, Building, Car, 
+  Presentation, Sparkles, Download, Copy, Check
+} from 'lucide-react';
+import { bahttext } from 'bahttext';
 import { initialFormData } from '../types';
 import type { BudgetFormData } from '../types';
 import { TrainingForm } from '../components/forms/TrainingForm';
@@ -13,16 +17,19 @@ import staffSbr from '../data/staff_sbr.json';
 import contacts from '../data/contacts.json';
 import directors from '../data/directors.json';
 import { BudgetAnalyticsCard } from '../components/budget/BudgetAnalyticsCard';
+import { AnimatedNumber } from '../components/ui/AnimatedNumber';
+import { ConfettiEffect } from '../components/ui/ConfettiEffect';
+
 const stagger = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
 };
 const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } }
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' as const } }
 };
 
-function BudgetPage() {
+export default function BudgetPage() {
   const [formData, setFormData] = useState<BudgetFormData>(() => {
     try {
       const saved = localStorage.getItem('sbr_budget_active_draft');
@@ -36,6 +43,9 @@ function BudgetPage() {
   });
   const [showResult, setShowResult] = useState(false);
   const [calculationResult, setCalculationResult] = useState<any>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [copiedTotal, setCopiedTotal] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const isFormValid = () => {
@@ -43,8 +53,19 @@ function BudgetPage() {
     if (!formData.activityType) return false;
     const hasDate = (formData.startDate && formData.endDate) || formData.startDate || formData.date;
     if (!hasDate || !formData.days) return false;
-    return true; // Basic validation
+    return true;
   };
+
+  // Determine current active step (1 to 4)
+  const currentStep = !formData.regulation
+    ? 1
+    : !formData.activityType
+    ? 2
+    : !isFormValid()
+    ? 3
+    : showResult
+    ? 4
+    : 3;
 
   const calculateBudgetData = (formData: BudgetFormData) => {
     let result: any = {
@@ -56,7 +77,7 @@ function BudgetPage() {
     const isGistda = formData.regulation === 'ระเบียบ สทอภ. (GISTDA)';
 
     const rates = {
-      foodBreak: isGistda ? 100 : 35, // 100 per meal, 2 breaks = 200/day
+      foodBreak: isGistda ? 100 : 35,
       foodLunch: isGistda ? 400 : 300,
       foodReception: isGistda ? 1000 : 500,
       speakerThaiNormal: isGistda ? 1200 : 600,
@@ -76,24 +97,24 @@ function BudgetPage() {
         if (title === 'ผสทอภ.' || title === 'รอง ผสทอภ.') {
           return 800;
         }
-        return 600; // Default executive rate (ผอ.สำนัก)
+        return 600;
       } else if (isDirector || directors.some(d => d.name === name)) {
-        return 600; // Directors get 600
+        return 600;
       } else {
         const staff = staffSbr.find(s => s.name === name) || contacts.find(c => c.name === name);
         const title = staff ? (staff as any).title || (staff as any).position || '' : '';
         if (title.includes('ผู้อำนวยการสำนัก') || title.includes('ผู้อำนวยการ') || title.includes('ผอ.')) {
           return 600;
         }
-        return 400; // Default staff rate
+        return 400;
       }
     };
 
     const getGovAllowanceRate = (_name: string, isExecutive: boolean) => {
       if (isExecutive) {
-        return 270; // Gov executive training allowance
+        return 270;
       } else {
-        return 240; // Gov staff training allowance
+        return 240;
       }
     };
 
@@ -116,7 +137,6 @@ function BudgetPage() {
       let foodLunchCost = 0;
       let foodRecepCost = 0;
 
-      // Loop days to calculate active food cost
       for (let d = 1; d <= days; d++) {
         if (formData.foodBreakMorning && formData.foodBreakMorningDays.includes(d)) {
           foodBreakMorningCost += rates.foodBreak * totalPeople;
@@ -269,7 +289,7 @@ function BudgetPage() {
         result.totalCost += roomCost;
       }
 
-      // 5. Speaker Room & Travel
+      // 6. Speaker Room & Travel
       const totalSpeakers = spkThaiNorm + spkThaiExp + spkFor;
       if (totalSpeakers > 0 && nights > 0) {
         const speakerRoomCost = totalSpeakers * rates.speakerRoom * nights;
@@ -292,7 +312,6 @@ function BudgetPage() {
         result.totalCost += taxiCost;
       }
 
-      // Foreign speaker flight/travel cost (sum of flightFees array)
       const flightFees = (formData.speakerForeignFlightFees || []).map((f: any) => parseFloat(f) || 0);
       const totalFlightFee = flightFees.reduce((acc: number, val: number) => acc + val, 0);
       if (totalFlightFee > 0) {
@@ -393,7 +412,7 @@ function BudgetPage() {
       }
     }
 
-    // Custom Other Expenses (ค่าใช้จ่ายอื่นๆ: ชื่อรายการ และ จำนวนเงิน)
+    // Custom Other Expenses
     const otherExpAmt = parseFloat(formData.otherExpenseAmount) || 0;
     if (otherExpAmt > 0) {
       result.breakdown.push({
@@ -432,54 +451,230 @@ function BudgetPage() {
     }
   }, [formData]);
 
+  // Handle CommandPalette preset loader events
+  useEffect(() => {
+    const handleQuickPresetEvent = (e: any) => {
+      const presetType = e.detail?.type;
+      if (presetType) {
+        loadQuickPreset(presetType);
+      }
+    };
+    window.addEventListener('sbr-load-quick-preset', handleQuickPresetEvent);
+    return () => window.removeEventListener('sbr-load-quick-preset', handleQuickPresetEvent);
+  }, []);
+
+  // Quick Preset Starters
+  const loadQuickPreset = (type: 'training' | 'meeting' | 'fieldtrip') => {
+    const today = new Date().toISOString().split('T')[0];
+    let newFormData: BudgetFormData = { ...initialFormData };
+
+    if (type === 'training') {
+      newFormData = {
+        ...initialFormData,
+        projectName: 'โครงการฝึกอบรมเชิงปฏิบัติการเทคโนโลยีภูมิสารสนเทศ ประจำปี 2569',
+        regulation: 'ระเบียบ สทอภ. (GISTDA)',
+        activityType: 'training',
+        startDate: today,
+        endDate: today,
+        days: '3',
+        totalAttendees: '30',
+        foodBreakMorning: true,
+        foodBreakMorningDays: [1, 2, 3],
+        foodBreakAfternoon: true,
+        foodBreakAfternoonDays: [1, 2, 3],
+        foodLunch: true,
+        foodLunchDays: [1, 2, 3],
+        speakerThaiNormal: '2',
+        speakerNeedsTravel: true,
+        speakerTaxiFee: '1000',
+        staffCount: '4',
+        staffNames: ['น.ส.ศิริพักตร์ เสลียนคิด', 'นายภคิน ทำทุ่ง', 'นางสาวธัญญ์ธิญา ถาวรเศรษฐ์', 'นางสาววัชรี พูลสุข'],
+        staffNeedsRoom: true,
+        staffDoubleRooms: '2',
+        staffSingleRooms: '0',
+      };
+    } else if (type === 'meeting') {
+      newFormData = {
+        ...initialFormData,
+        projectName: 'การประชุมคณะกรรมการบริหารและพัฒนาเครือข่ายความร่วมมือ สบร. ครั้งที่ 1/2569',
+        regulation: 'ระเบียบ สทอภ. (GISTDA)',
+        activityType: 'meeting',
+        startDate: today,
+        endDate: today,
+        days: '1',
+        committeeCount: '15',
+        foodBreakMorning: true,
+        foodBreakMorningDays: [1],
+        foodBreakAfternoon: true,
+        foodBreakAfternoonDays: [1],
+        foodLunch: true,
+        foodLunchDays: [1],
+        roomRental: '5000',
+      };
+    } else if (type === 'fieldtrip') {
+      newFormData = {
+        ...initialFormData,
+        projectName: 'การลงพื้นที่สำรวจและติดตามการดำเนินงานเครือข่ายสถานีรับสัญญาณดาวเทียมภาคสนาม',
+        regulation: 'ระเบียบ สทอภ. (GISTDA)',
+        activityType: 'field_trip',
+        startDate: today,
+        endDate: today,
+        days: '2',
+        committeeCount: '6',
+        foodBreakMorning: true,
+        foodBreakMorningDays: [1, 2],
+        foodBreakAfternoon: true,
+        foodBreakAfternoonDays: [1, 2],
+        foodLunch: true,
+        foodLunchDays: [1, 2],
+        carRental: '6000',
+        tollFee: '800',
+      };
+    }
+
+    setFormData(newFormData);
+    const res = calculateBudgetData(newFormData);
+    setCalculationResult(res);
+    setShowResult(true);
+    setShowConfetti(true);
+    setTimeout(() => {
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  };
+
   const handleCalculate = () => {
     if (!isFormValid()) return;
     const res = calculateBudgetData(formData);
     setCalculationResult(res);
     setShowResult(true);
+    setShowConfetti(true);
     setTimeout(() => {
       resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
+
   const handleExportExcel = async () => {
     if (!calculationResult) return;
+    setIsExporting(true);
     try {
       await exportToExcel(formData, calculationResult);
+      setShowConfetti(true);
     } catch (error) {
       console.error("Failed to export Excel", error);
       alert("เกิดข้อผิดพลาดในการสร้างไฟล์ Excel");
+    } finally {
+      setIsExporting(false);
     }
   };
 
-  return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-background">
-      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-accent/[0.04] blur-[100px] pointer-events-none" />
-      <div className="absolute top-[20%] right-[-10%] w-[30vw] h-[30vw] rounded-full bg-accent-secondary/[0.03] blur-[120px] pointer-events-none" />
+  const handleCopyTotal = () => {
+    if (!calculationResult) return;
+    navigator.clipboard.writeText(calculationResult.totalCost.toString());
+    setCopiedTotal(true);
+    setTimeout(() => setCopiedTotal(false), 2000);
+  };
 
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Hero Section */}
+  return (
+    <div className="min-h-screen w-full relative overflow-hidden bg-background pb-20">
+      {/* Confetti Celebration Particle Effect */}
+      <ConfettiEffect trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
+
+      <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] rounded-full bg-blue-500/[0.03] blur-[120px] pointer-events-none" />
+      <div className="absolute top-[25%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-indigo-500/[0.03] blur-[140px] pointer-events-none" />
+
+      <main className="relative z-10 mx-auto max-w-[1500px] px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6">
+        
+        {/* Header Hero Section */}
         <motion.div
           initial="hidden"
           animate="visible"
           variants={stagger}
-          className="mb-10 max-w-4xl"
+          className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-200/80 pb-6"
         >
-          <motion.div variants={fadeInUp} className="mb-4">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-              Budget Allocation System v2.0
-            </span>
+          <div className="space-y-1.5">
+            <motion.div variants={fadeInUp} className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                Budget Allocation Engine 2026
+              </span>
+              <span className="text-xs text-slate-400 font-medium">• ระบบคำนวณงบประมาณอัตโนมัติ</span>
+            </motion.div>
+            <motion.h1 variants={fadeInUp} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 font-display">
+              ระบบประมาณการค่าใช้จ่ายโครงการ <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">สบร.</span>
+            </motion.h1>
+            <motion.p variants={fadeInUp} className="text-xs sm:text-sm text-slate-500 max-w-3xl leading-relaxed">
+              รองรับระเบียบ สทอภ. (GISTDA) และระเบียบสำนักงบประมาณ ครอบคลุมงานฝึกอบรม สัมมนา ประชุม และลงพื้นที่ภาคสนาม พร้อมส่งออก Excel ตามแบบฟอร์ม ฝบร. ทันที
+            </motion.p>
+          </div>
+
+          {/* Quick 1-Click Starter Presets */}
+          <motion.div variants={fadeInUp} className="flex flex-wrap items-center gap-2 bg-white/90 backdrop-blur-md p-2.5 rounded-2xl border border-slate-200/80 shadow-xs shrink-0">
+            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 pl-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>โหลดตัวอย่างด่วน:</span>
+            </div>
+            <button
+              onClick={() => loadQuickPreset('training')}
+              className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs rounded-xl border border-purple-200/80 transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+            >
+              <Presentation className="w-3.5 h-3.5" />
+              <span>จัดอบรม 3 วัน 30 คน</span>
+            </button>
+            <button
+              onClick={() => loadQuickPreset('meeting')}
+              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-200/80 transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+            >
+              <Building className="w-3.5 h-3.5" />
+              <span>ประชุม 1 วัน 15 คน</span>
+            </button>
+            <button
+              onClick={() => loadQuickPreset('fieldtrip')}
+              className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs rounded-xl border border-emerald-200/80 transition-all active:scale-95 shadow-xs flex items-center gap-1.5"
+            >
+              <Car className="w-3.5 h-3.5" />
+              <span>ลงพื้นที่ 2 วัน</span>
+            </button>
           </motion.div>
-          <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.15] mb-4">
-            ระบบประมาณค่าใช้จ่าย<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent-secondary">
-              กิจกรรม
-            </span>
-          </motion.h1>
-          <motion.p variants={fadeInUp} className="text-base sm:text-lg text-muted-foreground max-w-3xl leading-relaxed">
-            รองรับการคำนวณแยกตามประเภทกิจกรรม: อบรม ประชุม และลงพื้นที่ภาคสนาม พร้อมระบบจับคู่นอนและดึงข้อมูลผู้บริหารอัตโนมัติ
-          </motion.p>
         </motion.div>
+
+        {/* Interactive Step Navigation Progress Bar */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { step: 1, title: '1. ฐานระเบียบอ้างอิง', desc: formData.regulation || 'ยังไม่ได้เลือก', completed: !!formData.regulation },
+              { step: 2, title: '2. ประเภทกิจกรรม', desc: formData.activityType === 'training' ? 'อบรม/สัมมนา' : formData.activityType === 'meeting' ? 'การประชุม' : formData.activityType === 'field_trip' ? 'ออกภาคสนาม' : 'ยังไม่ได้เลือก', completed: !!formData.activityType },
+              { step: 3, title: '3. รายละเอียดโครงการ', desc: isFormValid() ? 'กรอกข้อมูลครบถ้วน' : 'กรอกวัน/คน/รายการ', completed: isFormValid() },
+              { step: 4, title: '4. สรุปผลและส่งออก', desc: showResult && calculationResult ? `ยอดรวม ฿${calculationResult.totalCost.toLocaleString()}` : 'รอการคำนวณ', completed: showResult && !!calculationResult },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className={`p-3 rounded-2xl border transition-all flex items-center gap-3 ${
+                  item.completed
+                    ? 'bg-blue-50/70 border-blue-200 text-blue-900 shadow-xs'
+                    : currentStep === item.step
+                    ? 'bg-slate-50 border-blue-400 ring-2 ring-blue-100 text-slate-900'
+                    : 'bg-slate-50/40 border-slate-200/70 text-slate-400'
+                }`}
+              >
+                <div
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                    item.completed
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : currentStep === item.step
+                      ? 'bg-blue-100 text-blue-700 font-black'
+                      : 'bg-slate-200 text-slate-500'
+                  }`}
+                >
+                  {item.completed ? <Check className="w-4 h-4" /> : item.step}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold truncate">{item.title}</p>
+                  <p className="text-[10px] text-slate-500 truncate font-medium">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Main Content Grid */}
         <div className={`grid gap-8 items-start transition-all duration-500 ${
@@ -492,8 +687,8 @@ function BudgetPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className={`space-y-8 ${showResult && calculationResult ? 'xl:col-span-8' : 'w-full'}`}
+            transition={{ duration: 0.4 }}
+            className={`space-y-6 ${showResult && calculationResult ? 'xl:col-span-8' : 'w-full'}`}
           >
             {/* Saved Drafts & Presets Control Bar */}
             <DraftsManager 
@@ -508,7 +703,7 @@ function BudgetPage() {
             {/* Step 1: Regulation */}
             <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4 hover:border-slate-300 transition-colors">
               <div className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black">1</span>
+                <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black shadow-xs">1</span>
                 <div>
                   <h3 className="text-base font-bold text-slate-800">เลือกฐานระเบียบอ้างอิง</h3>
                   <p className="text-xs text-slate-500">เลือกระเบียบที่ต้องการใช้ในการคำนวณงบประมาณ</p>
@@ -552,7 +747,7 @@ function BudgetPage() {
                   className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-4 hover:border-slate-300 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black">2</span>
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-indigo-100/70 text-indigo-700 text-xs font-black shadow-xs">2</span>
                     <div>
                       <h3 className="text-base font-bold text-slate-800">เลือกประเภทกิจกรรม</h3>
                       <p className="text-xs text-slate-500">รูปแบบฟอร์มจะเปลี่ยนไปตามประเภทกิจกรรมที่เลือก</p>
@@ -605,7 +800,7 @@ function BudgetPage() {
                   className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs space-y-6 hover:border-slate-300 transition-colors"
                 >
                   <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
-                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black">3</span>
+                    <span className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-100/70 text-blue-700 text-xs font-black shadow-xs">3</span>
                     <div>
                       <h3 className="text-base font-bold text-slate-800">กรอกข้อมูลรายละเอียดโครงการ</h3>
                       <p className="text-xs text-slate-500">ระบุจำนวนคน ระยะเวลา และค่าใช้จ่ายต่างๆ</p>
@@ -623,14 +818,14 @@ function BudgetPage() {
                     <button
                       className={`w-full mt-4 h-14 text-sm sm:text-base font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 ${
                         isFormValid() 
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 active:scale-[0.98] cursor-pointer' 
+                          ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 active:scale-[0.98] cursor-pointer' 
                           : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
                       }`}
                       onClick={handleCalculate}
                       disabled={!isFormValid()}
                     >
                       <Calculator className="w-5 h-5" />
-                      <span>คำนวณงบประมาณอัตโนมัติ</span>
+                      <span>คำนวณงบประมาณอัตโนมัติ (Calculate Budget)</span>
                       <ArrowRight className="w-5 h-5" />
                     </button>
                   </motion.div>
@@ -651,12 +846,19 @@ function BudgetPage() {
                     <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold text-[11px] rounded-lg border border-emerald-200 inline-block mb-1.5">
                       ✓ คำนวณเรียบร้อย
                     </span>
-                    <h3 className="text-xl font-bold text-slate-900">สรุปงบประมาณโครงการ</h3>
+                    <h3 className="text-xl font-black text-slate-900 font-display">สรุปงบประมาณโครงการ</h3>
                     <p className="text-xs text-slate-500 mt-0.5">อ้างอิงจาก {formData.regulation}</p>
                   </div>
+                  <button
+                    onClick={handleCopyTotal}
+                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition border border-slate-100"
+                    title="คัดลอกยอดรวม"
+                  >
+                    {copiedTotal ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  </button>
                 </div>
 
-                <div className="space-y-3.5">
+                <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
                   {calculationResult.breakdown.map((item: any, idx: number) => (
                     <div key={idx} className="flex justify-between items-center border-b border-slate-100 pb-3 gap-3">
                       <div className="min-w-0">
@@ -664,27 +866,32 @@ function BudgetPage() {
                         <span className="text-[11px] text-slate-500 line-clamp-2">{item.detail}</span>
                       </div>
                       <span className="font-mono text-sm sm:text-base font-bold text-slate-900 shrink-0">
-                        ฿ {item.amount.toLocaleString()}
+                        <AnimatedNumber value={item.amount} prefix="฿ " />
                       </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-4 border-t-2 border-slate-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 p-4 rounded-2xl border">
+                <div className="pt-4 border-t-2 border-slate-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-purple-50/50 p-4 rounded-2xl border border-blue-200/60 space-y-2">
                   <div className="flex justify-between items-end gap-2">
-                    <span className="text-sm font-bold text-slate-700">ยอดรวมทั้งสิ้น</span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-700">ยอดรวมทั้งสิ้น (Grand Total)</span>
                     <span className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-mono">
-                      ฿ {calculationResult.totalCost.toLocaleString()}
+                      <AnimatedNumber value={calculationResult.totalCost} prefix="฿ " />
                     </span>
                   </div>
+                  <p className="text-[11px] text-blue-700 font-bold text-right">
+                    ({bahttext(calculationResult.totalCost)})
+                  </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={handleExportExcel}
-                  className="w-full flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98]"
+                  disabled={isExporting}
+                  className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
-                  <span>📥 Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)</span>
+                  <Download className="w-4 h-4" />
+                  <span>{isExporting ? 'กำลังส่งออก Excel...' : 'Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)'}</span>
                 </button>
               </div>
             </div>
@@ -695,5 +902,3 @@ function BudgetPage() {
     </div>
   );
 }
-
-export default BudgetPage;

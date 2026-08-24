@@ -41,6 +41,36 @@ export const FoodSection: React.FC<Props> = ({ formData, setFormData }) => {
 
   const hasAnyFoodSelected = formData.foodBreakMorning || formData.foodBreakAfternoon || formData.foodLunch || formData.foodReception;
 
+  const handleSelectAllDaysForActive = () => {
+    setFormData(prev => ({
+      ...prev,
+      foodBreakMorningDays: prev.foodBreakMorning ? allDays : [],
+      foodBreakAfternoonDays: prev.foodBreakAfternoon ? allDays : [],
+      foodLunchDays: prev.foodLunch ? allDays : [],
+      foodReceptionDays: prev.foodReception ? allDays : [],
+    }));
+  };
+
+  const handleSelectFirstDayOnly = () => {
+    setFormData(prev => ({
+      ...prev,
+      foodBreakMorningDays: prev.foodBreakMorning ? [1] : [],
+      foodBreakAfternoonDays: prev.foodBreakAfternoon ? [1] : [],
+      foodLunchDays: prev.foodLunch ? [1] : [],
+      foodReceptionDays: prev.foodReception ? [1] : [],
+    }));
+  };
+
+  const handleClearAllDays = () => {
+    setFormData(prev => ({
+      ...prev,
+      foodBreakMorningDays: [],
+      foodBreakAfternoonDays: [],
+      foodLunchDays: [],
+      foodReceptionDays: [],
+    }));
+  };
+
   return (
     <div className={cardClass}>
       <h3 className={titleClass}>
@@ -118,10 +148,38 @@ export const FoodSection: React.FC<Props> = ({ formData, setFormData }) => {
 
       {hasAnyFoodSelected && (
         <div className="mt-6 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
-          <h4 className="text-sm font-semibold mb-4 text-foreground flex items-center gap-2">
-            ระบุวันที่ต้องการจัดเลี้ยง
-            <span className="text-xs font-normal text-muted-foreground">(เลือกวันที่ต้องการเบิกค่าอาหาร)</span>
-          </h4>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              ระบุวันที่ต้องการจัดเลี้ยง
+              <span className="text-xs font-normal text-muted-foreground">(เลือกวันที่ต้องการเบิกค่าอาหาร)</span>
+            </h4>
+
+            {totalDays > 1 && (
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={handleSelectAllDaysForActive}
+                  className="px-2.5 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg transition"
+                >
+                  เลือกทุกวัน ({totalDays} วัน)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectFirstDayOnly}
+                  className="px-2.5 py-1 bg-muted hover:bg-muted/80 text-muted-foreground rounded-lg transition"
+                >
+                  เฉพาะวันแรก
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearAllDays}
+                  className="px-2.5 py-1 text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                >
+                  ล้างวัน
+                </button>
+              </div>
+            )}
+          </div>
           
           <div className="space-y-3">
             {allDays.map(day => {

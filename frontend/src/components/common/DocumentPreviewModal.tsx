@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, Printer, Download, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Printer, Download, FileText, ZoomIn, ZoomOut, RotateCcw, Copy, Check } from 'lucide-react';
 import { bahttext } from 'bahttext';
 
 interface Item {
@@ -74,6 +74,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   invoices = [],
   onDownload,
 }) => {
+  const [zoomScale, setZoomScale] = useState(100);
+  const [copied, setCopied] = useState(false);
+
   if (!isOpen) return null;
 
   // Flatten all items across invoices exactly like docxGenerator
@@ -150,63 +153,127 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     window.print();
   };
 
+  const handleCopyText = () => {
+    let text = `บันทึกข้อความ\nส่วนราชการ: ${department} โทร. 033 005 833\nที่: สคร.     /2568    วันที่: ${requesterDate}\nเรื่อง: รายงานขอความเห็นชอบการจัดซื้อจัดจ้าง จำนวน ${totalItemsCount} รายการ\nเรียน: ${approverPosition} ผ่าน รก.หน.ฝถท.\n\n`;
+    text += `ด้วย ${department} ได้ดำเนินการจัดซื้อวัสดุสำหรับการจัด ${introCourse} จำนวน ${totalItemsCount} รายการ โดยมีรายละเอียดดังต่อไปนี้:\n\n`;
+    
+    flatItems.forEach(item => {
+      const descText = item.code ? `${item.code} ${item.description}` : item.description;
+      text += `${item.idx}. ค่า ${descText} จำนวน ${item.qty} ${item.unit} เป็นเงิน ${formatPrice(item.totalPrice)} บาท ${formatVendorWithPrefix(item.vendor)} ตามใบเสร็จเลขที่ ${item.invNum} ลงวันที่ ${item.invDate}\n`;
+    });
+
+    text += `\nรวม ${totalItemsCount} รายการ เป็นเงินทั้งสิ้น ${formatPrice(grandTotalPaid)} บาท (${thaiTextAmount})\n`;
+    text += `การจัดซื้อจัดจ้างดังกล่าว เป็นการดำเนินการตาม ${regulatoryText}\nจึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ\n\n`;
+    text += `( ${requesterName} )\n${requesterPosition}\n\n( ${approverName} )\n${approverPosition}`;
+
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full max-h-[92vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-        {/* Header Bar */}
-        <div className="p-4 sm:p-5 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-slate-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-white border border-slate-200 rounded-3xl max-w-5xl w-full max-h-[94vh] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        
+        {/* Header Control Toolbar */}
+        <div className="p-3 sm:p-4 border-b border-slate-200/80 flex flex-wrap items-center justify-between shrink-0 bg-slate-50 gap-2">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl border border-blue-100 shadow-sm">
+            <div className="p-2 bg-blue-600 text-white rounded-xl shadow-md shadow-blue-500/20">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-800">
-                ตัวอย่างบันทึกข้อความ (Word .docx Preview)
+              <h3 className="text-sm sm:text-base font-black text-slate-800 font-display">
+                ตัวอย่างบันทึกข้อความราชการ (Live A4 Preview)
               </h3>
-              <p className="text-xs text-slate-500">
-                แสดงผลตรงตามไฟล์ Word (.docx) ที่จะดาวน์โหลด 100%
+              <p className="text-[11px] text-slate-500">
+                จำลองหน้ากระดาษ A4 เสมือนจริงตรงตามไฟล์ Word (.docx) 100%
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {onDownload && (
+          {/* Controls: Zoom, Copy, Print, Download */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* Zoom Controls */}
+            <div className="hidden sm:flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-xs">
               <button
-                type="button"
-                onClick={onDownload}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all"
+                onClick={() => setZoomScale(prev => Math.max(60, prev - 10))}
+                className="p-1 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                title="ย่อขนาด"
               >
-                <Download className="w-4 h-4" />
-                ดาวน์โหลด Word (.docx)
+                <ZoomOut className="w-3.5 h-3.5" />
               </button>
-            )}
+              <span className="text-xs font-mono font-bold text-slate-700 px-1.5 min-w-[42px] text-center">
+                {zoomScale}%
+              </span>
+              <button
+                onClick={() => setZoomScale(prev => Math.min(140, prev + 10))}
+                className="p-1 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                title="ขยายขนาด"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setZoomScale(100)}
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                title="รีเซ็ตขนาด 100%"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
+            {/* Copy Full Text */}
+            <button
+              type="button"
+              onClick={handleCopyText}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all shadow-xs"
+              title="คัดลอกข้อความทั้งหมด"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              <span className="hidden md:inline">{copied ? 'คัดลอกแล้ว!' : 'คัดลอกข้อความ'}</span>
+            </button>
+
+            {/* Print Button */}
             <button
               type="button"
               onClick={handlePrint}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-all"
+              className="p-2 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all shadow-xs"
               title="พิมพ์เอกสาร"
             >
               <Printer className="w-4 h-4" />
             </button>
 
+            {/* Download docx Button */}
+            {onDownload && (
+              <button
+                type="button"
+                onClick={onDownload}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition-all active:scale-95"
+              >
+                <Download className="w-4 h-4" />
+                <span>ดาวน์โหลด Word (.docx)</span>
+              </button>
+            )}
+
+            {/* Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition-all"
+              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Modal Body: Exact A4 Word Page Replica */}
-        <div className="p-3 sm:p-8 overflow-y-auto flex-1 bg-slate-200/80 flex flex-col items-center">
-          <div className="w-full max-w-[210mm] min-h-[297mm] h-auto shrink-0 bg-white text-slate-900 shadow-2xl p-8 sm:p-14 pb-16 my-2 sm:my-6 font-sans border border-slate-300/80 text-base leading-relaxed space-y-4 rounded-xs break-words">
-            
-            {/* 1. Header Title: บันทึกข้อความ (Bold 29pt) */}
+        {/* Modal Body: Scalable A4 Word Page Replica */}
+        <div className="p-3 sm:p-8 overflow-auto flex-1 bg-slate-200/90 flex flex-col items-center custom-scroll">
+          <div 
+            style={{ transform: `scale(${zoomScale / 100})`, transformOrigin: 'top center' }}
+            className="w-full max-w-[210mm] min-h-[297mm] h-auto shrink-0 bg-white text-slate-900 shadow-2xl p-8 sm:p-14 pb-16 my-2 sm:my-4 font-thai border border-slate-300/80 text-base leading-relaxed space-y-4 rounded-xs break-words transition-transform duration-200"
+          >
+            {/* Header: บันทึกข้อความ */}
             <div className="border-b-2 border-slate-900 pb-2">
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight font-serif">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight font-thai">
                 บันทึกข้อความ
               </h1>
             </div>
@@ -293,7 +360,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
             <div className="h-6" />
 
-            {/* Signature Blocks (Right Aligned matching Word template) */}
+            {/* Signature Blocks */}
             <div className="space-y-8 pr-4">
               {/* Requester Signature Block */}
               <div className="text-right space-y-1">

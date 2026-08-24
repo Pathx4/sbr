@@ -3,14 +3,17 @@ import { runTesseract } from '../utils/tesseractWorker';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye
+  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check
 } from 'lucide-react';
+import { bahttext } from 'bahttext';
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
 import { preprocessImageForOcr, parseThaiReceiptOcr, extractVendorNameFromText, cleanCompanyName } from '../utils/imageOcrOptimizer';
 import { getStoredUser } from '../utils/auth';
 import { DocumentPreviewModal } from '../components/common/DocumentPreviewModal';
+import { AnimatedNumber } from '../components/ui/AnimatedNumber';
+import { ConfettiEffect } from '../components/ui/ConfettiEffect';
 
 interface Item {
   id: string;
@@ -149,12 +152,20 @@ export default function AutoWordPage() {
   const [scanStatus, setScanStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Download state
+  // Download & Modal State
   const [isGeneratingDocx, setIsGeneratingDocx] = useState(false);
   const [isGeneratingExcel, setIsGeneratingExcel] = useState(false);
   const [isGeneratingIllus, setIsGeneratingIllus] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Image Studio & Effects State
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [rotationAngle, setRotationAngle] = useState(0);
+  const [filterMode, setFilterMode] = useState<'normal' | 'contrast' | 'invert'>('normal');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [copiedGrandTotal, setCopiedGrandTotal] = useState(false);
+
 
 
   // Load Contacts directly from local contacts.json on mount
@@ -682,6 +693,7 @@ export default function AutoWordPage() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      setShowConfetti(true);
       setStatusMsg({ type: 'success', text: 'สร้างเอกสาร Word (.docx) สำเร็จแล้ว!' });
     } catch (err: any) {
       console.error(err);
@@ -716,6 +728,7 @@ export default function AutoWordPage() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      setShowConfetti(true);
       setStatusMsg({ 
         type: 'success', 
         text: isIllustration ? 'สร้างไฟล์ Excel ภาพประกอบ (.xlsx) สำเร็จแล้ว!' : 'สร้างไฟล์ Excel สรุปค่าใช้จ่าย (.xlsx) สำเร็จแล้ว!' 
@@ -731,26 +744,37 @@ export default function AutoWordPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-6 pb-16 px-4">
+      {/* Confetti Celebration Particle Effect */}
+      <ConfettiEffect trigger={showConfetti} onComplete={() => setShowConfetti(false)} />
+
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 border border-blue-200/70 text-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-purple-50/60 border border-blue-200/80 text-slate-800 rounded-3xl p-6 sm:p-7 shadow-xs relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100/70 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-xs">
-              <Crop className="w-3.5 h-3.5 text-blue-600" />
-              <span>Interactive Side-by-Side Crop OCR Engine (No Server Needed)</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/70 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-xs">
+                <Crop className="w-3.5 h-3.5 text-blue-600" />
+                <span>Interactive Side-by-Side OCR Studio v2.5</span>
+              </span>
+              {invoices.length > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/80 shadow-xs">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{invoices.length} ใบเสร็จ ({invoices.reduce((s, inv) => s + inv.items.length, 0)} รายการ)</span>
+                </span>
+              )}
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-display">
-              ระบบเอกสารจัดซื้อจัดจ้างจากใบกำกับภาษีอัตโนมัติ (Tax Invoice & Excel Generator)
+              ระบบเอกสารจัดซื้อจัดจ้างจากใบกำกับภาษีอัตโนมัติ (Tax Invoice & Excel Studio)
             </h1>
             <p className="text-slate-600 text-xs max-w-3xl leading-relaxed">
-              แสดงรูปภาพใบกำกับภาษี/ใบเสร็จรับเงินคู่กับตารางข้อมูล คุณสามารถลากกรอบสี่เหลี่ยมบนรูปภาพฝั่งซ้ายเพื่อสแกนเฉพาะจุด เช่น ลากคลุมตารางสินค้าหรือชื่อร้านค้า ข้อความจะวิ่งลงตารางให้อัตโนมัติทันที
+              แสดงรูปภาพใบกำกับภาษี/ใบเสร็จรับเงินคู่กับตารางข้อมูล ลากกรอบสี่เหลี่ยมบนรูปภาพฝั่งซ้ายเพื่อสแกนเฉพาะจุด พร้อมเครื่องมือซูม หมุน และปรับความคมชัดของหมึกพิมพ์
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98]"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-all active:scale-[0.98]"
             >
               <Upload className="w-4 h-4" />
               <span>+ อัปโหลดใบกำกับภาษี/ใบเสร็จ</span>
@@ -853,10 +877,10 @@ export default function AutoWordPage() {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-blue-600" />
-              <h2 className="font-bold text-slate-800 text-sm">รูปภาพใบกำกับภาษี (ลากคลุมกรอบเพื่อสแกน)</h2>
+              <h2 className="font-bold text-slate-800 text-sm">รูปภาพใบกำกับภาษี (OCR Studio)</h2>
             </div>
             {activeInvoice && (
-              <span className="text-[11px] font-semibold text-slate-500">
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                 เอกสารที่ {invoices.findIndex(i => i.id === activeInvoice.id) + 1} / {invoices.length}
               </span>
             )}
@@ -893,11 +917,66 @@ export default function AutoWordPage() {
             </div>
           )}
 
+          {/* Image Controls Toolbar (Zoom, Rotate, Contrast) */}
+          {activeInvoice && activeInvoice.imagePreview && (
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.2))}
+                  className="p-1.5 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
+                  title="ย่อภาพ"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[11px] font-mono font-bold text-slate-700 px-1.5">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <button
+                  onClick={() => setZoomLevel(prev => Math.min(2.5, prev + 0.2))}
+                  className="p-1.5 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
+                  title="ขยายภาพ"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setZoomLevel(1)}
+                  className="px-2 py-1 text-[10px] text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
+                  title="รีเซ็ตขนาด 100%"
+                >
+                  1:1
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setRotationAngle(prev => (prev + 90) % 360)}
+                  className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-xs text-[11px] font-semibold"
+                  title="หมุนภาพ 90 องศา"
+                >
+                  <RotateCw className="w-3.5 h-3.5 text-blue-600" />
+                  <span>หมุน {rotationAngle > 0 ? `${rotationAngle}°` : ''}</span>
+                </button>
+                <button
+                  onClick={() => setFilterMode(prev => prev === 'normal' ? 'contrast' : 'normal')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border shadow-xs text-[11px] font-semibold transition ${
+                    filterMode === 'contrast'
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                  title="ปรับความคมชัดสำหรับหมึกจาง"
+                >
+                  <Contrast className="w-3.5 h-3.5" />
+                  <span>{filterMode === 'contrast' ? 'โหมดคมชัดสูง' : 'หมึกคมชัด'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Interactive Crop Image Box */}
           {activeInvoice && activeInvoice.imagePreview ? (
             <div className="space-y-3">
               <div
-                className="relative bg-slate-900 rounded-2xl overflow-hidden cursor-crosshair select-none border border-slate-300 min-h-[420px] max-h-[600px] flex items-center justify-center"
+                className="relative bg-slate-950 rounded-2xl overflow-hidden cursor-crosshair select-none border border-slate-300 min-h-[420px] max-h-[600px] flex items-center justify-center shadow-inner"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -908,13 +987,22 @@ export default function AutoWordPage() {
                   alt="Tax Invoice Preview"
                   draggable={false}
                   onDragStart={e => e.preventDefault()}
+                  style={{
+                    transform: `rotate(${rotationAngle}deg) scale(${zoomLevel})`,
+                    filter: filterMode === 'contrast' 
+                      ? 'contrast(170%) brightness(92%) grayscale(100%)' 
+                      : filterMode === 'invert' 
+                      ? 'invert(100%)' 
+                      : 'none',
+                    transition: 'transform 0.15s ease-out, filter 0.2s ease'
+                  }}
                   className="max-w-full max-h-[580px] object-contain select-none pointer-events-none"
                 />
 
                 {/* Selection Bounding Box Overlay */}
                 {cropSelection && cropSelection.width > 0 && cropSelection.height > 0 && (
                   <div
-                    className="absolute border-2 border-blue-500 bg-blue-500/20 backdrop-blur-[1px] shadow-lg pointer-events-none"
+                    className="absolute border-2 border-blue-400 bg-blue-500/25 backdrop-blur-[1px] shadow-lg pointer-events-none ring-2 ring-blue-500/30 animate-pulse"
                     style={{
                       left: `${cropSelection.x}px`,
                       top: `${cropSelection.y}px`,
@@ -922,8 +1010,8 @@ export default function AutoWordPage() {
                       height: `${cropSelection.height}px`
                     }}
                   >
-                    <span className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
-                      พื้นที่สแกนเฉพาะจุด ({Math.round(cropSelection.width)}x{Math.round(cropSelection.height)})
+                    <span className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow">
+                      พื้นที่สแกน ({Math.round(cropSelection.width)} × {Math.round(cropSelection.height)} px)
                     </span>
                   </div>
                 )}
@@ -934,7 +1022,7 @@ export default function AutoWordPage() {
                 <button
                   onClick={() => handleCropScan('auto')}
                   disabled={isScanning || !cropSelection}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition disabled:opacity-40"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 disabled:opacity-40"
                 >
                   {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crop className="w-3.5 h-3.5" />}
                   <span>สแกนเฉพาะกรอบที่ลากคลุม</span>
@@ -1674,11 +1762,36 @@ export default function AutoWordPage() {
           {/* Section 3: Document Generation Download Buttons */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm space-y-4 hover:shadow-md transition-shadow">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-              <h2 className="text-base font-black text-slate-900">3. สร้างเอกสาร Word & Excel (One-Click Download)</h2>
-              <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200/80 w-fit">
-                รวมสุทธิทุกบิล: <span className="font-mono font-black">{calculateGrandTotal().toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span> บาท
+              <div>
+                <h2 className="text-base font-black text-slate-900 font-display">3. สร้างเอกสาร Word & Excel (One-Click Download)</h2>
+                <p className="text-xs text-slate-500">สร้างไฟล์เอกสารราชการและตารางสรุปค่าใช้จ่ายพร้อมดาวน์โหลดทันที</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-1.5 rounded-xl border border-emerald-200/80 w-fit flex items-center gap-1.5">
+                  <span>รวมสุทธิทุกบิล:</span>
+                  <AnimatedNumber value={calculateGrandTotal()} prefix="฿ " suffix=" บ." decimals={2} className="font-mono font-black text-sm" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(calculateGrandTotal().toFixed(2));
+                    setCopiedGrandTotal(true);
+                    setTimeout(() => setCopiedGrandTotal(false), 2000);
+                  }}
+                  className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition border border-slate-200 shadow-xs"
+                  title="คัดลอกยอดสุทธิ"
+                >
+                  {copiedGrandTotal ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                </button>
               </div>
             </div>
+
+            {/* Thai BahtText Preview */}
+            {calculateGrandTotal() > 0 && (
+              <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/60 text-center text-xs font-bold text-blue-700">
+                ({bahttext(calculateGrandTotal())})
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <button
@@ -1687,7 +1800,7 @@ export default function AutoWordPage() {
                 className="group flex items-center justify-center gap-2.5 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isGeneratingDocx ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5 text-blue-100 group-hover:scale-110 transition-transform" />}
-                <span className="font-bold text-xs">ดาวน์โหลด Word (.docx)</span>
+                <span className="font-bold text-xs sm:text-sm">ดาวน์โหลด Word (.docx)</span>
               </button>
 
               <button
@@ -1696,7 +1809,7 @@ export default function AutoWordPage() {
                 className="group flex items-center justify-center gap-2.5 p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isGeneratingExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSpreadsheet className="w-5 h-5 text-emerald-100 group-hover:scale-110 transition-transform" />}
-                <span className="font-bold text-xs">ดาวน์โหลด Excel สรุป (.xlsx)</span>
+                <span className="font-bold text-xs sm:text-sm">ดาวน์โหลด Excel สรุป (.xlsx)</span>
               </button>
 
               <button
@@ -1705,7 +1818,7 @@ export default function AutoWordPage() {
                 className="group flex items-center justify-center gap-2.5 p-4 bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white rounded-2xl shadow-md shadow-purple-500/20 hover:shadow-lg hover:shadow-purple-500/30 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
               >
                 {isGeneratingIllus ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5 text-purple-100 group-hover:scale-110 transition-transform" />}
-                <span className="font-bold text-xs">ดาวน์โหลด Excel ภาพ (.xlsx)</span>
+                <span className="font-bold text-xs sm:text-sm">ดาวน์โหลด Excel ภาพ (.xlsx)</span>
               </button>
             </div>
 
@@ -1714,10 +1827,10 @@ export default function AutoWordPage() {
               type="button"
               onClick={() => setIsPreviewOpen(true)}
               disabled={invoices.length === 0}
-              className="w-full flex items-center justify-center gap-2 p-3.5 bg-slate-50 hover:bg-indigo-50/60 text-slate-700 hover:text-indigo-700 font-bold text-xs rounded-2xl border border-slate-200/80 hover:border-indigo-200 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
+              className="w-full flex items-center justify-center gap-2 p-3.5 bg-slate-50 hover:bg-indigo-50/60 text-slate-700 hover:text-indigo-700 font-bold text-xs sm:text-sm rounded-2xl border border-slate-200/80 hover:border-indigo-200 transition-all active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none"
             >
               <Eye className="w-4 h-4 text-indigo-600" />
-              <span>ดูตัวอย่างเอกสารบันทึกข้อความราชการ (Live Preview)</span>
+              <span>ดูตัวอย่างเอกสารบันทึกข้อความราชการ (Live A4 Preview)</span>
             </button>
           </div>
         </div>
