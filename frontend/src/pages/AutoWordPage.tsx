@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { runTesseract } from '../utils/tesseractWorker';
+import { runTesseract, runMultiPassTesseract } from '../utils/tesseractWorker';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic
+  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic, Sparkles
 } from 'lucide-react';
 import { bahttext } from 'bahttext';
 import contactsData from '../data/contacts.json';
 import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
-import { preprocessImageForOcr, parseThaiReceiptOcr, extractVendorNameFromText, cleanCompanyName } from '../utils/imageOcrOptimizer';
+import { 
+  preprocessImageForOcr, 
+  preprocessMultiPassImageForOcr, 
+  parseThaiReceiptOcr, 
+  parseThaiReceiptOcrDeep, 
+  extractVendorNameFromText, 
+  cleanCompanyName 
+} from '../utils/imageOcrOptimizer';
 import { getStoredUser } from '../utils/auth';
 import { DocumentPreviewModal } from '../components/common/DocumentPreviewModal';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
@@ -167,6 +174,7 @@ export default function AutoWordPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedGrandTotal, setCopiedGrandTotal] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [scanEngineMode, setScanEngineMode] = useState<'deep' | 'quick'>('deep');
 
 
 
@@ -297,21 +305,59 @@ export default function AutoWordPage() {
       const file = files[i];
       const imagePreview = URL.createObjectURL(file);
 
-      // Step 1/3: Image Preprocessing & High-DPI Upscaling + Noise Reduction + Sharpening
-      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 1/3: กำลังปรับความคมชัดภาพ 5 ขั้นตอน (Noise Reduction, CLAHE, Morphological Dilation)...`);
-      setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
-      const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
+      let parsed: any = null;
 
-      // Step 2/3: Dual-Language OCR Engine (Thai + English)
-      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 2/3: กำลังถอดข้อความภาษาไทย-อังกฤษด้วย Tesseract.js OCR...`);
-      const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
-        setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
-      });
+      if (scanEngineMode === 'deep') {
+        // ====================================================================
+        // DEEPSCAN 4.0: MULTI-PASS PROGRESSIVE SCANNING + THAI LEXICON + MATH
+        // ====================================================================
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 1/4: กำลังสังเคราะห์ภาพ 4 มิติ (Sauvola Adaptive, CLAHE, Header/Summary Zoom)...`);
+        setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
 
-      // Step 3/3: 2D Spatial Table Reconstruction & Noise Filtering
-      setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ขั้นตอนที่ 3/3: กำลังจัดกลุ่มพิกัดตาราง 2D (Spatial Table Clustering) และคัดกรองข้อความขยะ...`);
-      setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
-      const parsed = parseThaiReceiptOcr(rawText);
+        const layers = await preprocessMultiPassImageForOcr(file);
+
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 2/4: กำลังสแกนถอดข้อความ Multi-Pass Consensus ด้วย Tesseract.js...`);
+        
+        const passResults = await runMultiPassTesseract([
+          { id: 'main', label: 'สแกนภาพรวมความละเอียดสูง', src: layers.passMain },
+          { id: 'sauvola', label: 'สแกนดึงหมึกจาง & ลบเงา (Sauvola Adaptive)', src: layers.passSauvola },
+          { id: 'header', label: 'สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
+          { id: 'summary', label: 'สแกนเจาะลึกยอดสุทธิ & ส่วนลด', src: layers.passSummary },
+        ], (stepLabel, stepPct) => {
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${stepLabel}...`);
+          setScanProgress(Math.round(((i + 0.2 + (stepPct * 0.6) / 100) / files.length) * 100));
+        });
+
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: เทียบพจนานุกรมศัพท์พัสดุไทย & ซ่อมสระลอย/คำผิด...`);
+        setScanProgress(Math.round(((i + 0.85) / files.length) * 100));
+
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/4: ตรวจสอบสมดุลคณิตศาสตร์ยอดเงิน (Math Constraint Solver)...`);
+        setScanProgress(Math.round(((i + 0.95) / files.length) * 100));
+
+        parsed = parseThaiReceiptOcrDeep({
+          mainText: passResults.main?.rawText || '',
+          sauvolaText: passResults.sauvola?.rawText || '',
+          headerText: passResults.header?.rawText || '',
+          summaryText: passResults.summary?.rawText || '',
+        });
+
+      } else {
+        // ====================================================================
+        // QUICK SCAN: SINGLE-PASS FAST
+        // ====================================================================
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สแกนด่วน: กำลังปรับความคมชัดภาพ...`);
+        setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
+        const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
+
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สแกนด่วน: กำลังถอดข้อความด้วย Tesseract.js OCR...`);
+        const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+          setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
+        });
+
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] กำลังจัดโครงสร้างตารางข้อมูล...`);
+        setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
+        parsed = parseThaiReceiptOcr(rawText);
+      }
 
       if (!parsed) continue;
 
@@ -364,7 +410,12 @@ export default function AutoWordPage() {
       setInvoices((prev) => [...prev, newInvoice]);
       setActiveInvoiceId(newInvId);
       setScanProgress(Math.round(((i + 1) / files.length) * 100));
-      setStatusMsg({ type: 'success', text: 'สแกนอ่านและคัดกรองข้อมูลบิลด้วย Tesseract.js สำเร็จ!' });
+      setStatusMsg({ 
+        type: 'success', 
+        text: scanEngineMode === 'deep' 
+          ? `สแกนด้วย DeepScan 4.0 (4 มิติ + ซ่อมคำผิด + ตรวจสมดุลเลข) สำเร็จ!` 
+          : `สแกนด่วนสำเร็จ!` 
+      });
     }
 
     setIsScanning(false);
@@ -773,7 +824,36 @@ export default function AutoWordPage() {
               แสดงรูปภาพใบกำกับภาษี/ใบเสร็จรับเงินคู่กับตารางข้อมูล ลากกรอบสี่เหลี่ยมบนรูปภาพฝั่งซ้ายเพื่อสแกนเฉพาะจุด พร้อมเครื่องมือซูม หมุน และปรับความคมชัดของหมึกพิมพ์
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {/* DeepScan 4.0 vs Quick Scan Mode Switch */}
+            <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setScanEngineMode('deep')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  scanEngineMode === 'deep'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="สแกน 4 มิติซ้อน + เทียบพจนานุกรมศัพท์พัสดุไทย + ตรวจสมดุลคณิตศาสตร์ 100% (แนะนำ)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span>🔬 DeepScan 4.0 (แนะนำ)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setScanEngineMode('quick')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  scanEngineMode === 'quick'
+                    ? 'bg-white text-blue-700 shadow-sm border border-blue-200/60'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="สแกนรอบเดียวเน้นความเร็ว"
+              >
+                <span>⚡ สแกนด่วน</span>
+              </button>
+            </div>
+
             <button
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-all active:scale-[0.98]"

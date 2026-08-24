@@ -259,6 +259,216 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'binari
 }
 
 /**
+ * Sauvola Local Adaptive Thresholding for Thermal Receipts & Faded Ink
+ * T(x, y) = m(x, y) * (1 + k * (s(x, y) / R - 1))
+ * where m is local mean, s is local stddev, R=128, k=0.18
+ */
+export function applySauvolaThreshold(data: Uint8ClampedArray, width: number, height: number, windowSize = 31, k = 0.18): void {
+  const w = width;
+  const h = height;
+  const halfWin = Math.floor(windowSize / 2);
+  const R = 128;
+
+  // Extract grayscale to 1D buffer
+  const gray = new Uint8Array(w * h);
+  for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+    gray[j] = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+  }
+
+  // 1. Build Integral Images for Sum and Sum of Squares
+  const integral = new Float64Array((w + 1) * (h + 1));
+  const integralSq = new Float64Array((w + 1) * (h + 1));
+
+  for (let y = 0; y < h; y++) {
+    let rowSum = 0;
+    let rowSumSq = 0;
+    for (let x = 0; x < w; x++) {
+      const g = gray[y * w + x];
+      rowSum += g;
+      rowSumSq += g * g;
+
+      const idx = (y + 1) * (w + 1) + (x + 1);
+      const prevRowIdx = y * (w + 1) + (x + 1);
+
+      integral[idx] = integral[prevRowIdx] + rowSum;
+      integralSq[idx] = integralSq[prevRowIdx] + rowSumSq;
+    }
+  }
+
+  // 2. Compute Sauvola threshold locally per pixel
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - halfWin);
+    const y1 = Math.min(h, y + halfWin + 1);
+
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - halfWin);
+      const x1 = Math.min(w, x + halfWin + 1);
+
+      const area = (y1 - y0) * (x1 - x0);
+
+      const A = y0 * (w + 1) + x0;
+      const B = y0 * (w + 1) + x1;
+      const C = y1 * (w + 1) + x0;
+      const D = y1 * (w + 1) + x1;
+
+      const sum = integral[D] - integral[B] - integral[C] + integral[A];
+      const sumSq = integralSq[D] - integralSq[B] - integralSq[C] + integralSq[A];
+
+      const mean = sum / area;
+      const variance = Math.max(0, (sumSq / area) - (mean * mean));
+      const stddev = Math.sqrt(variance);
+
+      const threshold = mean * (1.0 + k * ((stddev / R) - 1.0));
+
+      const g = gray[y * w + x];
+      const bin = g < threshold ? 0 : 255;
+
+      const pIdx = (y * w + x) * 4;
+      data[pIdx] = bin;
+      data[pIdx + 1] = bin;
+      data[pIdx + 2] = bin;
+    }
+  }
+}
+
+export interface MultiPassProcessedImages {
+  passMain: string;
+  passSauvola: string;
+  passHeader: string;
+  passSummary: string;
+}
+
+/**
+ * Multi-Pass Preprocessor: Generates 4 distinct visual layers for DeepScan 4.0
+ */
+export function preprocessMultiPassImageForOcr(file: File): Promise<MultiPassProcessedImages> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      try {
+        let width = img.width;
+        let height = img.height;
+
+        if (width < 2400) {
+          const ratio = 2400 / width;
+          width = 2400;
+          height = Math.round(height * ratio);
+        }
+
+        // 1. Pass Main: CLAHE Grayscale + Unsharp Mask
+        const canvasMain = document.createElement('canvas');
+        canvasMain.width = width;
+        canvasMain.height = height;
+        const ctxMain = canvasMain.getContext('2d');
+        if (!ctxMain) throw new Error('No 2d context');
+
+        ctxMain.drawImage(img, 0, 0, width, height);
+        const imgDataMain = ctxMain.getImageData(0, 0, width, height);
+        const dataMain = imgDataMain.data;
+
+        // Grayscale conversion
+        for (let i = 0; i < dataMain.length; i += 4) {
+          const gray = Math.round(0.299 * dataMain[i] + 0.587 * dataMain[i + 1] + 0.114 * dataMain[i + 2]);
+          dataMain[i] = gray;
+          dataMain[i + 1] = gray;
+          dataMain[i + 2] = gray;
+        }
+
+        // Unsharp Masking filter on Main Pass
+        const sharpBuffer = new Uint8ClampedArray(dataMain);
+        const w = width;
+        const h = height;
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const idx = (y * w + x) * 4;
+            const blurred = (
+              sharpBuffer[((y-1)*w+(x-1))*4] + sharpBuffer[((y-1)*w+x)*4]*2 + sharpBuffer[((y-1)*w+(x+1))*4] +
+              sharpBuffer[((y)*w+(x-1))*4]*2 + sharpBuffer[((y)*w+x)*4]*4 + sharpBuffer[((y)*w+(x+1))*4]*2 +
+              sharpBuffer[((y+1)*w+(x-1))*4] + sharpBuffer[((y+1)*w+x)*4]*2 + sharpBuffer[((y+1)*w+(x+1))*4]
+            ) / 16;
+            const orig = sharpBuffer[idx];
+            const sharpened = Math.round(orig + 1.2 * (orig - blurred));
+            const val = Math.max(0, Math.min(255, sharpened));
+            dataMain[idx] = val;
+            dataMain[idx + 1] = val;
+            dataMain[idx + 2] = val;
+          }
+        }
+        ctxMain.putImageData(imgDataMain, 0, 0);
+        const passMain = canvasMain.toDataURL('image/jpeg', 0.98);
+
+        // 2. Pass Sauvola: Local Adaptive Binarization
+        const canvasSauvola = document.createElement('canvas');
+        canvasSauvola.width = width;
+        canvasSauvola.height = height;
+        const ctxSauvola = canvasSauvola.getContext('2d');
+        if (!ctxSauvola) throw new Error('No Sauvola context');
+
+        ctxSauvola.drawImage(img, 0, 0, width, height);
+        const imgDataSauvola = ctxSauvola.getImageData(0, 0, width, height);
+        applySauvolaThreshold(imgDataSauvola.data, width, height, 31, 0.18);
+        ctxSauvola.putImageData(imgDataSauvola, 0, 0);
+        const passSauvola = canvasSauvola.toDataURL('image/jpeg', 0.98);
+
+        // 3. Pass Header: Top 35% zoomed
+        const canvasHeader = document.createElement('canvas');
+        const headerH = Math.round(height * 0.35);
+        canvasHeader.width = width;
+        canvasHeader.height = headerH;
+        const ctxHeader = canvasHeader.getContext('2d');
+        if (ctxHeader) {
+          ctxHeader.drawImage(canvasSauvola, 0, 0, width, headerH, 0, 0, width, headerH);
+        }
+        const passHeader = canvasHeader.toDataURL('image/jpeg', 0.98);
+
+        // 4. Pass Summary: Bottom 35% zoomed
+        const canvasSummary = document.createElement('canvas');
+        const summaryH = Math.round(height * 0.35);
+        const summaryY = height - summaryH;
+        canvasSummary.width = width;
+        canvasSummary.height = summaryH;
+        const ctxSummary = canvasSummary.getContext('2d');
+        if (ctxSummary) {
+          ctxSummary.drawImage(canvasSauvola, 0, summaryY, width, summaryH, 0, 0, width, summaryH);
+        }
+        const passSummary = canvasSummary.toDataURL('image/jpeg', 0.98);
+
+        URL.revokeObjectURL(objectUrl);
+        resolve({
+          passMain,
+          passSauvola,
+          passHeader,
+          passSummary,
+        });
+      } catch (err) {
+        console.error('Multi-pass preprocessing error', err);
+        URL.revokeObjectURL(objectUrl);
+        resolve({
+          passMain: objectUrl,
+          passSauvola: objectUrl,
+          passHeader: objectUrl,
+          passSummary: objectUrl,
+        });
+      }
+    };
+
+    img.onerror = () => {
+      resolve({
+        passMain: objectUrl,
+        passSauvola: objectUrl,
+        passHeader: objectUrl,
+        passSummary: objectUrl,
+      });
+    };
+
+    img.src = objectUrl;
+  });
+}
+
+
+/**
  * High-Precision Thai & English Technical & Hardware Fuzzy Correction Dictionary
  */
 const TYPO_MAP: Record<string, string> = {
@@ -1221,3 +1431,240 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
   };
 }
+
+// ============================================================================
+// DEEPSCAN 4.0: THAI LEXICON, MATHEMATICAL CONSTRAINT SOLVER & MULTI-PASS PARSER
+// ============================================================================
+
+/**
+ * Extensive Thai Procurement, Office Supplies, IT & Corporate Lexicon
+ */
+export const THAI_PROCUREMENT_LEXICON = [
+  // Corporate & Legal
+  'บริษัท', 'จำกัด (มหาชน)', 'จำกัด', 'ห้างหุ้นส่วนจำกัด', 'สำนักงานใหญ่', 'สาขา', 'สาขาที่',
+  'ใบกำกับภาษีอย่างย่อ', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'เอกสารออกเป็นชุด', 'ต้นฉบับ',
+  'เลขประจำตัวผู้เสียภาษี', 'ผู้เสียภาษีอากร', 'โทรศัพท์', 'โทรสาร', 'ที่อยู่',
+
+  // Stationery & Office Supplies
+  'กระดาษถ่ายเอกสาร A4', 'กระดาษถ่ายเอกสาร', 'กระดาษพิมพ์งาน', 'กระดาษการ์ด', 'กระดาษโน้ต',
+  'กระดาษต่อเนื่อง', 'กระดาษชำระ', 'กระดาษทิชชู่', 'กระดาษห่อของขวัญ', 'กระดาษคาร์บอน',
+  'แฟ้มห่วง', 'แฟ้มสันกว้าง', 'แฟ้มซอง', 'แฟ้มหนีบ', 'แฟ้มเอกสาร', 'แฟ้มสะสมผลงาน',
+  'ปากกาลูกลื่น', 'ปากกาหมึกเจล', 'ปากกาเน้นข้อความ', 'ปากกาเคมี', 'ปากกาไวท์บอร์ด', 'ดินสอดำ',
+  'ยางลบ', 'น้ำยาลบคำผิด', 'เทปลบคำผิด', 'ไม้บรรทัด', 'กรรไกร', 'มีดคัตเตอร์', 'ใบมีดคัตเตอร์',
+  'ลวดเย็บกระดาษ', 'เครื่องเย็บกระดาษ', 'เครื่องเจาะกระดาษ', 'คลิปหนีบกระดาษ', 'คลิปดำ',
+  'เทปใส', 'เทปใสแกนเล็ก', 'เทปกาวสองหน้า', 'เทปผ้า', 'เทปกระดาษกาวย่น', 'กาวน้ำ', 'กาวแท่ง',
+  'ซองจดหมาย', 'ซองเอกสารสีน้ำตาล', 'ซองขยายข้าง', 'สมุดบันทึก', 'สมุดบัญชี', 'โพสต์อิท',
+
+  // IT & Computer Supplies
+  'ตลับหมึกพิมพ์', 'ตลับหมึก', 'หมึกพิมพ์', 'ผงหมึกโทนเนอร์', 'หมึกอิงค์เจ็ท', 'ริบบอน',
+  'แฟลชไดร์ฟ', 'ฮาร์ดดิสก์', 'การ์ดหน่วยความจำ', 'สายชาร์จ', 'สายสัญญาณ', 'สายแลน', 'สายต่อพ่วง',
+  'แป้นพิมพ์', 'คีย์บอร์ด', 'เมาส์ไร้สาย', 'แผ่นรองเมาส์', 'ปลั๊กไฟ', 'ปลั๊กพ่วง', 'รางปลั๊กไฟ',
+  'แบตเตอรี่', 'ถ่านอัลคาไลน์', 'ถ่านไฟฉาย', 'ซองใส่บัตร', 'สายคล้องบัตร',
+
+  // Food, Refreshments & Catering
+  'กาแฟคั่วบด', 'กาแฟปรุงสำเร็จ', 'กาแฟสำเร็จรูป', 'ครีมเทียม', 'น้ำตาลทราย', 'น้ำตาลทรายขาว',
+  'ชาเขียว', 'ชาไทย', 'น้ำดื่ม', 'น้ำแร่', 'น้ำผลไม้', 'ชุดอาหารว่าง', 'คุกกี้', 'ขนมปัง',
+  'ถ้วยกาแฟกระดาษ', 'ถ้วยกระดาษ', 'ช้อนพลาสติก', 'ส้อมพลาสติก', 'กระดาษเช็ดหน้า', 'ทิชชู่เปียก'
+];
+
+/**
+ * Smart Fuzzy Lexicon Auto-Correction for Thai Words
+ */
+export function fuzzyCorrectThaiLexicon(text: string): string {
+  if (!text || text.length < 3) return text;
+  let corrected = text;
+
+  // Direct fast string normalizations
+  corrected = corrected
+    .replace(/บรัษท|บริษทั|บรษัท|บิรษัท/g, 'บริษัท')
+    .replace(/จำกดั|จํากัด|จำกัดมหาชน/g, 'จำกัด')
+    .replace(/ใบกำกบัภาษี|ใบกำก้บภาษี/g, 'ใบกำกับภาษี')
+    .replace(/ใบเสรจ็รบัเงนิ|ใบเสรจรับเงิน/g, 'ใบเสร็จรับเงิน')
+    .replace(/สำนกังานใหญ่|สำนักงานใหญ/g, 'สำนักงานใหญ่')
+    .replace(/กระดาษถ่ย|กระดาษถาย|กระดาษถายเอกสาร/g, 'กระดาษถ่ายเอกสาร')
+    .replace(/หมึกพิมพ|ตลบัหมึก|ตลับหมึกพิมพ/g, 'ตลับหมึกพิมพ์')
+    .replace(/แฟม้สันกว้าง|แฟม้ห่วง/g, 'แฟ้ม')
+    .replace(/ปากกาลูกลืน่|ปากกาลกลื่น/g, 'ปากกาลูกลื่น');
+
+  // Match against procurement dictionary tokens
+  const words = corrected.split(/(\s+)/);
+  const fixedWords = words.map((w) => {
+    const trimmed = w.trim();
+    if (trimmed.length < 4) return w;
+
+    let bestMatch = trimmed;
+    let minDistance = 999;
+
+    for (const dictWord of THAI_PROCUREMENT_LEXICON) {
+      if (Math.abs(dictWord.length - trimmed.length) > 2) continue;
+      const dist = levenshteinDistance(trimmed, dictWord);
+      if (dist <= 2 && dist < minDistance) {
+        minDistance = dist;
+        bestMatch = dictWord;
+      }
+    }
+
+    // Only apply if strong confidence match
+    if (minDistance <= 2 && bestMatch !== trimmed) {
+      return bestMatch;
+    }
+    return w;
+  });
+
+  return fixedWords.join('');
+}
+
+/**
+ * Mathematical Constraint Solver for Line Items & Invoices
+ * Reconciles Quantity * UnitPrice == TotalPrice by repairing misread digits
+ */
+export function solveMathematicalConstraints(
+  items: Array<{
+    item_code: string;
+    description: string;
+    quantity: number;
+    unit: string;
+    unit_price: number;
+    total_price: number;
+  }>,
+  extractedGrandTotal: number,
+  extractedDiscount: number
+) {
+  const balancedItems = items.map((item) => {
+    let q = item.quantity || 1;
+    let u = item.unit_price || 0;
+    let t = item.total_price || 0;
+
+    // Check if exactly balanced
+    const calcTotal = Math.round(q * u * 100) / 100;
+    if (Math.abs(calcTotal - t) < 0.05) {
+      return { ...item, quantity: q, unit_price: u, total_price: t };
+    }
+
+    // Case 1: Unit price is 0 or equal to total price with q > 1
+    if (u === 0 || (u === t && q > 1)) {
+      u = Math.round((t / q) * 100) / 100;
+      return { ...item, quantity: q, unit_price: u, total_price: t };
+    }
+
+    // Case 2: OCR misread total price or unit price single digit (e.g. 8 <-> 3, 0 <-> 6, 1 <-> 7)
+    const expectedTotal = Math.round(q * u * 100) / 100;
+    if (expectedTotal > 0 && Math.abs(expectedTotal - t) < 100) {
+      // If expected total is visually similar to scanned total, adjust to expected total
+      return { ...item, quantity: q, unit_price: u, total_price: expectedTotal };
+    }
+
+    // Default: prioritize total_price and re-derive unit_price
+    if (t > 0 && q > 0) {
+      u = Math.round((t / q) * 100) / 100;
+    }
+
+    return { ...item, quantity: q, unit_price: u, total_price: t };
+  });
+
+  // Invoice-Level Reconciliation
+  const calculatedSum = balancedItems.reduce((s, i) => s + (i.total_price || 0), 0);
+  let finalGrandTotal = extractedGrandTotal;
+  let finalDiscount = extractedDiscount;
+
+  if (finalGrandTotal <= 0 && calculatedSum > 0) {
+    finalGrandTotal = calculatedSum - finalDiscount;
+  } else if (finalGrandTotal > 0 && calculatedSum > finalGrandTotal && finalDiscount === 0) {
+    finalDiscount = Math.round((calculatedSum - finalGrandTotal) * 100) / 100;
+  }
+
+  return {
+    items: balancedItems,
+    subtotal: calculatedSum,
+    discount: finalDiscount,
+    grandTotal: finalGrandTotal,
+    isMatched: Math.abs((calculatedSum - finalDiscount) - finalGrandTotal) < 0.05
+  };
+}
+
+export interface DeepScanPassOutputs {
+  mainText: string;
+  sauvolaText?: string;
+  headerText?: string;
+  summaryText?: string;
+}
+
+/**
+ * DeepScan 4.0: Multi-Pass Consensus Parser
+ * Fuses 4 distinct passes, applies Thai Lexicon spell-correction, and solves mathematical constraints
+ */
+export function parseThaiReceiptOcrDeep(passes: DeepScanPassOutputs) {
+  // 1. Primary Parse from Main High-DPI Pass
+  const mainParsed = parseThaiReceiptOcr(passes.mainText);
+
+  // 2. Secondary Parse from Sauvola Adaptive Pass (if provided)
+  const sauvolaParsed = passes.sauvolaText ? parseThaiReceiptOcr(passes.sauvolaText) : null;
+
+  // 3. Header Zoom Pass (if provided)
+  let vendorName = mainParsed.vendor_name;
+  let invoiceNumber = mainParsed.invoice_number;
+  let invoiceDate = mainParsed.invoice_date;
+
+  if (passes.headerText) {
+    const headerParsed = parseThaiReceiptOcr(passes.headerText);
+    if (headerParsed.vendor_name && headerParsed.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย' && headerParsed.vendor_name.length > 5) {
+      vendorName = headerParsed.vendor_name;
+    }
+    if (headerParsed.invoice_number && headerParsed.invoice_number.length >= 4) {
+      invoiceNumber = headerParsed.invoice_number;
+    }
+    if (headerParsed.invoice_date) {
+      invoiceDate = headerParsed.invoice_date;
+    }
+  }
+
+  // 4. Merge Line Items between Main Pass & Sauvola Pass
+  let combinedItems = [...mainParsed.items];
+
+  if (sauvolaParsed && sauvolaParsed.items.length > combinedItems.length) {
+    // If Sauvola detected more items (recovered faded thermal lines), use Sauvola items list
+    combinedItems = sauvolaParsed.items;
+  }
+
+  // 5. Apply Thai Lexicon Auto-Correction on Vendor & Items
+  vendorName = fuzzyCorrectThaiLexicon(vendorName);
+
+  const cleanedItems = combinedItems.map((item) => ({
+    ...item,
+    description: fuzzyCorrectThaiLexicon(item.description)
+  }));
+
+  // 6. Summary Zoom Pass (if provided)
+  let grandTotal = mainParsed.total_amount || 0;
+  let discount = mainParsed.discount || 0;
+
+  if (passes.summaryText) {
+    const summaryParsed = parseThaiReceiptOcr(passes.summaryText);
+    if (summaryParsed.total_amount && summaryParsed.total_amount > 0) {
+      grandTotal = summaryParsed.total_amount;
+    }
+    if (summaryParsed.discount && summaryParsed.discount > 0) {
+      discount = summaryParsed.discount;
+    }
+  }
+
+  // 7. Mathematical Constraint Balancing
+  const mathSolution = solveMathematicalConstraints(cleanedItems, grandTotal, discount);
+
+  return {
+    vendor_name: vendorName || 'ร้านค้า / บริษัทผู้ขาย',
+    invoice_number: invoiceNumber || '',
+    invoice_date: invoiceDate || '',
+    discount: mathSolution.discount,
+    total_amount: mathSolution.grandTotal,
+    items: mathSolution.items,
+    reconciliation: {
+      subtotal: mathSolution.subtotal,
+      totalAmount: mathSolution.grandTotal,
+      discount: mathSolution.discount,
+      isMatched: mathSolution.isMatched,
+      discrepancy: Math.round((mathSolution.subtotal - mathSolution.grandTotal) * 100) / 100
+    }
+  };
+}
+

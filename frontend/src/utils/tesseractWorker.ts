@@ -107,6 +107,40 @@ export async function runTesseract(
   return { words, rawText };
 }
 
+export interface MultiPassItem {
+  id: string;
+  label: string;
+  src: string | File;
+}
+
+export async function runMultiPassTesseract(
+  passes: MultiPassItem[],
+  onProgress?: (stepLabel: string, percent: number) => void
+): Promise<Record<string, OcrResult>> {
+  const w = await initWorker('tha+eng');
+  const results: Record<string, OcrResult> = {};
+  const total = passes.length;
+
+  for (let i = 0; i < passes.length; i++) {
+    const pass = passes[i];
+    if (onProgress) {
+      onProgress(pass.label, Math.round(((i) / total) * 100));
+    }
+    const ret = await w.recognize(pass.src);
+    const rawText = ret.data.text || '';
+    const words: OcrWord[] = ((ret.data as any).words || []).map((wItem: any) => ({
+      text: wItem.text,
+      bbox: { x0: wItem.bbox.x0, y0: wItem.bbox.y0, x1: wItem.bbox.x1, y1: wItem.bbox.y1 },
+    }));
+    results[pass.id] = { rawText, words };
+    if (onProgress) {
+      onProgress(pass.label, Math.round(((i + 1) / total) * 100));
+    }
+  }
+
+  return results;
+}
+
 export async function terminateWorker() {
   if (workerPromise) {
     const w = await workerPromise;
