@@ -3,7 +3,7 @@ import { runTesseract } from '../utils/tesseractWorker';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check
+  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic
 } from 'lucide-react';
 import { bahttext } from 'bahttext';
 import contactsData from '../data/contacts.json';
@@ -14,6 +14,7 @@ import { getStoredUser } from '../utils/auth';
 import { DocumentPreviewModal } from '../components/common/DocumentPreviewModal';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { ConfettiEffect } from '../components/ui/ConfettiEffect';
+import { VoiceItemModal } from '../components/common/VoiceItemModal';
 
 interface Item {
   id: string;
@@ -165,6 +166,7 @@ export default function AutoWordPage() {
   const [filterMode, setFilterMode] = useState<'normal' | 'contrast' | 'invert'>('normal');
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedGrandTotal, setCopiedGrandTotal] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
 
 
 
@@ -1731,13 +1733,25 @@ export default function AutoWordPage() {
               </div>
 
               <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => handleAddItem(activeInvoice.id)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>เพิ่มรายการสินค้า</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleAddItem(activeInvoice.id)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ เพิ่มรายการ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsVoiceModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-xl border border-purple-200 transition shadow-xs active:scale-95"
+                    title="พูดภาษาไทยเพื่อเพิ่มรายการสินค้าอัตโนมัติ"
+                  >
+                    <Mic className="w-3.5 h-3.5 text-purple-600 animate-pulse" />
+                    <span>🎙️ พูดสั่งรายการ (Voice)</span>
+                  </button>
+                </div>
 
                 <button
                   onClick={() => handleDeleteInvoice(activeInvoice.id)}
@@ -1851,6 +1865,36 @@ export default function AutoWordPage() {
         approverDate={approverDate}
         invoices={invoices}
         onDownload={handleGenerateWord}
+      />
+
+      {/* Thai Voice Item Entry Modal */}
+      <VoiceItemModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onAddItem={(voiceItem) => {
+          if (!activeInvoice) return;
+          const newItem: Item = {
+            id: Date.now().toString(),
+            item_code: '',
+            description: voiceItem.description,
+            quantity: voiceItem.quantity,
+            unit: voiceItem.unit,
+            unit_price: voiceItem.unit_price,
+            total_price: voiceItem.total_price,
+          };
+
+          setInvoices(prev => prev.map(inv => {
+            if (inv.id === activeInvoice.id) {
+              return {
+                ...inv,
+                items: [...inv.items, newItem]
+              };
+            }
+            return inv;
+          }));
+
+          setStatusMsg({ type: 'success', text: `เพิ่มรายการ "${voiceItem.description}" ด้วยเสียงสำเร็จแล้ว!` });
+        }}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Save, 
   FolderOpen, 
@@ -11,7 +11,9 @@ import {
   BookmarkCheck,
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Search,
+  Share2
 } from 'lucide-react';
 import type { BudgetFormData } from '../../types';
 import { initialFormData } from '../../types';
@@ -26,6 +28,7 @@ export interface SavedPreset {
   projectName?: string;
   totalAttendees?: string;
   days?: string;
+  estimatedTotal?: number;
   formData: BudgetFormData;
 }
 
@@ -42,7 +45,12 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
   const [presets, setPresets] = useState<SavedPreset[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isCloneModalOpen, setIsCloneModalOpen] = useState(false);
+  const [selectedPresetForClone, setSelectedPresetForClone] = useState<SavedPreset | null>(null);
+  const [cloneNewName, setCloneNewName] = useState('');
   const [saveName, setSaveName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'training' | 'meeting' | 'field_trip'>('all');
   const [lastAutoSavedTime, setLastAutoSavedTime] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
@@ -107,41 +115,64 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
     
     setIsSaveModalOpen(false);
     setSaveName('');
-    showToast(`บันทึกแม่แบบ "${finalName}" เรียบร้อยแล้ว!`);
+    showToast(`บันทึกโครงการ "${finalName}" ลงในคลังเรียบร้อยแล้ว!`);
   };
 
   // Load a Preset into Form
   const handleLoadPreset = (preset: SavedPreset) => {
-    if (window.confirm(`ต้องการโหลดข้อมูล "${preset.name}" เข้าสู่ฟอร์มหรือไม่?`)) {
+    if (window.confirm(`ต้องการโหลดข้อมูลโครงการ "${preset.name}" เข้าสู่ฟอร์มหรือไม่?`)) {
       setFormData(preset.formData);
       setIsModalOpen(false);
-      showToast(`โหลดข้อมูล "${preset.name}" เรียบร้อยแล้ว!`);
+      showToast(`โหลดโครงการ "${preset.name}" เรียบร้อยแล้ว!`);
     }
   };
 
   // Delete a Preset
   const handleDeletePreset = (id: string, name: string) => {
-    if (window.confirm(`ต้องการลบแม่แบบ "${name}" หรือไม่?`)) {
+    if (window.confirm(`ต้องการลบโครงการ "${name}" หรือไม่?`)) {
       const updated = presets.filter(p => p.id !== id);
       setPresets(updated);
       localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(updated));
-      showToast(`ลบแม่แบบเรียบร้อยแล้ว`, 'info');
+      showToast(`ลบโครงการเรียบร้อยแล้ว`, 'info');
     }
   };
 
-  // Duplicate a Preset
-  const handleDuplicatePreset = (preset: SavedPreset) => {
-    const duplicated: SavedPreset = {
-      ...preset,
+  // Open Clone Modal for a Preset
+  const handleOpenCloneModal = (preset: SavedPreset) => {
+    setSelectedPresetForClone(preset);
+    const currentYear = new Date().getFullYear() + 543;
+    setCloneNewName(`${preset.name} (ปี ${currentYear})`);
+    setIsCloneModalOpen(true);
+  };
+
+  // Execute Clone Preset
+  const handleExecuteClone = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPresetForClone) return;
+
+    const clonedName = cloneNewName.trim() || `${selectedPresetForClone.name} (ฉบับคัดลอก)`;
+    const nowStr = new Date().toISOString();
+
+    const clonedPreset: SavedPreset = {
+      ...selectedPresetForClone,
       id: Date.now().toString(),
-      name: `${preset.name} (สำเนา)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      name: clonedName,
+      projectName: clonedName,
+      createdAt: nowStr,
+      updatedAt: nowStr,
+      formData: {
+        ...selectedPresetForClone.formData,
+        projectName: clonedName,
+      }
     };
-    const updated = [duplicated, ...presets];
+
+    const updated = [clonedPreset, ...presets];
     setPresets(updated);
     localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(updated));
-    showToast(`ทำสำเนาแม่แบบเรียบร้อยแล้ว`);
+    
+    setIsCloneModalOpen(false);
+    setSelectedPresetForClone(null);
+    showToast(`ทำซ้ำโครงการ "${clonedName}" เรียบร้อยแล้ว!`);
   };
 
   // Clear Form / Reset
@@ -154,10 +185,11 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
     }
   };
 
-  // Export Presets to JSON File
+  // Export Presets to JSON/.sbr File
   const handleExportJSON = () => {
     const dataToExport = {
-      version: '2.0',
+      app: 'SBR Smart Budgeting System (GISTDA)',
+      version: '2.5',
       exportedAt: new Date().toISOString(),
       currentDraft: formData,
       presets: presets
@@ -166,13 +198,31 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sbr_budget_templates_${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `sbr_budget_vault_${new Date().toISOString().slice(0, 10)}.sbr`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('ส่งออกไฟล์แม่แบบ (.json) เรียบร้อยแล้ว');
+    showToast('ส่งออกไฟล์คลังโครงการ (.sbr) เรียบร้อยแล้ว');
   };
 
-  // Import Presets from JSON File
+  // Export Single Preset
+  const handleExportSinglePreset = (preset: SavedPreset) => {
+    const dataToExport = {
+      app: 'SBR Smart Budgeting System (GISTDA)',
+      version: '2.5',
+      exportedAt: new Date().toISOString(),
+      project: preset
+    };
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${preset.name.replace(/[^\w\u0E00-\u0E7F]/g, '_')}.sbr`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`ส่งออกโครงการ "${preset.name}" สำเร็จแล้ว`);
+  };
+
+  // Import Presets from JSON/.sbr File
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -185,15 +235,21 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
           const merged = [...imported.presets, ...presets.filter(p => !imported.presets.some((ip: SavedPreset) => ip.id === p.id))];
           setPresets(merged);
           localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(merged));
-          showToast(`นำเข้าแม่แบบสำเร็จ ${imported.presets.length} รายการ!`);
+          showToast(`นำเข้าโครงการสำเร็จ ${imported.presets.length} รายการ!`);
+        } else if (imported.project && imported.project.formData) {
+          const newPreset = { ...imported.project, id: Date.now().toString() };
+          const merged = [newPreset, ...presets];
+          setPresets(merged);
+          localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(merged));
+          showToast(`นำเข้าโครงการ "${newPreset.name}" เรียบร้อยแล้ว!`);
         } else if (imported.formData) {
           setFormData(imported.formData);
           showToast('นำเข้าและโหลดข้อมูลฟอร์มเรียบร้อยแล้ว!');
         } else {
-          alert('รูปแบบไฟล์ JSON ไม่ถูกต้อง');
+          alert('รูปแบบไฟล์ .sbr / .json ไม่ถูกต้อง');
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการอ่านไฟล์ JSON');
+        alert('เกิดข้อผิดพลาดในการอ่านไฟล์');
       }
     };
     reader.readAsText(file);
@@ -208,6 +264,19 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
       default: return { label: type, color: 'bg-gray-100 text-gray-800 border-gray-200' };
     }
   };
+
+  // Filtered Presets
+  const filteredPresets = useMemo(() => {
+    return presets.filter((p) => {
+      const matchSearch = !searchQuery.trim() || 
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(p.projectName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        String(p.regulation || '').toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchFilter = selectedFilter === 'all' || p.activityType === selectedFilter;
+      return matchSearch && matchFilter;
+    });
+  }, [presets, searchQuery, selectedFilter]);
 
   return (
     <div className="w-full mb-6">
@@ -237,7 +306,7 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
               ? `ระบบจำข้อมูลอัตโนมัติล่าสุดเวลา ${lastAutoSavedTime} น.`
               : 'ระบบกำลังจำข้อมูลที่คุณกรอกอัตโนมัติ'}
           </span>
-          <span className="hidden sm:inline text-muted-foreground/40">• ข้อมูลไม่หายเมื่อรีเฟรชหรือปิดหน้าเว็บ</span>
+          <span className="hidden sm:inline text-muted-foreground/40">• บันทึกในเครื่องปลอดภัย ข้อมูลไม่หาย</span>
         </div>
 
         {/* Right: Quick Action Buttons */}
@@ -249,22 +318,22 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
               setSaveName(formData.projectName || '');
               setIsSaveModalOpen(true);
             }}
-            className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all active:scale-95 shadow-sm"
-            title="บันทึกข้อมูลฟอร์มปัจจุบันเป็นแม่แบบเพื่อใช้ซ้ำ"
+            className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all active:scale-95 shadow-sm"
+            title="บันทึกข้อมูลฟอร์มปัจจุบันเป็นโครงการในคลัง"
           >
             <Save className="w-3.5 h-3.5" />
-            บันทึกเป็นแม่แบบ
+            <span>บันทึกโครงการ</span>
           </button>
 
           {/* Open Saved Presets Modal Button */}
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 transition-all active:scale-95 shadow-sm"
-            title="เปิดดูรายการโครงการ/แม่แบบที่เคยบันทึกไว้"
+            className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 transition-all active:scale-95 shadow-sm"
+            title="เปิดดูคลังโครงการ & ทำซ้ำโครงการเดิม"
           >
             <FolderOpen className="w-3.5 h-3.5" />
-            แม่แบบที่บันทึกไว้ ({presets.length})
+            <span>คลังโครงการ ({presets.length})</span>
           </button>
 
           {/* Reset Form Button */}
@@ -275,7 +344,7 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
             title="ล้างข้อมูลทั้งหมดในฟอร์มเพื่อเริ่มต้นใหม่"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            ล้างฟอร์ม
+            <span>ล้างฟอร์ม</span>
           </button>
         </div>
       </div>
@@ -283,15 +352,15 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
       {/* Save Preset Dialog Modal */}
       {isSaveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+          <div className="bg-card border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-border/50 pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                <div className="p-2 bg-primary/10 rounded-xl text-primary">
                   <BookmarkCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-foreground">บันทึกเป็นแม่แบบ (Save Template)</h3>
-                  <p className="text-xs text-muted-foreground">บันทึกข้อมูลฟอร์มปัจจุบันเพื่อนำกลับมาใช้ซ้ำได้ง่าย</p>
+                  <h3 className="text-base font-bold text-foreground">บันทึกเข้าสู่คลังโครงการ (Project Vault)</h3>
+                  <p className="text-xs text-muted-foreground">บันทึกข้อมูลฟอร์มปัจจุบันเพื่อนำกลับมาใช้ซ้ำหรือ Clone ภายหลัง</p>
                 </div>
               </div>
               <button 
@@ -306,26 +375,26 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
             <form onSubmit={handleSavePreset} className="space-y-4">
               <div>
                 <label className="text-xs font-semibold text-foreground mb-1.5 block">
-                  ตั้งชื่อแม่แบบ / ชื่อโครงการ
+                  ตั้งชื่อโครงการ / แม่แบบ
                 </label>
                 <input
                   type="text"
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  placeholder="เช่น อบรม GIS และ Remote Sensing 3 วัน..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                  placeholder="เช่น โครงการฝึกอบรม GIS ประจำปี 2569..."
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium"
                   autoFocus
                 />
               </div>
 
-              <div className="bg-muted/40 rounded-xl p-3 text-xs text-muted-foreground space-y-1">
+              <div className="bg-muted/40 rounded-2xl p-3.5 text-xs text-muted-foreground space-y-1.5">
                 <div className="flex justify-between">
                   <span>ประเภทกิจกรรม:</span>
                   <span className="font-semibold text-foreground">{getActivityTypeLabel(formData.activityType).label}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>ระเบียบอ้างอิง:</span>
-                  <span className="font-semibold text-foreground">{formData.regulation || '-'}</span>
+                  <span className="font-semibold text-foreground truncate max-w-[200px]">{formData.regulation || '-'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>จำนวนวัน / ผู้เข้าร่วม:</span>
@@ -343,10 +412,10 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all flex items-center gap-1.5"
                 >
                   <Save className="w-4 h-4" />
-                  บันทึกแม่แบบ
+                  บันทึกเข้าคลัง
                 </button>
               </div>
             </form>
@@ -354,44 +423,173 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
         </div>
       )}
 
-      {/* Saved Presets / History Modal */}
-      {isModalOpen && (
+      {/* Clone Project Dialog Modal */}
+      {isCloneModalOpen && selectedPresetForClone && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-card border border-border rounded-2xl max-w-3xl w-full max-h-[85vh] shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-border/50 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
-                  <Layers className="w-5 h-5" />
+          <div className="bg-card border border-border rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-border/50 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-600">
+                  <Copy className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground">คลังแม่แบบและประวัติที่บันทึกไว้</h3>
-                  <p className="text-xs text-muted-foreground">เลือกแม่แบบเพื่อโหลดข้อมูลกลับเข้าฟอร์มทันที โดยไม่ต้องกรอกใหม่</p>
+                  <h3 className="text-base font-bold text-foreground">ทำซ้ำโครงการ (Clone Project)</h3>
+                  <p className="text-xs text-muted-foreground">คัดลอกโครงร่างโครงการนี้เพื่อนำไปปรับปรุงเป็นโครงการใหม่</p>
                 </div>
               </div>
               <button 
                 type="button" 
-                onClick={() => setIsModalOpen(false)}
-                className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted"
+                onClick={() => setIsCloneModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            <form onSubmit={handleExecuteClone} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-foreground mb-1.5 block">
+                  ตั้งชื่อโครงการฉบับคัดลอกใหม่
+                </label>
+                <input
+                  type="text"
+                  value={cloneNewName}
+                  onChange={(e) => setCloneNewName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted/40 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm font-medium"
+                  autoFocus
+                />
+              </div>
+
+              <div className="p-3 bg-blue-50/70 border border-blue-200/60 rounded-2xl text-xs text-blue-900 leading-relaxed">
+                💡 โครงสร้าง อัตราคน ค่าอาหาร ค่าวิทยากร และที่พักเดิมทั้งหมดจะถูกทำสำเนาไว้ คุณสามารถโหลดไปปรับวันที่หรือจำนวนคนใหม่ได้ทันที
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCloneModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <Copy className="w-4 h-4" />
+                  ยืนยันทำซ้ำโครงการ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Saved Presets / Project Vault Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-3xl max-w-4xl w-full max-h-[85vh] shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="p-5 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-primary/10 rounded-2xl text-primary">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground font-display">
+                    คลังบันทึกโครงการ & ทำซ้ำโครงการ (Project Vault)
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    ค้นหา เรียกดู หรือทำซ้ำ (Clone) โครงการที่เคยบันทึกไว้ในเบราว์เซอร์
+                  </p>
+                </div>
+              </div>
+
+              {/* Top Action Tools: Export All / Import */}
+              <div className="flex items-center gap-2">
+                <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-muted hover:bg-muted/80 text-foreground border border-border/60 transition shadow-xs">
+                  <Upload className="w-3.5 h-3.5 text-blue-600" />
+                  <span>นำเข้าไฟล์ (.sbr)</span>
+                  <input
+                    type="file"
+                    accept=".sbr,.json"
+                    onChange={handleImportJSON}
+                    className="hidden"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleExportJSON}
+                  disabled={presets.length === 0}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-muted hover:bg-muted/80 text-foreground border border-border/60 transition shadow-xs disabled:opacity-40"
+                  title="สำรองข้อมูลโครงการทั้งหมดเป็นไฟล์ .sbr"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>สำรองคลังทั้งหมด</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-muted-foreground hover:text-foreground p-1.5 rounded-xl hover:bg-muted ml-1"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="p-4 border-b border-border/40 bg-muted/20 flex flex-col sm:flex-row gap-3 items-center justify-between">
+              {/* Search Box */}
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ค้นหาชื่อโครงการ หรือ ระเบียบ..."
+                  className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary/40 font-medium"
+                />
+              </div>
+
+              {/* Activity Filter Tabs */}
+              <div className="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
+                {[
+                  { id: 'all', label: 'ทั้งหมด' },
+                  { id: 'training', label: 'ฝึกอบรม' },
+                  { id: 'meeting', label: 'ประชุม' },
+                  { id: 'field_trip', label: 'ลงพื้นที่' },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSelectedFilter(tab.id as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition ${
+                      selectedFilter === tab.id
+                        ? 'bg-primary text-primary-foreground shadow-xs'
+                        : 'bg-background hover:bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Modal Body: List of Presets */}
             <div className="p-5 overflow-y-auto flex-1 space-y-3">
-              {presets.length === 0 ? (
-                <div className="text-center py-12 px-4 border-2 border-dashed border-border/60 rounded-2xl space-y-3">
+              {filteredPresets.length === 0 ? (
+                <div className="text-center py-12 px-4 border-2 border-dashed border-border/60 rounded-3xl space-y-3">
                   <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center mx-auto text-muted-foreground">
                     <FolderOpen className="w-6 h-6" />
                   </div>
-                  <div className="text-sm font-semibold text-foreground">ยังไม่มีแม่แบบที่บันทึกไว้</div>
+                  <div className="text-sm font-bold text-foreground">ไม่พบโครงการในเงื่อนไขที่ค้นหา</div>
                   <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                    เมื่อคุณกรอกข้อมูลโครงการเสร็จแล้ว สามารถกดปุ่ม <strong>"บันทึกเป็นแม่แบบ"</strong> เพื่อเก็บไว้ใช้ในครั้งถัดไปได้ทันที
+                    ลองพิมพ์คำค้นหาใหม่ หรือกดบันทึกโครงการปัจจุบันเพื่อเก็บไว้ใช้งานในคลัง
                   </p>
                 </div>
               ) : (
-                presets.map((preset) => {
+                filteredPresets.map((preset) => {
                   const tag = getActivityTypeLabel(preset.activityType);
                   const dateFormatted = new Date(preset.createdAt).toLocaleDateString('th-TH', {
                     day: 'numeric',
@@ -402,11 +600,11 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
                   return (
                     <div 
                       key={preset.id} 
-                      className="group p-4 bg-muted/30 hover:bg-muted/60 rounded-xl border border-border/60 hover:border-primary/40 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                      className="group p-4 bg-muted/30 hover:bg-muted/70 rounded-2xl border border-border/60 hover:border-primary/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs"
                     >
                       <div className="space-y-1.5 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold border ${tag.color}`}>
+                          <span className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold border ${tag.color}`}>
                             {tag.label}
                           </span>
                           <h4 className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
@@ -414,42 +612,51 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
                           </h4>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3.5 h-3.5" />
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1 font-mono">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
                             {dateFormatted}
                           </span>
                           <span>•</span>
-                          <span>{preset.regulation}</span>
+                          <span className="truncate max-w-[240px]">{preset.regulation}</span>
                           <span>•</span>
-                          <span>{preset.days || 1} วัน ({preset.totalAttendees || 0} คน)</span>
+                          <span className="font-semibold text-foreground/80">{preset.days || 1} วัน ({preset.totalAttendees || 0} คน)</span>
                         </div>
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
                         <button
                           type="button"
-                          onClick={() => handleDuplicatePreset(preset)}
-                          className="p-2 text-muted-foreground hover:text-foreground hover:bg-background rounded-lg border border-border/40 transition-all"
-                          title="ทำสำเนาแม่แบบนี้"
+                          onClick={() => handleExportSinglePreset(preset)}
+                          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-xl border border-border/50 transition-all"
+                          title="ส่งออกโครงการนี้ (.sbr)"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCloneModal(preset)}
+                          className="inline-flex items-center gap-1 px-3 py-2 text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-xl text-xs font-bold border border-indigo-200 transition-all"
+                          title="ทำซ้ำโครงการนี้เพื่อปรับปรุงเป็นโครงการใหม่"
                         >
                           <Copy className="w-3.5 h-3.5" />
+                          <span>Clone</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeletePreset(preset.id, preset.name)}
-                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg border border-border/40 transition-all"
-                          title="ลบแม่แบบนี้"
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl border border-border/50 transition-all"
+                          title="ลบโครงการนี้"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleLoadPreset(preset)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95"
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95"
                         >
-                          โหลดข้อมูลนี้
+                          <span>โหลดเข้าฟอร์ม</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -457,40 +664,6 @@ export const DraftsManager: React.FC<Props> = ({ formData, setFormData, onReset 
                   );
                 })
               )}
-            </div>
-
-            {/* Modal Footer: Import/Export */}
-            <div className="p-4 bg-muted/40 border-t border-border/50 flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleExportJSON}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-background hover:bg-muted border border-border text-foreground transition-all"
-                  title="ดาวน์โหลดไฟล์สำรองแม่แบบเพื่อส่งต่อให้เพื่อนร่วมงาน"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  ส่งออกแม่แบบ (.json)
-                </button>
-
-                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-background hover:bg-muted border border-border text-foreground transition-all cursor-pointer">
-                  <Upload className="w-3.5 h-3.5" />
-                  นำเข้าแม่แบบ (.json)
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportJSON}
-                    className="sr-only"
-                  />
-                </label>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                ปิดหน้าต่าง
-              </button>
             </div>
           </div>
         </div>

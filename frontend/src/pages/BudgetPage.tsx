@@ -17,6 +17,7 @@ import staffSbr from '../data/staff_sbr.json';
 import contacts from '../data/contacts.json';
 import directors from '../data/directors.json';
 import { BudgetAnalyticsCard } from '../components/budget/BudgetAnalyticsCard';
+import { ExecutiveSummaryModal } from '../components/budget/ExecutiveSummaryModal';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { ConfettiEffect } from '../components/ui/ConfettiEffect';
 
@@ -46,6 +47,7 @@ export default function BudgetPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedTotal, setCopiedTotal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isInfographicOpen, setIsInfographicOpen] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const isFormValid = () => {
@@ -884,21 +886,62 @@ export default function BudgetPage() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleExportExcel}
-                  disabled={isExporting}
-                  className="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98] disabled:opacity-50"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{isExporting ? 'กำลังส่งออก Excel...' : 'Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)'}</span>
-                </button>
+                <div className="space-y-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsInfographicOpen(true)}
+                    className="w-full flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-[0.98]"
+                  >
+                    <Sparkles className="w-4 h-4 text-cyan-200" />
+                    <span>📊 สร้างภาพสรุปโครงการ (Infographic Slide 16:9)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportExcel}
+                    disabled={isExporting}
+                    className="w-full flex items-center justify-center gap-2 p-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm rounded-2xl shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all active:scale-[0.98] disabled:opacity-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>{isExporting ? 'กำลังส่งออก Excel...' : 'Export เป็น Excel (ตามแบบฟอร์ม ฝบร.)'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
         </div>
       </main>
+
+      {/* Executive Infographic Summary Modal (16:9 PNG Slide Card) */}
+      {calculationResult && (
+        <ExecutiveSummaryModal
+          isOpen={isInfographicOpen}
+          onClose={() => setIsInfographicOpen(false)}
+          formData={formData}
+          totalBudget={calculationResult.totalCost || 0}
+          breakdown={{
+            food: (calculationResult.breakdown || [])
+              .filter((i: any) => i.label?.includes('อาหาร') || i.label?.includes('เครื่องดื่ม'))
+              .reduce((s: number, i: any) => s + (i.amount || 0), 0),
+            speaker: (calculationResult.breakdown || [])
+              .filter((i: any) => i.label?.includes('วิทยากร') || i.label?.includes('ผู้ทรงคุณวุฒิ'))
+              .reduce((s: number, i: any) => s + (i.amount || 0), 0),
+            room: (calculationResult.breakdown || [])
+              .filter((i: any) => i.label?.includes('ที่พัก') || i.label?.includes('ห้องพัก'))
+              .reduce((s: number, i: any) => s + (i.amount || 0), 0),
+            allowance: (calculationResult.breakdown || [])
+              .filter((i: any) => i.label?.includes('เบี้ยเลี้ยง'))
+              .reduce((s: number, i: any) => s + (i.amount || 0), 0),
+            transport: (calculationResult.breakdown || [])
+              .filter((i: any) => i.label?.includes('พาหนะ') || i.label?.includes('เดินทาง') || i.label?.includes('น้ำมัน') || i.label?.includes('ตั๋ว'))
+              .reduce((s: number, i: any) => s + (i.amount || 0), 0),
+            other: (calculationResult.breakdown || [])
+              .filter((i: any) => !i.label?.includes('อาหาร') && !i.label?.includes('เครื่องดื่ม') && !i.label?.includes('วิทยากร') && !i.label?.includes('ที่พัก') && !i.label?.includes('ห้องพัก') && !i.label?.includes('เบี้ยเลี้ยง') && !i.label?.includes('พาหนะ') && !i.label?.includes('เดินทาง'))
+              .reduce((s: number, i: any) => s + (i.amount || 0), 0),
+          }}
+        />
+      )}
     </div>
   );
 }
