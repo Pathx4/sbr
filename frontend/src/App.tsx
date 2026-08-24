@@ -44,24 +44,53 @@ function MainLayout() {
     }
   }, [currentUser]);
 
-  // Global Keyboard Shortcuts (Ctrl+K, Alt+1, Alt+2)
+  // Global Keyboard Shortcuts (Ctrl+K, Cmd+K, Alt+1, Alt+2, Ctrl+1, Ctrl+2)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      // 1. Spotlight Search: Ctrl+K / Cmd+K / Alt+K (supports EN 'k', TH 'า', and e.code 'KeyK')
+      const isKKey = e.code === 'KeyK' || e.key?.toLowerCase() === 'k' || e.key === 'า';
+      if ((e.ctrlKey || e.metaKey || e.altKey) && isKKey) {
         e.preventDefault();
+        e.stopPropagation();
         setIsCommandOpen((prev) => !prev);
-      } else if (e.altKey && e.key === '1') {
+        return;
+      }
+
+      // Check if user is typing in an active text input or editable element
+      const target = e.target as HTMLElement | null;
+      const isTyping = target && (
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.tagName === 'SELECT' || 
+        target.isContentEditable
+      );
+
+      // 2. Navigate to Budget: Alt+1 / Ctrl+1 (supports Digit1, Numpad1, '1', 'ๅ', '๑')
+      const is1Key = e.code === 'Digit1' || e.code === 'Numpad1' || e.key === '1' || e.key === 'ๅ' || e.key === '๑';
+      if ((e.altKey || (e.ctrlKey && !isTyping)) && is1Key) {
         e.preventDefault();
+        e.stopPropagation();
         navigate('/');
-      } else if (e.altKey && e.key === '2') {
+        setSidebarOpen(false);
+        return;
+      }
+
+      // 3. Navigate to AutoWord: Alt+2 / Ctrl+2 (supports Digit2, Numpad2, '2', '/', '๒')
+      const is2Key = e.code === 'Digit2' || e.code === 'Numpad2' || e.key === '2' || e.key === '/' || e.key === '๒';
+      if ((e.altKey || (e.ctrlKey && !isTyping)) && is2Key) {
         e.preventDefault();
+        e.stopPropagation();
         navigate('/auto-word');
+        setSidebarOpen(false);
+        return;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase (true) so the window catches the keydown event reliably
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [navigate]);
+
 
   const handleLoginSuccess = (user: AuthUser) => {
     setCurrentUser(user);
