@@ -1445,6 +1445,15 @@ export const THAI_PROCUREMENT_LEXICON = [
   'ใบกำกับภาษีอย่างย่อ', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'เอกสารออกเป็นชุด', 'ต้นฉบับ',
   'เลขประจำตัวผู้เสียภาษี', 'ผู้เสียภาษีอากร', 'โทรศัพท์', 'โทรสาร', 'ที่อยู่',
 
+  // Hardware, Electrical & Tools (Thai Watsadu, HomePro, DoHome, MegaHome)
+  'ตู้กันน้ำพลาสติกฝาทึบ', 'ตู้กันน้ำพลาสติกฝาใส', 'ตู้กันน้ำพลาสติก', 'ตู้กันน้ำ', 'ตู้ไฟสวิตช์บอร์ด', 'กล่องกันน้ำ', 'กล่องพักสายไฟ',
+  'ท่อหด', 'ท่อตรงยูพีวีซี', 'ท่อร้อยสายไฟ', 'ท่อพีวีซี', 'ท่อเฟล็กซ์', 'ข้อต่อตรง', 'ข้องอ 90', 'กิ๊บจับท่อ', 'แคล้มก้ามปู',
+  'กาวแท่ง', 'ปืนยิงกาวร้อน', 'ปืนกาว', 'กาวร้อน', 'กาวซิลิโคน', 'กาวตราช้าง', 'กาวดักหนู', 'เทปพันสายไฟ',
+  'หัวแร้งบัดกรีด้ามปืน', 'หัวแร้งบัดกรี', 'หัวแร้ง', 'ตะกั่วบัดกรี', 'ตะกั่วเส้น', 'น้ำยาประสานบัดกรี', 'ที่ดูดตะกั่ว',
+  'เคเบิ้ลแกลนด์', 'เคเบิลแกลนด์', 'เคเบิ้ลไทร์', 'เคเบิลไทร์', 'สายรัดเคเบิ้ลไทร์', 'สายรัดสายไฟ', 'หางปลา', 'ปลอกสายไฟ',
+  'สายไฟ VAF', 'สายไฟ VCT', 'สายไฟ THW', 'สายไฟ NYY', 'สวิตช์ไฟ', 'เต้ารับกราวด์คู่', 'เบรกเกอร์',
+  'GIANT KINGKONG', 'LEETECH', 'LUZINO', 'EAGLE', 'TAI-FONG', 'MATSUSHITA', 'PHILIPS', 'PANASONIC', 'SCHNEIDER', 'NANO', 'CHANG', 'HACO', 'YAZAKI', 'BCC',
+
   // Stationery & Office Supplies
   'กระดาษถ่ายเอกสาร A4', 'กระดาษถ่ายเอกสาร', 'กระดาษพิมพ์งาน', 'กระดาษการ์ด', 'กระดาษโน้ต',
   'กระดาษต่อเนื่อง', 'กระดาษชำระ', 'กระดาษทิชชู่', 'กระดาษห่อของขวัญ', 'กระดาษคาร์บอน',
@@ -1452,7 +1461,7 @@ export const THAI_PROCUREMENT_LEXICON = [
   'ปากกาลูกลื่น', 'ปากกาหมึกเจล', 'ปากกาเน้นข้อความ', 'ปากกาเคมี', 'ปากกาไวท์บอร์ด', 'ดินสอดำ',
   'ยางลบ', 'น้ำยาลบคำผิด', 'เทปลบคำผิด', 'ไม้บรรทัด', 'กรรไกร', 'มีดคัตเตอร์', 'ใบมีดคัตเตอร์',
   'ลวดเย็บกระดาษ', 'เครื่องเย็บกระดาษ', 'เครื่องเจาะกระดาษ', 'คลิปหนีบกระดาษ', 'คลิปดำ',
-  'เทปใส', 'เทปใสแกนเล็ก', 'เทปกาวสองหน้า', 'เทปผ้า', 'เทปกระดาษกาวย่น', 'กาวน้ำ', 'กาวแท่ง',
+  'เทปใส', 'เทปใสแกนเล็ก', 'เทปกาวสองหน้า', 'เทปผ้า', 'เทปกระดาษกาวย่น', 'กาวน้ำ',
   'ซองจดหมาย', 'ซองเอกสารสีน้ำตาล', 'ซองขยายข้าง', 'สมุดบันทึก', 'สมุดบัญชี', 'โพสต์อิท',
 
   // IT & Computer Supplies
@@ -1468,14 +1477,76 @@ export const THAI_PROCUREMENT_LEXICON = [
 ];
 
 /**
- * Smart Fuzzy Lexicon Auto-Correction for Thai Words
+ * Smart Fuzzy Lexicon Auto-Correction for Thai Words & Hardware Receipts
  */
 export function fuzzyCorrectThaiLexicon(text: string): string {
-  if (!text || text.length < 3) return text;
+  if (!text || text.length < 2) return text;
   let corrected = text;
 
-  // Direct fast string normalizations
+  // 1. Hardware, Tone Marks & Diacritics Normalizations
   corrected = corrected
+    // Missing Tone Marks (ไม้โท / ไม้เอก / ทัณฑฆาต)
+    .replace(/\bตูกันน้ำ/g, 'ตู้กันน้ำ')
+    .replace(/\bตูปิด/g, 'ตู้ปิด')
+    .replace(/\bตูไฟ/g, 'ตู้ไฟ')
+    .replace(/\bตูพลาสติก/g, 'ตู้พลาสติก')
+    .replace(/\bหัวแรง/g, 'หัวแร้ง')
+    .replace(/\bเคเบิลแกลนด\b/g, 'เคเบิ้ลแกลนด์')
+    .replace(/\bเคเบิ้ลแกลนด\b/g, 'เคเบิ้ลแกลนด์')
+    .replace(/\bเคเบิลแกลนด์/g, 'เคเบิ้ลแกลนด์')
+    .replace(/\bเคเบิลไทร\b/g, 'เคเบิ้ลไทร์')
+    .replace(/\bเคเบิลไทร์/g, 'เคเบิ้ลไทร์')
+    .replace(/\bสายไฟ\s*Ouหง7/g, 'สายรัดเคเบิ้ลไทร์')
+    .replace(/\bOuหง7/g, 'สายรัดเคเบิ้ลไทร์')
+    .replace(/\b0uหง7/g, 'สายรัดเคเบิ้ลไทร์')
+    .replace(/\bสายรัด\s*Ouหง7/g, 'สายรัดเคเบิ้ลไทร์')
+    .replace(/\bปลกั๊ไฟ/g, 'ปลั๊กไฟ')
+    .replace(/\bปลกั๊พ่วง/g, 'ปลั๊กพ่วง')
+    .replace(/\bถ่านอลัคาไลน์/g, 'ถ่านอัลคาไลน์')
+
+    // English Brand Truncations & Parens Misreads
+    .replace(/GIANT\s*KINGK[\(\[\{\/A-Za-z0-9]*/gi, 'GIANT KINGKONG')
+    .replace(/\bKINGK[\(\[\{\/A-Za-z0-9]*/gi, 'KINGKONG')
+    .replace(/\bLUZ\b/gi, 'LUZINO')
+    .replace(/\bLUZIN\b/gi, 'LUZINO')
+    .replace(/\bLEETEC[\(\[\{\/A-Za-z0-9]*/gi, 'LEETECH')
+    .replace(/\bLEETE[\(\[\{\/A-Za-z0-9]*/gi, 'LEETECH')
+    .replace(/\bTAI-FON\b/gi, 'TAI-FONG')
+    .replace(/\bEAGL\b/gi, 'EAGLE')
+    .replace(/\bMATSUSHIT\b/gi, 'MATSUSHITA')
+    .replace(/\bSCHNEIDE\b/gi, 'SCHNEIDER')
+    .replace(/\bPANASONI\b/gi, 'PANASONIC')
+
+    // Units & Dimensions
+    .replace(/\buna\b/gi, 'มม.')
+    .replace(/\bun\b/gi, 'มม.')
+    .replace(/\b(\d+)\s*una\b/gi, '$1 มม.')
+    .replace(/(\d+)\s*una\s*ใส/gi, '$1 มม. ใส')
+    .replace(/(\d+)มม\.\./g, '$1 มม.')
+    .replace(/(\d+)มม\./g, '$1 มม.')
+    .replace(/(\d+)ม\.\./g, '$1 ม.')
+
+    // Fractions & Quote Misreads (e.g. 1.5/3% -> 1.5/8", % -> ")
+    .replace(/1\.5\/3%/g, '1.5/8"')
+    .replace(/1\.5\/8(?!\")/g, '1.5/8"')
+    .replace(/3\/8(?!\")/g, '3/8"')
+    .replace(/1\/2(?!\")/g, '1/2"')
+    .replace(/3\/4(?!\")/g, '3/4"')
+    .replace(/(\d)\s*%(?!\s*VAT)/g, '$1"')
+
+    // Color OCR fixes (สระอำ -> สระอา)
+    .replace(/\bดา\b(?!\s*บ)/g, 'ดำ')
+    .replace(/\bแดง\s*ดา\b/g, 'แดง ดำ')
+    .replace(/\bขวา\b/g, 'ขาว')
+    .replace(/\bเหลอืง\b/g, 'เหลือง')
+    .replace(/\bนำ้เงิน\b/g, 'น้ำเงิน')
+
+    // Column quantity leak fixes (e.g. "PL 2PG9-BK" -> "PL PG9-BK")
+    .replace(/\bPL\s*(\d)(PG\d+)/gi, 'PL $2')
+    .replace(/\b2PG(\d+)/gi, 'PG$1')
+    .replace(/\b1PG(\d+)/gi, 'PG$1')
+
+    // Corporate & Legal Terms
     .replace(/บรัษท|บริษทั|บรษัท|บิรษัท/g, 'บริษัท')
     .replace(/จำกดั|จํากัด|จำกัดมหาชน/g, 'จำกัด')
     .replace(/ใบกำกบัภาษี|ใบกำก้บภาษี/g, 'ใบกำกับภาษี')
@@ -1486,7 +1557,7 @@ export function fuzzyCorrectThaiLexicon(text: string): string {
     .replace(/แฟม้สันกว้าง|แฟม้ห่วง/g, 'แฟ้ม')
     .replace(/ปากกาลูกลืน่|ปากกาลกลื่น/g, 'ปากกาลูกลื่น');
 
-  // Match against procurement dictionary tokens
+  // 2. Match against procurement dictionary tokens
   const words = corrected.split(/(\s+)/);
   const fixedWords = words.map((w) => {
     const trimmed = w.trim();
