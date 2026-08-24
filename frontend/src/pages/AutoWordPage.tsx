@@ -3,7 +3,8 @@ import { runTesseract, runMultiPassTesseract } from '../utils/tesseractWorker';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic, Sparkles
+  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic, Sparkles,
+  Hand
 } from 'lucide-react';
 import { bahttext } from 'bahttext';
 import contactsData from '../data/contacts.json';
@@ -171,6 +172,10 @@ export default function AutoWordPage() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [filterMode, setFilterMode] = useState<'normal' | 'contrast' | 'invert'>('normal');
+  const [activeTool, setActiveTool] = useState<'pan' | 'crop'>('pan');
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedGrandTotal, setCopiedGrandTotal] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
@@ -336,7 +341,9 @@ export default function AutoWordPage() {
 
         parsed = parseThaiReceiptOcrDeep({
           mainText: passResults.main?.rawText || '',
+          mainWords: passResults.main?.words || [],
           sauvolaText: passResults.sauvola?.rawText || '',
+          sauvolaWords: passResults.sauvola?.words || [],
           headerText: passResults.header?.rawText || '',
           summaryText: passResults.summary?.rawText || '',
         });
@@ -500,38 +507,69 @@ export default function AutoWordPage() {
     }
   };
 
-  // Mouse Handlers for Dragging Crop Box
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Disable native browser image dragging
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    setDragStart({ x, y });
-    setCropSelection({ x, y, width: 0, height: 0 });
-    setIsDraggingCrop(true);
+  // Pan & Zoom Controls
+  const handleResetPanZoom = () => {
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+    setCropSelection(null);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDraggingCrop || !dragStart) return;
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const currentX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    const currentY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
-
-    const width = currentX - dragStart.x;
-    const height = currentY - dragStart.y;
-
-    setCropSelection({
-      x: width < 0 ? currentX : dragStart.x,
-      y: height < 0 ? currentY : dragStart.y,
-      width: Math.abs(width),
-      height: Math.abs(height)
+    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.88;
+    setZoomLevel(prev => {
+      const next = Math.max(0.5, Math.min(4.0, prev * zoomFactor));
+      return Math.round(next * 100) / 100;
     });
   };
 
+  // Mouse Handlers for Pan & Crop Tools
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (activeTool === 'pan' || e.button === 1 || e.altKey) {
+      setIsPanning(true);
+      setPanStart({
+        x: e.clientX - panPosition.x,
+        y: e.clientY - panPosition.y
+      });
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      setDragStart({ x, y });
+      setCropSelection({ x, y, width: 0, height: 0 });
+      setIsDraggingCrop(true);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPanning) {
+      e.preventDefault();
+      setPanPosition({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y
+      });
+    } else if (isDraggingCrop && dragStart) {
+      e.preventDefault();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const currentX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const currentY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+
+      const width = currentX - dragStart.x;
+      const height = currentY - dragStart.y;
+
+      setCropSelection({
+        x: width < 0 ? currentX : dragStart.x,
+        y: height < 0 ? currentY : dragStart.y,
+        width: Math.abs(width),
+        height: Math.abs(height)
+      });
+    }
+  };
+
   const handleMouseUp = () => {
+    setIsPanning(false);
     setIsDraggingCrop(false);
     setDragStart(null);
   };
@@ -999,69 +1037,134 @@ export default function AutoWordPage() {
             </div>
           )}
 
-          {/* Image Controls Toolbar (Zoom, Rotate, Contrast) */}
+          {/* Image Controls Toolbar (Pan, Crop, Zoom, Rotate, Contrast) */}
           {activeInvoice && activeInvoice.imagePreview && (
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.2))}
-                  className="p-1.5 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
-                  title="ย่อภาพ"
-                >
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </button>
-                <span className="text-[11px] font-mono font-bold text-slate-700 px-1.5">
-                  {Math.round(zoomLevel * 100)}%
-                </span>
-                <button
-                  onClick={() => setZoomLevel(prev => Math.min(2.5, prev + 0.2))}
-                  className="p-1.5 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
-                  title="ขยายภาพ"
-                >
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setZoomLevel(1)}
-                  className="px-2 py-1 text-[10px] text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
-                  title="รีเซ็ตขนาด 100%"
-                >
-                  1:1
-                </button>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs">
+                {/* Tool Mode Selector: Pan vs Crop */}
+                <div className="flex items-center p-0.5 bg-slate-200/70 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTool('pan')}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                      activeTool === 'pan'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="โหมดเลื่อนดูรูป (คลิกลากเพื่อเลื่อนดูส่วนต่างๆ)"
+                  >
+                    <Hand className="w-3.5 h-3.5" />
+                    <span>เลื่อนดูรูป</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTool('crop')}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                      activeTool === 'crop'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                    title="โหมดลากกรอบสแกนเฉพาะจุด (Crop Box)"
+                  >
+                    <Crop className="w-3.5 h-3.5" />
+                    <span>ลากกรอบสแกน</span>
+                  </button>
+                </div>
+
+                {/* Zoom Controls with 1-click Reset */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.2))}
+                    className="p-1.5 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
+                    title="ย่อภาพ (-)"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[11px] font-mono font-bold text-slate-700 px-1.5 min-w-[42px] text-center">
+                    {Math.round(zoomLevel * 100)}%
+                  </span>
+                  <button
+                    onClick={() => setZoomLevel(prev => Math.min(4.0, prev + 0.2))}
+                    className="p-1.5 text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs"
+                    title="ขยายภาพ (+)"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleResetPanZoom}
+                    className="px-2 py-1 text-[10px] text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 rounded-lg border border-slate-200 shadow-xs font-semibold"
+                    title="รีเซ็ตตำแหน่งและขนาดภาพกลับเป็นปกติ"
+                  >
+                    1:1 พอดี
+                  </button>
+                </div>
+
+                {/* Rotate & Contrast Tools */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setRotationAngle(prev => (prev + 90) % 360)}
+                    className="flex items-center gap-1 px-2 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-xs text-[11px] font-semibold"
+                    title="หมุนภาพ 90 องศา"
+                  >
+                    <RotateCw className="w-3.5 h-3.5 text-blue-600" />
+                    <span>หมุน {rotationAngle > 0 ? `${rotationAngle}°` : ''}</span>
+                  </button>
+                  <button
+                    onClick={() => setFilterMode(prev => prev === 'normal' ? 'contrast' : 'normal')}
+                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border shadow-xs text-[11px] font-semibold transition ${
+                      filterMode === 'contrast'
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                    }`}
+                    title="ปรับความคมชัดสำหรับหมึกจาง"
+                  >
+                    <Contrast className="w-3.5 h-3.5" />
+                    <span>{filterMode === 'contrast' ? 'โหมดคมชัดสูง' : 'หมึกคมชัด'}</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setRotationAngle(prev => (prev + 90) % 360)}
-                  className="flex items-center gap-1 px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-xs text-[11px] font-semibold"
-                  title="หมุนภาพ 90 องศา"
-                >
-                  <RotateCw className="w-3.5 h-3.5 text-blue-600" />
-                  <span>หมุน {rotationAngle > 0 ? `${rotationAngle}°` : ''}</span>
-                </button>
-                <button
-                  onClick={() => setFilterMode(prev => prev === 'normal' ? 'contrast' : 'normal')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border shadow-xs text-[11px] font-semibold transition ${
-                    filterMode === 'contrast'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
-                  }`}
-                  title="ปรับความคมชัดสำหรับหมึกจาง"
-                >
-                  <Contrast className="w-3.5 h-3.5" />
-                  <span>{filterMode === 'contrast' ? 'โหมดคมชัดสูง' : 'หมึกคมชัด'}</span>
-                </button>
+              {/* Status Hint Bar */}
+              <div className="flex items-center justify-between px-3 py-1 bg-blue-50/70 border border-blue-200/60 rounded-xl text-[11px] text-blue-800">
+                <span className="flex items-center gap-1.5">
+                  {activeTool === 'pan' ? (
+                    <>
+                      <Hand className="w-3.5 h-3.5 text-blue-600" />
+                      <span><strong>โหมดเลื่อนดูรูป:</strong> คลิกค้างแล้วลากเพื่อเลื่อนดูส่วนต่างๆ • หมุนลูกกลิ้งเมาส์เพื่อซูมเข้า/ออก</span>
+                    </>
+                  ) : (
+                    <>
+                      <Crop className="w-3.5 h-3.5 text-blue-600" />
+                      <span><strong>โหมดลากกรอบ:</strong> คลิกค้างแล้วลากสี่เหลี่ยมคลุมข้อความที่ต้องการสแกนเจาะจง</span>
+                    </>
+                  )}
+                </span>
+                {(zoomLevel !== 1 || panPosition.x !== 0 || panPosition.y !== 0) && (
+                  <button
+                    onClick={handleResetPanZoom}
+                    className="text-[10px] underline font-bold text-blue-600 hover:text-blue-800 ml-2"
+                  >
+                    รีเซ็ตมุมมอง
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {/* Interactive Crop Image Box */}
+          {/* Interactive PanZoom & Crop Image Canvas */}
           {activeInvoice && activeInvoice.imagePreview ? (
             <div className="space-y-3">
               <div
-                className="relative bg-slate-950 rounded-2xl overflow-hidden cursor-crosshair select-none border border-slate-300 min-h-[420px] max-h-[600px] flex items-center justify-center shadow-inner"
+                className={`relative bg-slate-950 rounded-2xl overflow-hidden select-none border border-slate-300 min-h-[440px] max-h-[620px] flex items-center justify-center shadow-inner ${
+                  activeTool === 'pan'
+                    ? isPanning ? 'cursor-grabbing' : 'cursor-grab'
+                    : 'cursor-crosshair'
+                }`}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onWheel={handleWheel}
               >
                 <img
                   ref={imageRef}
@@ -1070,19 +1173,20 @@ export default function AutoWordPage() {
                   draggable={false}
                   onDragStart={e => e.preventDefault()}
                   style={{
-                    transform: `rotate(${rotationAngle}deg) scale(${zoomLevel})`,
+                    transform: `translate(${panPosition.x}px, ${panPosition.y}px) rotate(${rotationAngle}deg) scale(${zoomLevel})`,
+                    transformOrigin: 'center center',
                     filter: filterMode === 'contrast' 
                       ? 'contrast(170%) brightness(92%) grayscale(100%)' 
                       : filterMode === 'invert' 
                       ? 'invert(100%)' 
                       : 'none',
-                    transition: 'transform 0.15s ease-out, filter 0.2s ease'
+                    transition: isPanning ? 'none' : 'transform 0.12s ease-out, filter 0.2s ease'
                   }}
-                  className="max-w-full max-h-[580px] object-contain select-none pointer-events-none"
+                  className="max-w-full max-h-[600px] object-contain select-none pointer-events-none"
                 />
 
-                {/* Selection Bounding Box Overlay */}
-                {cropSelection && cropSelection.width > 0 && cropSelection.height > 0 && (
+                {/* Selection Bounding Box Overlay (Active in Crop Mode) */}
+                {activeTool === 'crop' && cropSelection && cropSelection.width > 0 && cropSelection.height > 0 && (
                   <div
                     className="absolute border-2 border-blue-400 bg-blue-500/25 backdrop-blur-[1px] shadow-lg pointer-events-none ring-2 ring-blue-500/30 animate-pulse"
                     style={{
@@ -1100,30 +1204,32 @@ export default function AutoWordPage() {
               </div>
 
               {/* Action Buttons for Crop Scan */}
-              <div className="flex flex-wrap gap-2 pt-1">
-                <button
-                  onClick={() => handleCropScan('auto')}
-                  disabled={isScanning || !cropSelection}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 disabled:opacity-40"
-                >
-                  {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crop className="w-3.5 h-3.5" />}
-                  <span>สแกนเฉพาะกรอบที่ลากคลุม</span>
-                </button>
-                <button
-                  onClick={() => handleCropScan('vendor')}
-                  disabled={isScanning || !cropSelection}
-                  className="flex items-center gap-1 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl border border-indigo-200 transition disabled:opacity-40"
-                >
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>ดึงชื่อร้าน</span>
-                </button>
-                <button
-                  onClick={() => setCropSelection(null)}
-                  className="px-3 py-2 text-slate-500 hover:bg-slate-100 text-xs font-medium rounded-xl transition"
-                >
-                  ล้างกรอบ
-                </button>
-              </div>
+              {activeTool === 'crop' && (
+                <div className="flex flex-wrap gap-2 pt-1 animate-in fade-in duration-200">
+                  <button
+                    onClick={() => handleCropScan('auto')}
+                    disabled={isScanning || !cropSelection}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 disabled:opacity-40"
+                  >
+                    {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crop className="w-3.5 h-3.5" />}
+                    <span>สแกนเฉพาะกรอบที่ลากคลุม</span>
+                  </button>
+                  <button
+                    onClick={() => handleCropScan('vendor')}
+                    disabled={isScanning || !cropSelection}
+                    className="flex items-center gap-1 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl border border-indigo-200 transition disabled:opacity-40"
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>ดึงชื่อร้าน</span>
+                  </button>
+                  <button
+                    onClick={() => setCropSelection(null)}
+                    className="px-3 py-2 text-slate-500 hover:bg-slate-100 text-xs font-medium rounded-xl transition"
+                  >
+                    ล้างกรอบ
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div

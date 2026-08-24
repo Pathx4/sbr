@@ -1655,21 +1655,39 @@ export function solveMathematicalConstraints(
 
 export interface DeepScanPassOutputs {
   mainText: string;
+  mainWords?: any[];
   sauvolaText?: string;
+  sauvolaWords?: any[];
   headerText?: string;
   summaryText?: string;
 }
 
 /**
- * DeepScan 4.0: Multi-Pass Consensus Parser
- * Fuses 4 distinct passes, applies Thai Lexicon spell-correction, and solves mathematical constraints
+ * DeepScan 5.0: Multi-Pass Consensus Parser with 2D Spatial Table Reconstruction
+ * Fuses 4 distinct visual layers + 2D Bounding-Box Spatial Grid, applies Thai Lexicon spell-correction, and solves mathematical constraints
  */
 export function parseThaiReceiptOcrDeep(passes: DeepScanPassOutputs) {
   // 1. Primary Parse from Main High-DPI Pass
   const mainParsed = parseThaiReceiptOcr(passes.mainText);
 
+  // 1.1 Spatial 2D Parse from Main Pass (reconstructing horizontal columns)
+  let mainSpatialParsed = null;
+  if (passes.mainWords && passes.mainWords.length > 0) {
+    const spatialText = reconstructTextFromBboxes(passes.mainWords);
+    if (spatialText) {
+      mainSpatialParsed = parseThaiReceiptOcr(spatialText);
+    }
+  }
+
   // 2. Secondary Parse from Sauvola Adaptive Pass (if provided)
   const sauvolaParsed = passes.sauvolaText ? parseThaiReceiptOcr(passes.sauvolaText) : null;
+  let sauvolaSpatialParsed = null;
+  if (passes.sauvolaWords && passes.sauvolaWords.length > 0) {
+    const spatialSauvolaText = reconstructTextFromBboxes(passes.sauvolaWords);
+    if (spatialSauvolaText) {
+      sauvolaSpatialParsed = parseThaiReceiptOcr(spatialSauvolaText);
+    }
+  }
 
   // 3. Header Zoom Pass (if provided)
   let vendorName = mainParsed.vendor_name;
@@ -1689,18 +1707,28 @@ export function parseThaiReceiptOcrDeep(passes: DeepScanPassOutputs) {
     }
   }
 
-  // 4. Merge Line Items between Main Pass & Sauvola Pass
-  let combinedItems = [...mainParsed.items];
+  // 4. Merge and Elect the Highest Quality Candidate List
+  const candidateLists = [
+    mainSpatialParsed?.items,
+    sauvolaSpatialParsed?.items,
+    sauvolaParsed?.items,
+    mainParsed?.items
+  ].filter((list): list is NonNullable<typeof list> => Boolean(list && list.length > 0));
 
-  if (sauvolaParsed && sauvolaParsed.items.length > combinedItems.length) {
-    // If Sauvola detected more items (recovered faded thermal lines), use Sauvola items list
-    combinedItems = sauvolaParsed.items;
+  let bestItems = mainParsed.items;
+  let maxCount = bestItems.length;
+
+  for (const candidate of candidateLists) {
+    if (candidate.length > maxCount) {
+      bestItems = candidate;
+      maxCount = candidate.length;
+    }
   }
 
   // 5. Apply Thai Lexicon Auto-Correction on Vendor & Items
   vendorName = fuzzyCorrectThaiLexicon(vendorName);
 
-  const cleanedItems = combinedItems.map((item) => ({
+  const cleanedItems = bestItems.map((item) => ({
     ...item,
     description: fuzzyCorrectThaiLexicon(item.description)
   }));
@@ -1738,4 +1766,5 @@ export function parseThaiReceiptOcrDeep(passes: DeepScanPassOutputs) {
     }
   };
 }
+
 
