@@ -818,7 +818,7 @@ export default function AutoWordPage() {
               )}
             </div>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 font-display">
-              ระบบเอกสารจัดซื้อจัดจ้างจากใบกำกับภาษีอัตโนมัติ (Tax Invoice & Excel Studio)
+              ระบบรายงานขอซื้อขอจ่าย
             </h1>
             <p className="text-slate-600 text-xs max-w-3xl leading-relaxed">
               แสดงรูปภาพใบกำกับภาษี/ใบเสร็จรับเงินคู่กับตารางข้อมูล ลากกรอบสี่เหลี่ยมบนรูปภาพฝั่งซ้ายเพื่อสแกนเฉพาะจุด พร้อมเครื่องมือซูม หมุน และปรับความคมชัดของหมึกพิมพ์

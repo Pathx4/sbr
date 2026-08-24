@@ -43,7 +43,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const defaultCommands: CommandItem[] = [
     {
       id: 'nav-budget',
-      title: 'ประมาณการค่าใช้จ่าย (Budget Estimator)',
+      title: 'ระบบประมาณค่าใช้จ่ายกิจกรรม (Budget Estimator)',
       category: 'ระบบหลัก',
       icon: Calculator,
       badge: 'หน้าระบบ',
@@ -54,7 +54,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     },
     {
       id: 'nav-autoword',
-      title: 'เอกสารขอซื้อ/ขอจ้างจากใบเสร็จ (Tax Invoice & OCR)',
+      title: 'ระบบรายงานขอซื้อขอจ่าย (Tax Invoice & OCR)',
       category: 'ระบบหลัก',
       icon: FileText,
       badge: 'หน้าระบบ',

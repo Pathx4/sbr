@@ -189,7 +189,7 @@ function MainLayout() {
                 <Calculator className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <span className="text-xs sm:text-sm font-bold block">ประมาณการค่าใช้จ่าย</span>
+                <span className="text-xs sm:text-sm font-bold block">ระบบประมาณค่าใช้จ่ายกิจกรรม</span>
                 <span className="text-[10px] text-slate-400 block font-normal">ฝึกอบรม • ประชุม • ภาคสนาม</span>
               </div>
             </div>
@@ -214,7 +214,7 @@ function MainLayout() {
                 <FileText className="w-4 h-4" />
               </div>
               <div className="text-left">
-                <span className="text-xs sm:text-sm font-bold block">เอกสารขอซื้อ/ขอจ้าง</span>
+                <span className="text-xs sm:text-sm font-bold block">ระบบรายงานขอซื้อขอจ่าย</span>
                 <span className="text-[10px] text-slate-400 block font-normal">สแกน OCR • Word • Excel</span>
               </div>
             </div>

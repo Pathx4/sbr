@@ -602,7 +602,7 @@ export default function BudgetPage() {
               <span className="text-xs text-slate-400 font-medium">• ระบบคำนวณงบประมาณอัตโนมัติ</span>
             </motion.div>
             <motion.h1 variants={fadeInUp} className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-slate-900 font-display">
-              ระบบประมาณการค่าใช้จ่ายโครงการ <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">สบร.</span>
+              ระบบประมาณค่าใช้จ่ายกิจกรรม <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">สบร.</span>
             </motion.h1>
             <motion.p variants={fadeInUp} className="text-xs sm:text-sm text-slate-500 max-w-3xl leading-relaxed">
               รองรับระเบียบ สทอภ. (GISTDA) และระเบียบสำนักงบประมาณ ครอบคลุมงานฝึกอบรม สัมมนา ประชุม และลงพื้นที่ภาคสนาม พร้อมส่งออก Excel ตามแบบฟอร์ม ฝบร. ทันที
