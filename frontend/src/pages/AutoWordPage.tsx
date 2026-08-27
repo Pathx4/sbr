@@ -12,9 +12,9 @@ import { generateWordDocument } from '../utils/docxGenerator';
 import { generateExcelDocument } from '../utils/excelGenerator';
 import { 
   preprocessImageForOcr, 
-  preprocessMultiPassImageForOcr, 
+  preprocessMultiPassImageForOcrDeep5,
   parseThaiReceiptOcr, 
-  parseThaiReceiptOcrDeep, 
+  parseThaiReceiptOcrDeep5,
   extractVendorNameFromText, 
   cleanCompanyName 
 } from '../utils/imageOcrOptimizer';
@@ -314,37 +314,47 @@ export default function AutoWordPage() {
 
       if (scanEngineMode === 'deep') {
         // ====================================================================
-        // DEEPSCAN 4.0: MULTI-PASS PROGRESSIVE SCANNING + THAI LEXICON + MATH
+        // DEEPSCAN 5.0: ULTRA-HIGH PRECISION (6-PASS SPATIAL CONSENSUS & MATH MATRIX)
         // ====================================================================
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 1/4: กำลังสังเคราะห์ภาพ 4 มิติ (Sauvola Adaptive, CLAHE, Header/Summary Zoom)...`);
-        setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 1/6: กำลังหมุนปรับระนาบตรง (Auto-Deskew) & เกลี่ยแสงลบเงาพับ...`);
+        setScanProgress(Math.round(((i + 0.05) / files.length) * 100));
 
-        const layers = await preprocessMultiPassImageForOcr(file);
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 2/6: กำลังสังเคราะห์ภาพ 6 มิติความละเอียดสูง (3000px Super-Sampling)...`);
+        setScanProgress(Math.round(((i + 0.12) / files.length) * 100));
+        const layers = await preprocessMultiPassImageForOcrDeep5(file);
 
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 2/4: กำลังสแกนถอดข้อความ Multi-Pass Consensus ด้วย Tesseract.js...`);
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/6: กำลังสแกนถอดรหัสข้อความแบบ Deep Multi-Pass Analysis...`);
         
         const passResults = await runMultiPassTesseract([
-          { id: 'main', label: 'สแกนภาพรวมความละเอียดสูง', src: layers.passMain },
-          { id: 'sauvola', label: 'สแกนดึงหมึกจาง & ลบเงา (Sauvola Adaptive)', src: layers.passSauvola },
-          { id: 'header', label: 'สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
-          { id: 'summary', label: 'สแกนเจาะลึกยอดสุทธิ & ส่วนลด', src: layers.passSummary },
+          { id: 'main', label: '1/6: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
+          { id: 'sauvola', label: '2/6: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
+          { id: 'morph', label: '3/6: สแกนเชื่อมลายเส้นหมึกจาง & ดอทเมทริกซ์', src: layers.passMorphStroke },
+          { id: 'header', label: '4/6: สแกนเจาะลึกชื่อร้านค้า & เลข 13 หลัก', src: layers.passHeader },
+          { id: 'body', label: '5/6: สแกนเจาะลึกตารางรายการสินค้า & รหัส SKU', src: layers.passBody },
+          { id: 'summary', label: '6/6: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
         ], (stepLabel, stepPct) => {
           setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${stepLabel}...`);
-          setScanProgress(Math.round(((i + 0.2 + (stepPct * 0.6) / 100) / files.length) * 100));
+          setScanProgress(Math.round(((i + 0.15 + (stepPct * 0.65) / 100) / files.length) * 100));
         });
 
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: เทียบพจนานุกรมศัพท์พัสดุไทย & ซ่อมสระลอย/คำผิด...`);
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/6: กำลังลงคะแนนโหวต Token-Level 2D Spatial Consensus Matrix...`);
         setScanProgress(Math.round(((i + 0.85) / files.length) * 100));
 
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/4: ตรวจสอบสมดุลคณิตศาสตร์ยอดเงิน (Math Constraint Solver)...`);
-        setScanProgress(Math.round(((i + 0.95) / files.length) * 100));
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 5/6: เทียบพจนานุกรมศัพท์พัสดุไทย 5.0 & ซ่อมคำผิด/สระลอย...`);
+        setScanProgress(Math.round(((i + 0.90) / files.length) * 100));
 
-        parsed = parseThaiReceiptOcrDeep({
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 6/6: ตรวจสอบสมดุลคณิตศาสตร์ & VAT 7% Matrix Solver...`);
+        setScanProgress(Math.round(((i + 0.96) / files.length) * 100));
+
+        parsed = parseThaiReceiptOcrDeep5({
           mainText: passResults.main?.rawText || '',
           mainWords: passResults.main?.words || [],
           sauvolaText: passResults.sauvola?.rawText || '',
           sauvolaWords: passResults.sauvola?.words || [],
+          morphStrokeText: passResults.morph?.rawText || '',
+          morphStrokeWords: passResults.morph?.words || [],
           headerText: passResults.header?.rawText || '',
+          bodyText: passResults.body?.rawText || '',
           summaryText: passResults.summary?.rawText || '',
         });
 
@@ -420,7 +430,7 @@ export default function AutoWordPage() {
       setStatusMsg({ 
         type: 'success', 
         text: scanEngineMode === 'deep' 
-          ? `สแกนด้วย DeepScan 4.0 (4 มิติ + ซ่อมคำผิด + ตรวจสมดุลเลข) สำเร็จ!` 
+          ? `สแกนด้วย DeepScan 5.0 (6 มิติ + Spatial Consensus + ตรวจสมดุลเงิน 100%) สำเร็จ!` 
           : `สแกนด่วนสำเร็จ!` 
       });
     }
@@ -863,7 +873,7 @@ export default function AutoWordPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 shrink-0">
-            {/* DeepScan 4.0 vs Quick Scan Mode Switch */}
+            {/* DeepScan 5.0 vs Quick Scan Mode Switch */}
             <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-inner">
               <button
                 type="button"
@@ -873,10 +883,10 @@ export default function AutoWordPage() {
                     ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200/60'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="สแกน 4 มิติซ้อน + เทียบพจนานุกรมศัพท์พัสดุไทย + ตรวจสมดุลคณิตศาสตร์ 100% (แนะนำ)"
+                title="สแกนเจาะลึก 6 มิติซ้อน + หมุนตรง Auto-Deskew + เทียบพจนานุกรมศัพท์พัสดุไทย 5.0 + ตรวจสมดุลคณิตศาสตร์ 100% (แนะนำเพื่อความแม่นยำสูงสุด)"
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <span>🔬 DeepScan 4.0 (แนะนำ)</span>
+                <span>🔬 DeepScan 5.0 (แม่นยำสูงสุด)</span>
               </button>
               <button
                 type="button"
