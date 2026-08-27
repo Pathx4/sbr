@@ -489,7 +489,18 @@ const TYPO_MAP: Record<string, string> = {
   'ปลกั๊ไฟ': 'ปลั๊กไฟ',
   'ปลกั๊พ่วง': 'ปลั๊กพ่วง',
   'ถ่านอลัคาไลน์': 'ถ่านอัลคาไลน์',
-  'สีสัม': 'สีส้ม'
+  'สีสัม': 'สีส้ม',
+  '%16009': 'XL6009',
+  '%l6009': 'XL6009',
+  '%L6009': 'XL6009',
+  'x16009': 'XL6009',
+  'xi6009': 'XL6009',
+  '*16009': 'XL6009',
+  '%1 6009': 'XL6009',
+  '%16019': 'XL6019',
+  '%14015': 'XL4015',
+  '%14016': 'XL4016',
+  '%17015': 'XL7015'
 };
 
 export function levenshteinDistance(a: string, b: string): number {
@@ -609,8 +620,21 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
 
   // 4. Hardware / Electronics Model Numbers & Technical Typos (Direct Specific Repairs)
   text = text
-    // Step up Converter
-    .replace(/\bXL6009\s*DC-to-DC\s*Step\s*up\s*Conv(?:er(?:ter)?)?/gi, 'XL6009 DC-to-DC Step up Converter')
+    // Specific OCR character confusions (%1, %l, %L, *1, x1, xi, xL -> XL)
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL|X\||%\|)\s*6009/gi, 'XL6009')
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL|X\||%\|)\s*6019/gi, 'XL6019')
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL|X\||%\|)\s*4015/gi, 'XL4015')
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL|X\||%\|)\s*4016/gi, 'XL4016')
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL|X\||%\|)\s*7015/gi, 'XL7015')
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL)\s*DC-to-DC/gi, 'XL6009 DC-to-DC')
+    .replace(/(?:%1|%l|%L|x1|xi|X1|\*1|xL)\s*Step\s*up/gi, 'XL6009 Step up')
+    .replace(/\b(?:%1|%l|%L|\*1)\b/g, 'XL')
+    .replace(/\[\s*(?:%1|%l|%L|\*1)\s*\]/g, '[XL]')
+
+    // Step up Converter (handles XL6009, %16009, %l6009, etc.)
+    .replace(/(?:XL6009|%16009|%l6009|%L6009|x16009|xi6009|X16009|\*16009|XL\s*6009|%1\s*6009)\s*DC-to-DC\s*Step\s*up\s*Conv(?:er(?:ter)?)?/gi, 'XL6009 DC-to-DC Step up Converter')
+    .replace(/(?:XL6009|%16009|%l6009|%L6009|x16009|xi6009|X16009|\*16009|XL\s*6009|%1\s*6009)\s*DC-to-DC/gi, 'XL6009 DC-to-DC Step up Converter')
+    .replace(/(?:XL6009|%16009|%l6009|%L6009|x16009|xi6009|X16009|\*16009|XL\s*6009|%1\s*6009)\s*Step\s*up\s*Conv(?:er(?:ter)?)?/gi, 'XL6009 DC-to-DC Step up Converter')
     .replace(/\bStep\s*up\s*Conv(?:er(?:ter)?)?/gi, 'Step up Converter')
     // Ultrasonic Module (JSN-SR04T)
     .replace(/Waterproof\s*Ultrasonic\s*Module\s*(?:เซนเซอร์วัดระยะทาง|เซนเซอร์|เซ)?(?:\s*\(JSN-SR04T\))?/gi, 'Waterproof Ultrasonic Module เซนเซอร์วัดระยะทาง (JSN-SR04T)')
