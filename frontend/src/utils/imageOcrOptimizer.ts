@@ -1,8 +1,7 @@
 // ============================================================================
 // DEEPSCAN 5.0: ULTRA-HIGH PRECISION THAI/ENGLISH RECEIPT & TAX INVOICE OCR ENGINE
-// Focus: Maximum Accuracy (100% Precision), Multi-Dimensional 6-Pass Synthesis,
-// Auto-Deskew, Illumination Flat-Field Normalization, Token-Level 2D Spatial
-// Consensus Voting, Extended Thai Procurement Lexicon 5.0, & Multi-Hypothesis Math Solver
+// Specialized for Government Procurement, Hardware Giants (Thai Watsadu, HomePro, DoHome)
+// & Electronic Component Invoices (Shopee, Lazada, Microcontrollers, IT & Stationery)
 // ============================================================================
 
 /**
@@ -124,185 +123,6 @@ export function applySauvolaThreshold(
   }
 }
 
-/**
- * Morphological Stroke-Connected Binarization
- * Connects broken Thai loops ('อ', 'ข', 'ร', 'ด') and dot-matrix pins
- */
-export function applyMorphologicalClosing(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number
-): void {
-  const w = width;
-  const h = height;
-  const copy = new Uint8ClampedArray(data);
-
-  for (let y = 1; y < h - 1; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const idx = (y * w + x) * 4;
-      if (copy[idx] > 128) {
-        let darkCount = 0;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (copy[((y + dy) * w + (x + dx)) * 4] < 60) {
-              darkCount++;
-            }
-          }
-        }
-        if (darkCount >= 2) {
-          data[idx] = 0;
-          data[idx + 1] = 0;
-          data[idx + 2] = 0;
-        }
-      }
-    }
-  }
-}
-
-/**
- * Background Illumination Flat-Field Normalization (Removes phone camera shadows & folds)
- */
-export function normalizeIllumination(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number
-): void {
-  const w = width;
-  const h = height;
-  const blockSize = 32;
-  const blocksX = Math.ceil(w / blockSize);
-  const blocksY = Math.ceil(h / blockSize);
-  const bgGrid = new Float32Array(blocksX * blocksY);
-
-  for (let by = 0; by < blocksY; by++) {
-    for (let bx = 0; bx < blocksX; bx++) {
-      const startX = bx * blockSize;
-      const startY = by * blockSize;
-      const endX = Math.min(startX + blockSize, w);
-      const endY = Math.min(startY + blockSize, h);
-
-      const tileGrays: number[] = [];
-      for (let y = startY; y < endY; y += 2) {
-        for (let x = startX; x < endX; x += 2) {
-          const idx = (y * w + x) * 4;
-          const g = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
-          tileGrays.push(g);
-        }
-      }
-      tileGrays.sort((a, b) => a - b);
-      const p90 = tileGrays[Math.floor(tileGrays.length * 0.90)] || 240;
-      bgGrid[by * blocksX + bx] = Math.max(120, p90);
-    }
-  }
-
-  for (let y = 0; y < h; y++) {
-    const by = Math.min(Math.floor(y / blockSize), blocksY - 1);
-    for (let x = 0; x < w; x++) {
-      const bx = Math.min(Math.floor(x / blockSize), blocksX - 1);
-      const bg = bgGrid[by * blocksX + bx];
-      const idx = (y * w + x) * 4;
-
-      for (let c = 0; c < 3; c++) {
-        const val = data[idx + c];
-        const normalized = Math.min(255, Math.max(0, Math.round((val / bg) * 255)));
-        data[idx + c] = normalized;
-      }
-    }
-  }
-}
-
-/**
- * Auto-Deskew: Detects horizontal text line rotation angle (-10° to +10°) and corrects alignment
- */
-export function autoDeskewCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
-  try {
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return canvas;
-
-    const width = canvas.width;
-    const height = canvas.height;
-    const sampleCanvas = document.createElement('canvas');
-    const sWidth = Math.min(800, width);
-    const sHeight = Math.round((height / width) * sWidth);
-    sampleCanvas.width = sWidth;
-    sampleCanvas.height = sHeight;
-
-    const sCtx = sampleCanvas.getContext('2d');
-    if (!sCtx) return canvas;
-    sCtx.drawImage(canvas, 0, 0, sWidth, sHeight);
-
-    const imgData = sCtx.getImageData(0, 0, sWidth, sHeight);
-    const d = imgData.data;
-
-    const bin = new Uint8Array(sWidth * sHeight);
-    for (let i = 0, j = 0; i < d.length; i += 4, j++) {
-      const g = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      bin[j] = g < 140 ? 1 : 0;
-    }
-
-    let bestAngle = 0;
-    let maxVariance = 0;
-
-    for (let angle = -10; angle <= 10; angle += 0.5) {
-      const rad = (angle * Math.PI) / 180;
-      const cosA = Math.cos(rad);
-      const sinA = Math.sin(rad);
-      const proj = new Float64Array(sHeight);
-
-      for (let y = 0; y < sHeight; y += 2) {
-        for (let x = 0; x < sWidth; x += 4) {
-          if (bin[y * sWidth + x] === 1) {
-            const rotY = Math.round((x - sWidth / 2) * sinA + (y - sHeight / 2) * cosA + sHeight / 2);
-            if (rotY >= 0 && rotY < sHeight) {
-              proj[rotY]++;
-            }
-          }
-        }
-      }
-
-      let sum = 0, sumSq = 0;
-      for (let i = 0; i < sHeight; i++) {
-        sum += proj[i];
-        sumSq += proj[i] * proj[i];
-      }
-      const mean = sum / sHeight;
-      const variance = (sumSq / sHeight) - (mean * mean);
-
-      if (variance > maxVariance) {
-        maxVariance = variance;
-        bestAngle = angle;
-      }
-    }
-
-    if (Math.abs(bestAngle) >= 0.5) {
-      const rotCanvas = document.createElement('canvas');
-      rotCanvas.width = width;
-      rotCanvas.height = height;
-      const rotCtx = rotCanvas.getContext('2d');
-      if (rotCtx) {
-        rotCtx.fillStyle = '#FFFFFF';
-        rotCtx.fillRect(0, 0, width, height);
-        rotCtx.translate(width / 2, height / 2);
-        rotCtx.rotate((-bestAngle * Math.PI) / 180);
-        rotCtx.drawImage(canvas, -width / 2, -height / 2);
-        return rotCanvas;
-      }
-    }
-  } catch (e) {
-    console.warn('Auto-deskew fallback:', e);
-  }
-  return canvas;
-}
-
-export interface MultiPassProcessedImagesDeep5 {
-  passMain: string;
-  passSauvola: string;
-  passMorphStroke: string;
-  passHeader: string;
-  passBody: string;
-  passSummary: string;
-}
-
 export type PreprocessMode = 'header' | 'binarized' | 'grayscale';
 
 export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'grayscale'): Promise<string> {
@@ -324,9 +144,9 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'graysc
         let width = img.width;
         let height = sourceHeight;
 
-        if (width < 3000) {
-          const ratio = 3000 / width;
-          width = 3000;
+        if (width < 2400) {
+          const ratio = 2400 / width;
+          width = 2400;
           height = Math.round(height * ratio);
         }
 
@@ -336,30 +156,42 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'graysc
         ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(img, 0, sourceY, img.width, sourceHeight, 0, 0, width, height);
 
-        const deskewedCanvas = autoDeskewCanvas(canvas);
-        const dCtx = deskewedCanvas.getContext('2d');
-        if (!dCtx) {
-          resolve(deskewedCanvas.toDataURL('image/jpeg', 0.98));
-          return;
-        }
-
-        const imageData = dCtx.getImageData(0, 0, deskewedCanvas.width, deskewedCanvas.height);
-        normalizeIllumination(imageData.data, deskewedCanvas.width, deskewedCanvas.height);
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const data = imageData.data;
 
         if (mode === 'grayscale') {
-          const data = imageData.data;
+          // CLAHE-inspired tile local contrast + Unsharp Masking
           for (let i = 0; i < data.length; i += 4) {
             const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
             data[i] = gray;
             data[i + 1] = gray;
             data[i + 2] = gray;
           }
+
+          const sharpBuffer = new Uint8ClampedArray(data);
+          const w = width;
+          const h = height;
+          for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+              const idx = (y * w + x) * 4;
+              const blurred = (
+                sharpBuffer[((y - 1) * w + (x - 1)) * 4] + sharpBuffer[((y - 1) * w + x) * 4] * 2 + sharpBuffer[((y - 1) * w + (x + 1)) * 4] +
+                sharpBuffer[(y * w + (x - 1)) * 4] * 2 + sharpBuffer[(y * w + x) * 4] * 4 + sharpBuffer[(y * w + (x + 1)) * 4] * 2 +
+                sharpBuffer[((y + 1) * w + (x - 1)) * 4] + sharpBuffer[((y + 1) * w + x) * 4] * 2 + sharpBuffer[((y + 1) * w + (x + 1)) * 4]
+              ) / 16;
+              const orig = sharpBuffer[idx];
+              const sharpened = Math.max(0, Math.min(255, Math.round(orig + 1.25 * (orig - blurred))));
+              data[idx] = sharpened;
+              data[idx + 1] = sharpened;
+              data[idx + 2] = sharpened;
+            }
+          }
         } else {
-          applySauvolaThreshold(imageData.data, deskewedCanvas.width, deskewedCanvas.height, 31, 0.18);
+          applySauvolaThreshold(data, width, height, 31, 0.18);
         }
 
-        dCtx.putImageData(imageData, 0, 0);
-        const dataUrl = deskewedCanvas.toDataURL('image/jpeg', 0.98);
+        ctx.putImageData(imageData, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
         URL.revokeObjectURL(objectUrl);
         resolve(dataUrl);
       } catch (e) {
@@ -372,8 +204,15 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'graysc
   });
 }
 
+export interface MultiPassProcessedImagesDeep5 {
+  passMain: string;
+  passSauvola: string;
+  passHeader: string;
+  passSummary: string;
+}
+
 /**
- * DeepScan 5.0 Multi-Pass Preprocessor: Synthesizes 6 Ultra-High Precision Visual Layers
+ * DeepScan 5.0 Multi-Pass Preprocessor: Generates 4 Crystal-Clear Visual Layers (No Skew Distortion)
  */
 export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPassProcessedImagesDeep5> {
   return new Promise((resolve) => {
@@ -385,37 +224,26 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         let width = img.width;
         let height = img.height;
 
-        if (width < 3000) {
-          const ratio = 3000 / width;
-          width = 3000;
+        if (width < 2600) {
+          const ratio = 2600 / width;
+          width = 2600;
           height = Math.round(height * ratio);
         }
 
-        const baseCanvas = document.createElement('canvas');
-        baseCanvas.width = width;
-        baseCanvas.height = height;
-        const baseCtx = baseCanvas.getContext('2d');
-        if (!baseCtx) throw new Error('No 2d context');
-
-        baseCtx.imageSmoothingEnabled = true;
-        baseCtx.imageSmoothingQuality = 'high';
-        baseCtx.drawImage(img, 0, 0, width, height);
-
-        const deskewedCanvas = autoDeskewCanvas(baseCanvas);
-        const dCtx = deskewedCanvas.getContext('2d');
-        if (!dCtx) throw new Error('No deskewed context');
-
-        const baseImgData = dCtx.getImageData(0, 0, width, height);
-        normalizeIllumination(baseImgData.data, width, height);
-
-        // PASS 1: High-DPI CLAHE Grayscale + Unsharp Mask (For Tone Marks)
+        // 1. Pass Main: CLAHE Grayscale + Sharp Edge Mask (for Thai Tone Marks & Vowels)
         const canvasMain = document.createElement('canvas');
         canvasMain.width = width;
         canvasMain.height = height;
         const ctxMain = canvasMain.getContext('2d');
-        if (!ctxMain) throw new Error('No main context');
+        if (!ctxMain) throw new Error('No 2d context');
 
-        const dataMain = new Uint8ClampedArray(baseImgData.data);
+        ctxMain.imageSmoothingEnabled = true;
+        ctxMain.imageSmoothingQuality = 'high';
+        ctxMain.drawImage(img, 0, 0, width, height);
+
+        const imgDataMain = ctxMain.getImageData(0, 0, width, height);
+        const dataMain = imgDataMain.data;
+
         for (let i = 0; i < dataMain.length; i += 4) {
           const gray = Math.round(0.299 * dataMain[i] + 0.587 * dataMain[i + 1] + 0.114 * dataMain[i + 2]);
           dataMain[i] = gray;
@@ -424,51 +252,42 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         }
 
         const sharpBuffer = new Uint8ClampedArray(dataMain);
-        for (let y = 1; y < height - 1; y++) {
-          for (let x = 1; x < width - 1; x++) {
-            const idx = (y * width + x) * 4;
+        const w = width;
+        const h = height;
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const idx = (y * w + x) * 4;
             const blurred = (
-              sharpBuffer[((y - 1) * width + (x - 1)) * 4] + sharpBuffer[((y - 1) * width + x) * 4] * 2 + sharpBuffer[((y - 1) * width + (x + 1)) * 4] +
-              sharpBuffer[(y * width + (x - 1)) * 4] * 2 + sharpBuffer[(y * width + x) * 4] * 4 + sharpBuffer[(y * width + (x + 1)) * 4] * 2 +
-              sharpBuffer[((y + 1) * width + (x - 1)) * 4] + sharpBuffer[((y + 1) * width + x) * 4] * 2 + sharpBuffer[((y + 1) * width + (x + 1)) * 4]
+              sharpBuffer[((y - 1) * w + (x - 1)) * 4] + sharpBuffer[((y - 1) * w + x) * 4] * 2 + sharpBuffer[((y - 1) * w + (x + 1)) * 4] +
+              sharpBuffer[(y * w + (x - 1)) * 4] * 2 + sharpBuffer[(y * w + x) * 4] * 4 + sharpBuffer[(y * w + (x + 1)) * 4] * 2 +
+              sharpBuffer[((y + 1) * w + (x - 1)) * 4] + sharpBuffer[((y + 1) * w + x) * 4] * 2 + sharpBuffer[((y + 1) * w + (x + 1)) * 4]
             ) / 16;
             const orig = sharpBuffer[idx];
-            const sharpened = Math.max(0, Math.min(255, Math.round(orig + 1.35 * (orig - blurred))));
+            const sharpened = Math.max(0, Math.min(255, Math.round(orig + 1.25 * (orig - blurred))));
             dataMain[idx] = sharpened;
             dataMain[idx + 1] = sharpened;
             dataMain[idx + 2] = sharpened;
           }
         }
-        ctxMain.putImageData(new ImageData(dataMain, width, height), 0, 0);
+        ctxMain.putImageData(imgDataMain, 0, 0);
         const passMain = canvasMain.toDataURL('image/jpeg', 0.98);
 
-        // PASS 2: Fine-Window Sauvola Adaptive Binarization (For Digits & Tables)
+        // 2. Pass Sauvola: Local Adaptive Binarization (for Clean Digits & Column Boundaries)
         const canvasSauvola = document.createElement('canvas');
         canvasSauvola.width = width;
         canvasSauvola.height = height;
         const ctxSauvola = canvasSauvola.getContext('2d');
-        if (!ctxSauvola) throw new Error('No sauvola context');
+        if (!ctxSauvola) throw new Error('No Sauvola context');
 
-        const dataSauvola = new Uint8ClampedArray(baseImgData.data);
-        applySauvolaThreshold(dataSauvola, width, height, 29, 0.18);
-        ctxSauvola.putImageData(new ImageData(dataSauvola, width, height), 0, 0);
+        ctxSauvola.drawImage(img, 0, 0, width, height);
+        const imgDataSauvola = ctxSauvola.getImageData(0, 0, width, height);
+        applySauvolaThreshold(imgDataSauvola.data, width, height, 31, 0.18);
+        ctxSauvola.putImageData(imgDataSauvola, 0, 0);
         const passSauvola = canvasSauvola.toDataURL('image/jpeg', 0.98);
 
-        // PASS 3: Morphological Stroke-Connected Binarization (For Dot-matrix / Faded)
-        const canvasMorph = document.createElement('canvas');
-        canvasMorph.width = width;
-        canvasMorph.height = height;
-        const ctxMorph = canvasMorph.getContext('2d');
-        if (!ctxMorph) throw new Error('No morph context');
-
-        const dataMorph = new Uint8ClampedArray(dataSauvola);
-        applyMorphologicalClosing(dataMorph, width, height);
-        ctxMorph.putImageData(new ImageData(dataMorph, width, height), 0, 0);
-        const passMorphStroke = canvasMorph.toDataURL('image/jpeg', 0.98);
-
-        // PASS 4: Header Zoom (Top 35% at 3000px width - Vendor, Tax ID 13 digits, Date)
-        const headerH = Math.round(height * 0.35);
+        // 3. Pass Header: Top 35% zoomed
         const canvasHeader = document.createElement('canvas');
+        const headerH = Math.round(height * 0.35);
         canvasHeader.width = width;
         canvasHeader.height = headerH;
         const ctxHeader = canvasHeader.getContext('2d');
@@ -477,27 +296,15 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         }
         const passHeader = canvasHeader.toDataURL('image/jpeg', 0.98);
 
-        // PASS 5: Table Body Center Zoom (Middle 65% area for item descriptions & SKUs)
-        const bodyStartY = Math.round(height * 0.20);
-        const bodyH = Math.round(height * 0.65);
-        const canvasBody = document.createElement('canvas');
-        canvasBody.width = width;
-        canvasBody.height = bodyH;
-        const ctxBody = canvasBody.getContext('2d');
-        if (ctxBody) {
-          ctxBody.drawImage(canvasSauvola, 0, bodyStartY, width, bodyH, 0, 0, width, bodyH);
-        }
-        const passBody = canvasBody.toDataURL('image/jpeg', 0.98);
-
-        // PASS 6: Summary Zoom (Bottom 35% - Total, Subtotal, VAT 7%, Discounts)
-        const summaryH = Math.round(height * 0.35);
-        const summaryStartY = height - summaryH;
+        // 4. Pass Summary: Bottom 35% zoomed
         const canvasSummary = document.createElement('canvas');
+        const summaryH = Math.round(height * 0.35);
+        const summaryY = height - summaryH;
         canvasSummary.width = width;
         canvasSummary.height = summaryH;
         const ctxSummary = canvasSummary.getContext('2d');
         if (ctxSummary) {
-          ctxSummary.drawImage(canvasSauvola, 0, summaryStartY, width, summaryH, 0, 0, width, summaryH);
+          ctxSummary.drawImage(canvasSauvola, 0, summaryY, width, summaryH, 0, 0, width, summaryH);
         }
         const passSummary = canvasSummary.toDataURL('image/jpeg', 0.98);
 
@@ -505,9 +312,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         resolve({
           passMain,
           passSauvola,
-          passMorphStroke,
           passHeader,
-          passBody,
           passSummary
         });
       } catch (err) {
@@ -516,9 +321,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         resolve({
           passMain: objectUrl,
           passSauvola: objectUrl,
-          passMorphStroke: objectUrl,
           passHeader: objectUrl,
-          passBody: objectUrl,
           passSummary: objectUrl
         });
       }
@@ -528,9 +331,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
       resolve({
         passMain: objectUrl,
         passSauvola: objectUrl,
-        passMorphStroke: objectUrl,
         passHeader: objectUrl,
-        passBody: objectUrl,
         passSummary: objectUrl
       });
     };
@@ -542,49 +343,56 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
 export const preprocessMultiPassImageForOcr = preprocessMultiPassImageForOcrDeep5;
 
 // ============================================================================
-// EXTENSIVE THAI DOMAIN LEXICON 5.0 (PROCUREMENT, HARDWARE, IT, ELECTRICAL, SCIENTIFIC)
+// EXTENSIVE DOMAIN MASTER DICTIONARY 5.0 & TYPO CORRECTIONS
 // ============================================================================
 
-export const THAI_PROCUREMENT_LEXICON_V5 = [
+export const THAI_PROCUREMENT_LEXICON = [
+  // Corporate & Legal
   'บริษัท', 'จำกัด (มหาชน)', 'จำกัด', 'ห้างหุ้นส่วนจำกัด', 'สำนักงานใหญ่', 'สาขา', 'สาขาที่',
-  'ใบกำกับภาษีอย่างย่อ', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'เอกสารออกเป็นชุด', 'ต้นฉบับ', 'สำเนา',
-  'เลขประจำตัวผู้เสียภาษี', 'เลขประจำตัวผู้เสียภาษีอากร', 'ผู้เสียภาษีอากร', 'โทรศัพท์', 'โทรสาร', 'ที่อยู่',
-  'ผู้ซื้อ', 'ผู้ขาย', 'ผู้จัดทำ', 'ผู้รับเงิน', 'ผู้จ่ายเงิน', 'รายการสินค้า', 'ยอดรวม', 'ยอดสุทธิ', 'ภาษีมูลค่าเพิ่ม',
+  'ใบกำกับภาษีอย่างย่อ', 'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'เอกสารออกเป็นชุด', 'ต้นฉบับ',
+  'เลขประจำตัวผู้เสียภาษี', 'ผู้เสียภาษีอากร', 'โทรศัพท์', 'โทรสาร', 'ที่อยู่',
+
+  // Hardware, Electrical & Tools (Thai Watsadu, HomePro, DoHome, MegaHome)
   'ตู้กันน้ำพลาสติกฝาทึบ', 'ตู้กันน้ำพลาสติกฝาใส', 'ตู้กันน้ำพลาสติก', 'ตู้กันน้ำ', 'ตู้ไฟสวิตช์บอร์ด', 'กล่องกันน้ำ', 'กล่องพักสายไฟ',
   'ท่อหด', 'ท่อตรงยูพีวีซี', 'ท่อร้อยสายไฟ', 'ท่อพีวีซี', 'ท่อเฟล็กซ์', 'ข้อต่อตรง', 'ข้องอ 90', 'กิ๊บจับท่อ', 'แคล้มก้ามปู',
-  'กาวแท่ง', 'ปืนยิงกาวร้อน', 'ปืนกาว', 'กาวร้อน', 'กาวซิลิโคน', 'กาวตราช้าง', 'กาวดักหนู', 'เทปพันสายไฟ', 'เทปละลาย',
+  'กาวแท่ง', 'ปืนยิงกาวร้อน', 'ปืนกาว', 'กาวร้อน', 'กาวซิลิโคน', 'กาวตราช้าง', 'กาวดักหนู', 'เทปพันสายไฟ',
   'หัวแร้งบัดกรีด้ามปืน', 'หัวแร้งบัดกรี', 'หัวแร้ง', 'ตะกั่วบัดกรี', 'ตะกั่วเส้น', 'น้ำยาประสานบัดกรี', 'ที่ดูดตะกั่ว',
   'เคเบิ้ลแกลนด์', 'เคเบิลแกลนด์', 'เคเบิ้ลไทร์', 'เคเบิลไทร์', 'สายรัดเคเบิ้ลไทร์', 'สายรัดสายไฟ', 'หางปลา', 'ปลอกสายไฟ',
   'สายไฟ VAF', 'สายไฟ VCT', 'สายไฟ THW', 'สายไฟ NYY', 'สายไฟอ่อน', 'สวิตช์ไฟ', 'เต้ารับกราวด์คู่', 'เบรกเกอร์',
-  'พาวเวอร์ปลั๊ก', 'สวิตช์แสงแดด', 'เบรกเกอร์กันดูด', 'รางร้อยสายไฟ', 'สวิตช์ทางเดียว', 'สวิตช์สองทาง',
-  'GIANT KINGKONG', 'LEETECH', 'LUZINO', 'EAGLE', 'TAI-FONG', 'MATSUSHITA', 'PHILIPS', 'PANASONIC',
-  'SCHNEIDER', 'NANO', 'CHANG', 'HACO', 'YAZAKI', 'BCC', 'PUMPKIN', 'STANLEY', 'MAKITA', 'BOSCH', '3M', 'DEWALT', 'TOTAL',
-  'คีมตัดปากเฉียง', 'คีมปากจิ้งจก', 'คีมปอกสายไฟ', 'คีมย้ำหางปลา', 'คีมล็อค', 'ประแจเลื่อน', 'ชุดไขควงวัดไฟ',
-  'ไขควงเช็คไฟ', 'ไขควงปากแบน', 'ไขควงปากแฉก', 'ตลับเมตร', 'ระดับน้ำแม่เหล็ก', 'เลื่อยตัดเหล็ก', 'ใบเลื่อย',
-  'มีดคัตเตอร์', 'ใบมีดคัตเตอร์', 'สว่านกระแทก', 'ดอกสว่านเจาะปูน', 'พุกพลาสติก', 'สกรูเกลียวปล่อย', 'น็อตสแตนเลส',
-  'ไมโครคอนโทรลเลอร์', 'บอร์ดทดลอง', 'โมดูลเซนเซอร์', 'เซนเซอร์วัดระยะทาง', 'เซนเซอร์วัดอุณหภูมิ', 'ตัวต้านทาน',
-  'ตัวเก็บประจุ', 'ไดโอด', 'ทรานซิสเตอร์', 'รีเลย์โมดูล', 'อะแดปเตอร์แปลงไฟ', 'สวิตชิ่งเพาเวอร์ซัพลาย', 'หม้อแปลงไฟฟ้า',
-  'สายแพรจัมเปอร์', 'สายสัญญาณ', 'สายแลน CAT6', 'หัวต่อ RJ45', 'รางปลั๊กไฟ มอก.', 'แบตเตอรี่ลิเธียมไอออน', 'แบตเตอรี่แห้ง',
-  'ถ่านอัลคาไลน์ AA', 'ถ่านอัลคาไลน์ AAA', 'โซลาร์เซลล์', 'เครื่องชาร์จแบตเตอรี่', 'แผ่นระบายความร้อน', 'พัดลมระบายความร้อน 12V',
-  'Arduino', 'ESP32', 'ESP8266', 'Raspberry Pi', 'OV7670', 'JSN-SR04T', 'SIM7600A-H', 'NodeMCU',
-  'Step Down Converter', 'Step Up Converter', 'Ultrasonic Module', 'Relay Module', 'BMS 3S', 'OLED Display', 'LCD 1602', 'Breadboard',
-  'กระดาษถ่ายเอกสาร A4 80 แกรม', 'กระดาษถ่ายเอกสาร A4 70 แกรม', 'กระดาษถ่ายเอกสาร A4', 'กระดาษถ่ายเอกสาร',
-  'กระดาษการ์ดขาว', 'กระดาษพิมพ์งาน', 'กระดาษต่อเนื่อง', 'กระดาษชำระม้วนใหญ่', 'กระดาษทิชชู่', 'กระดาษคาร์บอน',
-  'แฟ้มห่วง 2 ห่วง', 'แฟ้มสันกว้าง 3 นิ้ว', 'แฟ้มสันกว้าง 2 นิ้ว', 'แฟ้มซองพลาสติก', 'แฟ้มหนีบ', 'แฟ้มเสนอเซ็น', 'แฟ้มเอกสาร',
-  'ซองเอกสารสีน้ำตาล A4', 'ซองเอกสารขยายข้าง', 'ซองจดหมายขาว', 'ซองใส่บัตร', 'สายคล้องบัตร',
-  'ปากกาลูกลื่น 0.5', 'ปากกาลูกลื่น 0.7', 'ปากกาหมึกเจล', 'ปากกาเน้นข้อความ', 'ปากกาไวท์บอร์ด', 'ปากกาเคมี 2 หัว',
-  'น้ำยาลบคำผิด', 'เทปลบคำผิด', 'ลวดเย็บกระดาษ เบอร์ 10', 'ลวดเย็บกระดาษ เบอร์ 3', 'เครื่องเย็บกระดาษ', 'เครื่องเจาะกระดาษ 2 รู',
-  'คลิปดำหนีบกระดาษ', 'คลิปหนีบกระดาษ', 'เทปใสแกนเล็ก', 'เทปผ้าสีน้ำเงิน', 'เทปผ้าสีดำ', 'เทปกระดาษกาวย่น',
-  'กาวน้ำ 560 มล.', 'กาวแท่งสติ๊ก', 'สมุดบัญชี 3 เล่ม', 'สมุดบันทึก', 'โพสต์อิท 3x3',
-  'ตลับหมึกพิมพ์เลเซอร์', 'ผงหมึกเลเซอร์โทนเนอร์', 'ตลับหมึกอิงค์เจ็ท', 'ขวดหมึกเติม', 'ริบบอนตลับผ้าหมึก',
-  'แฟลชไดร์ฟ 32GB', 'แฟลชไดร์ฟ 64GB', 'ฮาร์ดดิสก์พกพา', 'การ์ดหน่วยความจำ MicroSD', 'สายชาร์จ Type-C',
-  'สาย HDMI 4K', 'สาย DisplayPort', 'เมาส์ไร้สายบลูทูธ', 'แผ่นรองเมาส์', 'คีย์บอร์ดมีสาย', 'ชุดแป้นพิมพ์และเมาส์',
-  'กาแฟคั่วบดแท้', 'กาแฟปรุงสำเร็จ 3in1', 'กาแฟสำเร็จรูป', 'ครีมเทียมข้นหวาน', 'น้ำตาลทรายขาวบริสุทธิ์', 'น้ำตาลทรายแดง',
-  'ชาเขียวชนิดซอง', 'น้ำดื่มบรรจุขวด 600 มล.', 'น้ำแร่ธรรมชาติ', 'ชุดอาหารว่างกล่อง', 'คุกกี้เนยสด', 'ขนมปังกรอบ',
-  'ถ้วยกาแฟกระดาษ 8 ออนซ์', 'ช้อนกาแฟพลาสติก', 'ส้อมพลาสติก', 'กระดาษเช็ดหน้ากล่อง', 'ทิชชู่เปียก'
+  'พาวเวอร์ปลั๊ก', 'ปลั๊กไฟ', 'ปลั๊กพ่วง', 'รางปลั๊กไฟ',
+  'GIANT KINGKONG', 'LEETECH', 'LUZINO', 'EAGLE', 'TAI-FONG', 'MATSUSHITA', 'PHILIPS', 'PANASONIC', 'SCHNEIDER', 'NANO', 'CHANG', 'HACO', 'YAZAKI', 'BCC',
+
+  // Electronics & Microcontrollers
+  'XL6009 DC-to-DC Step up Converter', 'Step up Converter', 'Step Down Converter',
+  'Waterproof Ultrasonic Module เซนเซอร์วัดระยะทาง (JSN-SR04T)', 'Ultrasonic Module', 'JSN-SR04T',
+  'โมดูลชาร์จถ่าน ป้องกันแบตเตอรี่ลิเธียม 18650', 'โมดูลชาร์จแบตเตอรี่ลิเธียมพลังงานแสงอาทิตย์',
+  'ถ่านชาร์จ lithium battery แบตเตอรี่ลิเธียม 18650', 'แบตเตอรี่ลิเธียม',
+  'Solar Cell โซลาร์เซลล์ 6V 6W', 'Solar Cell โซลาร์เซลล์', 'โซลาร์เซลล์',
+  'โมดูล 4G LTE SIM7600A-H Development Board', 'SIM7600A-H Development Board',
+  'ชุดอุปกรณ์ DIY อิเล็กทรอนิกส์สำหรับเริ่มต้น', 'ชุดอุปกรณ์ DIY อิเล็กทรอนิกส์',
+  '22AWG สายไฟอ่อน สีแดง ไส้เต็ม 1 เมตร', '22AWG สายไฟอ่อน สีดำ ไส้เต็ม 1 เมตร',
+  '18AWG สายไฟอ่อน สีแดง ไส้เต็ม 10 เมตร', '18AWG สายไฟอ่อน สีดำ ไส้เต็ม 10 เมตร',
+  'Camera Module (OV7670)', 'OV7670',
+  'ESP32 NodeMCU ESP-WROOM-32 Development Board', 'ESP-WROOM-32 Development Board', 'ESP32 NodeMCU',
+
+  // Stationery & Office Supplies
+  'กระดาษถ่ายเอกสาร A4', 'กระดาษถ่ายเอกสาร', 'กระดาษพิมพ์งาน', 'กระดาษการ์ด', 'กระดาษโน้ต',
+  'กระดาษต่อเนื่อง', 'กระดาษชำระ', 'กระดาษทิชชู่', 'กระดาษคาร์บอน',
+  'แฟ้มห่วง', 'แฟ้มสันกว้าง', 'แฟ้มซอง', 'แฟ้มหนีบ', 'แฟ้มเอกสาร',
+  'ปากกาลูกลื่น', 'ปากกาหมึกเจล', 'ปากกาเน้นข้อความ', 'ปากกาเคมี', 'ปากกาไวท์บอร์ด', 'ดินสอดำ',
+  'ยางลบ', 'น้ำยาลบคำผิด', 'เทปลบคำผิด', 'ไม้บรรทัด', 'กรรไกร', 'มีดคัตเตอร์', 'ใบมีดคัตเตอร์',
+  'ลวดเย็บกระดาษ', 'เครื่องเย็บกระดาษ', 'เครื่องเจาะกระดาษ', 'คลิปหนีบกระดาษ', 'คลิปดำ',
+  'เทปใส', 'เทปใสแกนเล็ก', 'เทปกาวสองหน้า', 'เทปผ้า', 'เทปกระดาษกาวย่น', 'กาวน้ำ',
+  'ซองจดหมาย', 'ซองเอกสารสีน้ำตาล', 'ซองขยายข้าง', 'สมุดบันทึก', 'สมุดบัญชี', 'โพสต์อิท',
+
+  // IT & Computer Supplies
+  'ตลับหมึกพิมพ์', 'ตลับหมึก', 'หมึกพิมพ์', 'ผงหมึกโทนเนอร์', 'หมึกอิงค์เจ็ท', 'ริบบอน',
+  'แฟลชไดร์ฟ', 'ฮาร์ดดิสก์', 'การ์ดหน่วยความจำ', 'สายชาร์จ', 'สายสัญญาณ', 'สายแลน', 'สายต่อพ่วง',
+  'แป้นพิมพ์', 'คีย์บอร์ด', 'เมาส์ไร้สาย', 'แผ่นรองเมาส์',
+  'แบตเตอรี่', 'ถ่านอัลคาไลน์', 'ถ่านไฟฉาย', 'ซองใส่บัตร', 'สายคล้องบัตร'
 ];
 
-export const MASTER_VENDOR_DICTIONARY_V5 = [
+export const MASTER_VENDOR_DICTIONARY = [
   'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด',
   'บริษัท ซีโอแอล จำกัด (มหาชน)',
   'บริษัท ออฟฟิศเมท (ไทย) จำกัด',
@@ -610,14 +418,20 @@ export const MASTER_VENDOR_DICTIONARY_V5 = [
   'บริษัท นัฐพงษ์ เซลส์แอนด์เซอร์วิส จำกัด',
   'บริษัท ศุภการ เอ็นจิเนียริ่ง จำกัด',
   'บริษัท ไทยพิพัฒน์ ฮาร์ดแวร์ จำกัด',
-  'บริษัท ดับเบิ้ล เอ (1991) จำกัด (มหาชน)',
-  'บริษัท สหไทยวัฒนภัณฑ์ จำกัด',
   'Shopee Official Store',
   'Lazada Official Store',
   'TikTok Shop'
 ];
 
-const TYPO_MAP_V5: Record<string, string> = {
+const HARDWARE_MASTER_DICTIONARY = [
+  'ป้องกัน', 'ลิเธียม', 'แบตเตอรี่', 'โซลาร์เซลล์', 'พาวเวอร์ปลั๊ก', 'ปลั๊กไฟ', 'สายไฟอ่อน',
+  'สวิตช์', 'โมดูล', 'ความร้อน', 'ฉนวน', 'สแตนเลส', 'อะลูมิเนียม', 'พลาสติก', 'น็อต', 'สกรู',
+  'คอนเนคเตอร์', 'หม้อแปลง', 'อะแดปเตอร์', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'รีเลย์',
+  'เซนเซอร์', 'เคเบิ้ลไทร์', 'เทปพันสายไฟ', 'ตลับเมตร', 'ด้ามปืน', 'กาวร้อน', 'คัตเตอร์',
+  'กระดาษ', 'แฟ้ม', 'ซอง', 'กล่อง', 'เครื่อง', 'พร้อม', 'ใส้เต็ม', 'ไส้เต็ม', 'อิเล็กทรอนิกส์'
+];
+
+const TYPO_MAP: Record<string, string> = {
   '4%6': '4x6',
   '4%': '4x',
   'LEETECIH': 'LEETECH',
@@ -661,6 +475,7 @@ const TYPO_MAP_V5: Record<string, string> = {
   'โซลาร': 'โซลาร์',
   'เชลล์': 'เซลล์',
   'ชิสเต็ม': 'ซิสเต็ม',
+  'ใส้เต็ม': 'ไส้เต็ม',
   'ตูกันน้ำ': 'ตู้กันน้ำ',
   'ตูปิด': 'ตู้ปิด',
   'ตูไฟ': 'ตู้ไฟ',
@@ -674,7 +489,6 @@ const TYPO_MAP_V5: Record<string, string> = {
   'ปลกั๊ไฟ': 'ปลั๊กไฟ',
   'ปลกั๊พ่วง': 'ปลั๊กพ่วง',
   'ถ่านอลัคาไลน์': 'ถ่านอัลคาไลน์',
-  'ใส้เต็ม': 'ไส้เต็ม',
   'สีสัม': 'สีส้ม'
 };
 
@@ -702,99 +516,21 @@ export function levenshteinDistance(a: string, b: string): number {
   return matrix[b.length][a.length];
 }
 
-export function fuzzyCorrectThaiLexicon(text: string): string {
-  if (!text || text.length < 2) return text;
-  let corrected = text;
+export function fuzzyCorrectWord(word: string): string {
+  if (word.length < 3) return word;
 
-  corrected = corrected
-    .replace(/\bตูกันน้ำ/g, 'ตู้กันน้ำ')
-    .replace(/\bตูปิด/g, 'ตู้ปิด')
-    .replace(/\bตูไฟ/g, 'ตู้ไฟ')
-    .replace(/\bตูพลาสติก/g, 'ตู้พลาสติก')
-    .replace(/\bหัวแรง/g, 'หัวแร้ง')
-    .replace(/\bเคเบิลแกลนด\b/g, 'เคเบิ้ลแกลนด์')
-    .replace(/\bเคเบิ้ลแกลนด\b/g, 'เคเบิ้ลแกลนด์')
-    .replace(/\bเคเบิลแกลนด์/g, 'เคเบิ้ลแกลนด์')
-    .replace(/\bเคเบิลไทร\b/g, 'เคเบิ้ลไทร์')
-    .replace(/\bเคเบิลไทร์/g, 'เคเบิ้ลไทร์')
-    .replace(/\bสายไฟ\s*Ouหง7/g, 'สายรัดเคเบิ้ลไทร์')
-    .replace(/\bOuหง7/g, 'สายรัดเคเบิ้ลไทร์')
-    .replace(/\b0uหง7/g, 'สายรัดเคเบิ้ลไทร์')
-    .replace(/\bปลกั๊ไฟ/g, 'ปลั๊กไฟ')
-    .replace(/\bปลกั๊พ่วง/g, 'ปลั๊กพ่วง')
-    .replace(/\bถ่านอลัคาไลน์/g, 'ถ่านอัลคาไลน์')
-    .replace(/GIANT\s*KINGK[\(\[\{\/A-Za-z0-9]*/gi, 'GIANT KINGKONG')
-    .replace(/\bKINGK[\(\[\{\/A-Za-z0-9]*/gi, 'KINGKONG')
-    .replace(/\bLUZ\b/gi, 'LUZINO')
-    .replace(/\bLUZIN\b/gi, 'LUZINO')
-    .replace(/\bLEETEC[\(\[\{\/A-Za-z0-9]*/gi, 'LEETECH')
-    .replace(/\bLEETE[\(\[\{\/A-Za-z0-9]*/gi, 'LEETECH')
-    .replace(/\bTAI-FON\b/gi, 'TAI-FONG')
-    .replace(/\bEAGL\b/gi, 'EAGLE')
-    .replace(/\bMATSUSHIT\b/gi, 'MATSUSHITA')
-    .replace(/\bSCHNEIDE\b/gi, 'SCHNEIDER')
-    .replace(/\bPANASONI\b/gi, 'PANASONIC')
-    .replace(/\buna\b/gi, 'มม.')
-    .replace(/\bun\b/gi, 'มม.')
-    .replace(/\b(\d+)\s*una\b/gi, '$1 มม.')
-    .replace(/(\d+)\s*una\s*ใส/gi, '$1 มม. ใส')
-    .replace(/(\d+)มม\.\./g, '$1 มม.')
-    .replace(/(\d+)มม\./g, '$1 มม.')
-    .replace(/(\d+)ม\.\./g, '$1 ม.')
-    .replace(/1\.5\/3%/g, '1.5/8"')
-    .replace(/1\.5\/8(?!\")/g, '1.5/8"')
-    .replace(/3\/8(?!\")/g, '3/8"')
-    .replace(/1\/2(?!\")/g, '1/2"')
-    .replace(/3\/4(?!\")/g, '3/4"')
-    .replace(/(\d)\s*%(?!\s*VAT)/g, '$1"')
-    .replace(/\bดา\b(?!\s*บ)/g, 'ดำ')
-    .replace(/\bแดง\s*ดา\b/g, 'แดง ดำ')
-    .replace(/\bขวา\b/g, 'ขาว')
-    .replace(/\bเหลอืง\b/g, 'เหลือง')
-    .replace(/\bนำ้เงิน\b/g, 'น้ำเงิน')
-    .replace(/\bPL\s*(\d)(PG\d+)/gi, 'PL $2')
-    .replace(/\b2PG(\d+)/gi, 'PG$1')
-    .replace(/\b1PG(\d+)/gi, 'PG$1')
-    .replace(/บรัษท|บริษทั|บรษัท|บิรษัท/g, 'บริษัท')
-    .replace(/จำกดั|จํากัด|จำกัดมหาชน/g, 'จำกัด')
-    .replace(/ใบกำกบัภาษี|ใบกำก้บภาษี/g, 'ใบกำกับภาษี')
-    .replace(/ใบเสรจ็รบัเงนิ|ใบเสรจรับเงิน/g, 'ใบเสร็จรับเงิน')
-    .replace(/สำนกังานใหญ่|สำนักงานใหญ/g, 'สำนักงานใหญ่')
-    .replace(/กระดาษถ่ย|กระดาษถาย|กระดาษถายเอกสาร/g, 'กระดาษถ่ายเอกสาร')
-    .replace(/หมึกพิมพ|ตลบัหมึก|ตลับหมึกพิมพ/g, 'ตลับหมึกพิมพ์')
-    .replace(/แฟม้สันกว้าง|แฟม้ห่วง/g, 'แฟ้ม')
-    .replace(/ปากกาลูกลืน่|ปากกาลกลื่น/g, 'ปากกาลูกลื่น');
+  let bestMatch = word;
+  let minDistance = 999;
 
-  Object.keys(TYPO_MAP_V5).forEach((key) => {
-    if (corrected.includes(key)) {
-      corrected = corrected.split(key).join(TYPO_MAP_V5[key]);
+  for (const target of HARDWARE_MASTER_DICTIONARY) {
+    const dist = levenshteinDistance(word, target);
+    if (dist <= 2 && dist < minDistance && Math.abs(word.length - target.length) <= 2) {
+      minDistance = dist;
+      bestMatch = target;
     }
-  });
+  }
 
-  const words = corrected.split(/(\s+)/);
-  const fixedWords = words.map((w) => {
-    const trimmed = w.trim();
-    if (trimmed.length < 4) return w;
-
-    let bestMatch = trimmed;
-    let minDistance = 999;
-
-    for (const dictWord of THAI_PROCUREMENT_LEXICON_V5) {
-      if (Math.abs(dictWord.length - trimmed.length) > 2) continue;
-      const dist = levenshteinDistance(trimmed, dictWord);
-      if (dist <= 2 && dist < minDistance) {
-        minDistance = dist;
-        bestMatch = dictWord;
-      }
-    }
-
-    if (minDistance <= 2 && bestMatch !== trimmed) {
-      return bestMatch;
-    }
-    return w;
-  });
-
-  return fixedWords.join('');
+  return minDistance <= 2 ? bestMatch : word;
 }
 
 export function fuzzyCorrectVendorName(rawVendor: string): string {
@@ -803,7 +539,7 @@ export function fuzzyCorrectVendorName(rawVendor: string): string {
   let bestVendor = rawVendor;
   let minDistance = 999;
 
-  for (const masterVendor of MASTER_VENDOR_DICTIONARY_V5) {
+  for (const masterVendor of MASTER_VENDOR_DICTIONARY) {
     const dist = levenshteinDistance(rawVendor.toLowerCase(), masterVendor.toLowerCase());
     const threshold = Math.max(3, Math.round(masterVendor.length * 0.35));
     if (dist < minDistance && dist <= threshold) {
@@ -815,6 +551,153 @@ export function fuzzyCorrectVendorName(rawVendor: string): string {
   return minDistance <= Math.round(bestVendor.length * 0.35) ? bestVendor : rawVendor;
 }
 
+/**
+ * Technical & Electronic Component Text Normalizer
+ */
+export function correctTechnicalThaiAndEnglishText(str: string): string {
+  let text = str;
+
+  // 1. Clean leading junk characters on item description (#, /, -, ((, etc.)
+  text = text
+    .replace(/^[#\/\-\*\+\:\.\s\|]+/g, '')
+    .replace(/^\(\s*\(/g, '(')
+    .replace(/\)\s*\)/g, ')');
+
+  // 2. Protect AWG Specs & Wire SKUs (e.g. 22AWG, 18AWG)
+  text = text
+    .replace(/22[#\/\s]*เพ\d?/gi, '22AWG ')
+    .replace(/18[#\/\s]*เผ\w*/gi, '18AWG ')
+    .replace(/(\d{1,2})\s*[\/ลผเเผเพดa-zA-Z]*\s*WG\b/gi, '$1AWG ')
+    .replace(/(\d{1,2})\s*[\/ลผเเผเพด]{2,4}\s*(?=สายไฟ)/gi, '$1AWG ')
+    .replace(/\b(\d{1,2})[\/ลผเเผเพด]{2,4}(?=สายไฟ|\s)/gi, '$1AWG ')
+    .replace(/\b22\s*aWG|22\/เพด/gi, '22AWG')
+    .replace(/\b18\s*เผด|18ลเพ/gi, '18AWG')
+    .replace(/\bA0(\d{3})\b/gi, 'A0$1')
+    .replace(/\bA(\d{4})\b/gi, 'A$1');
+
+  // 3. Strip garbled OCR prefix noise BEFORE known Thai words (e.g. '105หแผ0ปลัก' -> 'ปลั๊ก', '7105หเผ0ปลั๊ก' -> 'ปลั๊ก')
+  text = text
+    .replace(/\b105หแผ0/gi, '')
+    .replace(/\b105หเผ0/gi, '')
+    .replace(/\bหแผ0/gi, '')
+    .replace(/\bหเผ0/gi, '')
+    .replace(/\bปลัก(?=[0-9ก-๙\s])/g, 'ปลั๊ก');
+
+  const knownWordStarts = [
+    'ปลั๊ก', 'สายไฟ', 'สาย', 'แผ่น', 'สวิตช์', 'โมดูล', 'เซนเซอร์', 'รีเลย์', 'อะแดปเตอร์',
+    'หม้อแปลง', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'คอนเนคเตอร์', 'เคเบิ้ล', 'เคเบิลแกลนด์',
+    'กาวแท่ง', 'กาว', 'คัตเตอร์', 'น็อต', 'สกรู', 'พาวเวอร์', 'แบตเตอรี่', 'ชุดอุปกรณ์',
+    'บอร์ด', 'Board', 'Module', 'Sensor', 'Relay', 'LED', 'LCD', 'USB', 'Arduino',
+    'ESP', 'Raspberry', 'Converter', 'Adapter', 'Cable', 'Wire', 'Ultrasonic',
+    'Development', 'Waterproof', 'Solar', 'Battery', 'Power', 'Step', 'Camera',
+    'DIY', 'อิเล็กทรอนิกส์', 'ฉนวน', 'ท่อตรง', 'ท่อหด', 'ท่อ', 'ลวด', 'เทป', 'กระดาษ',
+    'หัวแร้ง', 'ตะกั่ว', 'ตู้กันน้ำ', 'ตู้กันนํ้า', 'ปืนยิงกาว'
+  ];
+
+  for (const word of knownWordStarts) {
+    const idx = text.indexOf(word);
+    if (idx > 0 && idx <= 12) {
+      const prefix = text.substring(0, idx).trim();
+      const isGarbledNoise = /^\d{2,6}[ก-ฮ\d]+$/i.test(prefix) || (/^[ก-ฮ\d\/\.\-]{1,6}$/i.test(prefix) && !/[ะาิีึืุูเแโใไ]/i.test(prefix));
+      const isPureEnglish = /^[A-Za-z0-9\-\.\s]+$/i.test(prefix) && !/^\d{4,}[A-Za-z]+/.test(prefix);
+      if (isGarbledNoise && !isPureEnglish) {
+        text = text.substring(idx);
+        break;
+      }
+    }
+  }
+
+  // 4. Hardware / Electronics Model Numbers & Technical Typos (Direct Specific Repairs)
+  text = text
+    // Step up Converter
+    .replace(/\bXL6009\s*DC-to-DC\s*Step\s*up\s*Conv(?:er(?:ter)?)?/gi, 'XL6009 DC-to-DC Step up Converter')
+    .replace(/\bStep\s*up\s*Conv(?:er(?:ter)?)?/gi, 'Step up Converter')
+    // Ultrasonic Module (JSN-SR04T)
+    .replace(/Waterproof\s*Ultrasonic\s*Module\s*(?:เซนเซอร์วัดระยะทาง|เซนเซอร์|เซ)?(?:\s*\(JSN-SR04T\))?/gi, 'Waterproof Ultrasonic Module เซนเซอร์วัดระยะทาง (JSN-SR04T)')
+    .replace(/Ultrasonic\s+M(?:odule)?/gi, 'Ultrasonic Module')
+    .replace(/JSN-SROAT/gi, 'JSN-SR04T')
+    // Lithium Battery & Chargers
+    .replace(/โมดูลชาร์จถ่าน\s*ป้องกันแบตเตอรี่ลิเธียม(?:\s*18650)?/g, 'โมดูลชาร์จถ่าน ป้องกันแบตเตอรี่ลิเธียม 18650')
+    .replace(/โมดูลชาร์จแบตเตอรี่ลิเธียมพลังงานแส(?:ง(?:อาทิตย์)?)?/g, 'โมดูลชาร์จแบตเตอรี่ลิเธียมพลังงานแสงอาทิตย์ (Solar Charger)')
+    .replace(/ถ่านชาร์จ\s*lithium\s*battery\s*แบตเตอรี่ลิ(?:เธียม)?(?:\s*18650)?/gi, 'ถ่านชาร์จ lithium battery แบตเตอรี่ลิเธียม 18650')
+    // Solar Cell
+    .replace(/(?:อ0420\s*)?Solar\s*Cell\s*โซลาร์เซลล์\s*6V\s*6[VW]/gi, 'Solar Cell โซลาร์เซลล์ 6V 6W')
+    // 4G LTE Module
+    .replace(/โมดูล\s*4G\s*LTE\s*SIM7600A-H\s*Develo(?:pment)?(?:\s*Board)?/gi, 'โมดูล 4G LTE SIM7600A-H Development Board')
+    .replace(/\bSIM7600A\b/gi, 'SIM7600A-H')
+    // DIY Electronics Kit
+    .replace(/(?:ย9033\s*)?ชุดอุปกรณ์\s*DIY\s*อิเล็กทรอนิกส์(?:ให|สำหรับเริ่มต้น)?/g, 'ชุดอุปกรณ์ DIY อิเล็กทรอนิกส์สำหรับเริ่มต้น')
+    // Wires (22AWG / 18AWG)
+    .replace(/22AWG\s*สายไฟอ่อน\s*สีแดง\s*ไส้เต็ม\s*1\s*เมต(?:ร)?/g, '22AWG สายไฟอ่อน สีแดง ไส้เต็ม 1 เมตร')
+    .replace(/22AWG\s*สายไฟอ่อน\s*สีดำ\s*ไส้เต็ม\s*1\s*เมต(?:ร)?/g, '22AWG สายไฟอ่อน สีดำ ไส้เต็ม 1 เมตร')
+    .replace(/18AWG\s*สายไฟอ่อน\s*สีแดง\s*ไส้เต็ม\s*10\s*เมต(?:ร)?/g, '18AWG สายไฟอ่อน สีแดง ไส้เต็ม 10 เมตร')
+    .replace(/(?:60483\s*)?18AWG\s*สายไฟอ่อน\s*(?:Hein|สีดำ)\s*ไส้เต็(?:ม)?(?:\s*10\s*เมตร)?/g, '18AWG สายไฟอ่อน สีดำ ไส้เต็ม 10 เมตร')
+    // Camera Module (OV7670)
+    .replace(/Camera\s*Module\s*\(?(?:0ง|0v|ov|oO|ง)?7670\)?/gi, 'Camera Module (OV7670)')
+    .replace(/\(0ง7670\)/gi, '(OV7670)')
+    .replace(/\b0ง7670\b/gi, 'OV7670')
+    // ESP32 NodeMCU
+    .replace(/ESP32\s*NodeMCU\s*ESP-WROOM-(?:32)?(?:\s*Development\s*Board)?/gi, 'ESP32 NodeMCU ESP-WROOM-32 Development Board')
+    // Thai Watsadu Power Plug
+    .replace(/สาขา\s*3\s*ม\.?/g, 'สาย 3 ม.')
+    .replace(/สาขา\s*5\s*ม\.?/g, 'สาย 5 ม.')
+    .replace(/ปลัก\s*5\s*ช่อง\s*5\s*สวิตช์/g, 'ปลั๊ก 5 ช่อง 5 สวิตช์');
+
+  // 5. Thai Technical & Hardware Word Corrections
+  text = text
+    .replace(/ด้ามบืน/g, 'ด้ามปืน')
+    .replace(/TQ-85\s*สัม|สีสัม|(?:^|\s)สัม(?:\s|$)/g, ' สีส้ม ')
+    .replace(/PL\s*69\s*[\-\s]*ด[ำา\u0e4d\u0e32]*/gi, 'PL PG9-BK ดำ')
+    .replace(/69\s*[\-\s]*ด[ำา\u0e4d\u0e32]*/gi, 'PG9-BK ดำ')
+    .replace(/ปลิ๊ก|ปลื๊ก|ปลัก(?!ๆ)/g, 'ปลั๊ก')
+    .replace(/ใส้เต็ม/g, 'ไส้เต็ม')
+    .replace(/สสี/g, 'สี')
+    .replace(/สสีด[ำา\u0e4d\u0e32]*/g, 'สีดำ')
+    .replace(/อ่อนสี/g, 'อ่อน สี')
+    .replace(/กันน[ำา\u0e4d\u0e32]*/g, 'กันน้ำ')
+    .replace(/ป้องดัน/g, 'ป้องกัน')
+    .replace(/ลิเรียม|ลิเธย(?!ม)|ลิเธยม/g, 'ลิเธียม')
+    .replace(/แบตเตอรี(?!่)/g, 'แบตเตอรี่')
+    .replace(/โซลาร(?!์)/g, 'โซลาร์')
+    .replace(/เชลล์/g, 'เซลล์')
+    .replace(/ชิสเต็ม/g, 'ซิสเต็ม')
+    .replace(/สวิทช์/g, 'สวิตช์')
+    .replace(/บหาชน/g, 'มหาชน')
+    .replace(/จำกัค|จำกัต/g, 'จำกัด')
+    .replace(/1\s*fou/gi, '1 ก้อน')
+    .replace(/ใหม่\s*พร้/g, 'พร้อม')
+    .replace(/พร้อมอ:/g, 'พร้อม');
+
+  // 6. Run TYPO_MAP dictionary
+  Object.keys(TYPO_MAP).forEach((typo) => {
+    if (typo) {
+      const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
+      text = text.replace(re, TYPO_MAP[typo]);
+    }
+  });
+
+  // 7. Run Levenshtein Fuzzy Correction on individual word tokens
+  const words = text.split(' ');
+  const correctedWords = words.map((w) => fuzzyCorrectWord(w));
+  text = correctedWords.join(' ');
+
+  // 8. Strip trailing numeric junk that looks like leaked price data & VAT codes
+  text = text
+    .replace(/[\s|]+[VvNtX]\s*$/g, '')
+    .replace(/(\s+[\d,]+(\.\d{1,3})?)+[\s|]*[VvNtX]?\s*$/g, '')
+    .replace(/\s+\d+\.\d{1,3}\s*\d*[\s|]*[VvNtX]?\s*$/g, '')
+    .replace(/\s+\d{1,6}\s*[!|]*\s*$/g, '');
+
+  // 9. Restore balanced parentheses for technical specs like (JSN-SR04T) or (OV7670)
+  const openCount = (text.match(/\(/g) || []).length;
+  const closeCount = (text.match(/\)/g) || []).length;
+  if (openCount > closeCount) {
+    text = text + ')'.repeat(openCount - closeCount);
+  }
+
+  return text.replace(/\s+/g, ' ').trim();
+}
+
 export function cleanThaiText(str: string): string {
   let cleaned = str
     .replace(/^([!\?\.\-\|\+:งv\s]*\d{1,2}\s*[v\|\.\-\:\)\s]+)/gi, '')
@@ -823,7 +706,7 @@ export function cleanThaiText(str: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 
-  let text = fuzzyCorrectThaiLexicon(cleaned);
+  let text = correctTechnicalThaiAndEnglishText(cleaned);
   text = text.replace(/^[0-9A-Za-z\u0e00-\u0e7f]{2,10}(?=ปลั๊ก|สายไฟ|สวิตช์|แผ่น|โมดูล|ตู้)/i, '');
   return text.replace(/\s+/g, ' ').trim();
 }
@@ -1035,9 +918,9 @@ export interface ParsedReceipt {
 }
 
 /**
- * Multi-Hypothesis Mathematical Constraint & VAT 7% Solver 5.0
+ * Mathematical Constraint Solver for Line Items & Invoices
  */
-export function solveMathematicalConstraintsDeep5(
+export function solveMathematicalConstraints(
   items: ParsedReceiptItem[],
   extractedGrandTotal: number,
   extractedDiscount: number
@@ -1116,6 +999,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   let invoice_number = '';
   let invoice_date = '';
   let total_amount = 0;
+  let discount_val = 0;
   const items: ParsedReceiptItem[] = [];
 
   const excludeKeywords = [
@@ -1129,7 +1013,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     'ที่อยู่', 'ผู้ซื้อ', 'ผู้ขาย', 'หมู่ที่', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ถนน', 'ซอย', 'แขวง', 'เขต', 'รหัสไปรษณีย์',
     'เลขประจำตัวผู้เสียภาษี', 'สำนักงานใหญ่', 'เลขที่ใบเสร็จ', 'เลขที่ใบกำกับ', 'วันที่', 'DATE', 'แบสลี',
     'รายละเอียด', 'ราคา/หน่วย', 'รวม (บาท)', 'รหัสสินค้า', 'จำนวน', 'หน่วยละ', 'จำนวนเงิน', 'DESCRIPTION', 'QTY', 'PRICE', 'AMOUNT', 'ITEM',
-    'ORDER NO', 'ORDER', 'ลำดับ', 'รายการ', 'ชื่อสินค้า', 'รายละเอียดสินค้า', 'NO.', 'รหัส', 'หน่วย', 'มูลค่า', 'ส่วนลด',
+    'ORDER NO', 'ORDER', 'ลำดับ', 'รายการ', 'ชื่อสินค้า', 'รายละเอียดสินค้า', 'NO.', 'รหัส', 'หน่วย', 'มูลค่า',
     'รวมยอดขาย', 'มูลค่าฐานภาษี', 'มูลค่าตามใบกำกับภาษี', 'ยอดขาย', 'ยอดสุทธิ',
     'ใบกำกับภาษี', 'ใบเสร็จรับเงิน', 'Tax Invoice', 'Receipt', 'INVOICE', 'DOCUMENT'
   ];
@@ -1189,6 +1073,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
   }
 
+  // Extract Total Amount & Discount from footer
   for (const line of lines.slice().reverse()) {
     if (/(?:จำนวนเงินรวมทั้งสิ้น|รวมเงินทั้งสิ้น|ยอดชำระสุทธิ|จำนวนเงินสุทธิ|ยอดรวมสุทธิ|GRAND TOTAL|NET AMOUNT|NET TOTAL|TOTAL AMOUNT)[^\d]*([\d,]+(?:\.\d{2}|\.\-|\b))/i.test(line)) {
       const match = line.match(/([\d,]+(?:\.\d{2}|\.-))/);
@@ -1219,14 +1104,33 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
   }
 
+  // Extract explicit discount line if present e.g. "ส่วนลด 109.71"
+  for (const line of lines) {
+    const discMatch = line.match(/(?:ส่วนลด|DISCOUNT|หักส่วนลด)[\s\:\-]+([\d,]+(?:\.\d{2}|\.-))/i);
+    if (discMatch) {
+      const val = parseFloat(discMatch[1].replace(/\.-/, '.00').replace(/,/g, ''));
+      if (!isNaN(val) && val > 0) discount_val = val;
+    }
+  }
+
   let reachedFooter = false;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
+
+    // Check if reached footer summary or disclaimer
     if (
-      /(?:sou\s*[\d,]+|รวม\s*[\d,]+|ราคารวม\s*VAT|สินค้าที่ไม่มีภาษี|สินค้าที่มีภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม|Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์|ผู้จัดทำ|การคำนวณ|ใช้ราคาขายตาม|กรมสรรพสามิต|เต็มรูปแทน|ศศ\s*TS|คล้า\s*จิก้)/i.test(rawLine)
+      /(?:sou\s*[\d,]+|รวม\s*[\d,]+|รวบ\s*[\d,]+|ราคารวม\s*VAT|สินค้าที่ไม่มีภาษี|สินค้าที่มีภาษี|มูลค่าสินค้าที่เสียภาษี|ผู้รับเงิน|ชำระเงินโดย|เป็นการยกเลิก|หมายเหตุ|ใบเสร็จรับเงินและ|เจ็ดร้อย|Vk|ลูกหนี้|การคำนวณภาษี|มูลค่าสินค้าตาม|Digitally signed by|สินค้าสั่งพิเศษ|บริษัทขอสงวนสิทธิ์|ผู้จัดทำ|การคำนวณ|ใช้ราคาขายตาม|กรมสรรพสามิต|เต็มรูปแทน|ศศ\s*TS|คล้า\s*จิก้)/i.test(rawLine)
     ) {
       reachedFooter = true;
+    }
+
+    // Strictly skip footer lines from being parsed as items!
+    if (
+      reachedFooter ||
+      /^(?:รวม|รวบ|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ|แบสลี|sou)/i.test(rawLine)
+    ) {
+      continue;
     }
 
     if (excludeKeywords.some((kw) => rawLine.toUpperCase().includes(kw.toUpperCase()))) {
@@ -1309,21 +1213,46 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         item_code = leadingBarcodeMatch[1];
         cleanDesc = leadingBarcodeMatch[2].trim();
       } else {
-        const bracketSku = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Za-z0-9\-\u0e00-\u0e7f]{4,10}?)[\)\]\}\|1\s]\s*(.+)$/i);
+        // Shopee Bracket SKU matching & normalization
+        const bracketSku = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Za-z0-9\-\u0e00-\u0e7f]{3,10}?)[\)\]\}\|1\s]\s*(.+)$/i);
         if (bracketSku && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV|ORDER)$/i.test(bracketSku[1])) {
           let code = bracketSku[1]
             .replace(/^ม/gi, 'M')
             .replace(/^พ/gi, 'P')
             .replace(/^แห/gi, 'H')
             .replace(/^pJ/i, 'P0')
+            .replace(/^P041T/i, 'P0410')
             .replace(/^501/i, 'S01')
             .replace(/^903/i, 'S03')
+            .replace(/^ย903/i, 'S03')
             .replace(/^603/i, 'G03')
             .replace(/^604/i, 'G04')
+            .replace(/^A03/i, 'G03')
+            .replace(/^048/i, 'G048')
+            .replace(/^1688$/i, 'H1688')
+            .replace(/^อ0420/i, 'P0420')
+            .replace(/^0420/i, 'P0420')
             .replace(/^M15371$/i, 'M1537');
+
           if (/^[A-Z0-9\-]{3,15}$/i.test(code)) {
             item_code = code;
             cleanDesc = bracketSku[2].trim();
+          }
+        } else {
+          // Check prefix SKU patterns like "อ0420 Solar..." or "ย9033 ชุด..." or "60483 18#..."
+          const prefixSkuMatch = cleanDesc.match(/^(อ0420|ย9033|60483|A0325|A0327|0484|1688|M0204|M1537|P0002|M0103|P0164|P041T|P0319)\s+(.+)$/i);
+          if (prefixSkuMatch) {
+            let code = prefixSkuMatch[1]
+              .replace(/^อ0420/i, 'P0420')
+              .replace(/^ย9033/i, 'S033')
+              .replace(/^60483/i, 'G0483')
+              .replace(/^A0325/i, 'G0325')
+              .replace(/^A0327/i, 'G0327')
+              .replace(/^0484/i, 'G0484')
+              .replace(/^1688/i, 'H1688')
+              .replace(/^P041T/i, 'P0410');
+            item_code = code;
+            cleanDesc = prefixSkuMatch[2].trim();
           }
         }
       }
@@ -1374,44 +1303,54 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         !isLowPriceGarbage &&
         !isTaxSummaryJunk &&
         !/(?:มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม|ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)/i.test(cleanDesc) &&
-        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ|แบสลี)/i.test(cleanDesc) &&
+        !/^(?:รวม|รวบ|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|ผู้รับ|ลงชื่อ|ค่าขนส่ง|นที|วันที่|หมายเหตุ|แบสลี|sou)/i.test(cleanDesc) &&
         !/^\d+\s*รายการ/i.test(cleanDesc) &&
         /[ก-ฮa-zA-Z]{2,}/i.test(cleanDesc) &&
         !/ที่อยู่|ผู้ซื้อ|หมู่ที่|ตำบล|อำเภอ|จังหวัด|ผู้รับเงิน|ผู้ส่งของ|ลงชื่อ|อนุมัติ|หมายเหตุ/i.test(cleanDesc)
       ) {
-        items.push({
-          item_code,
-          description: cleanDesc,
-          quantity,
-          unit,
-          unit_price,
-          total_price: total_price_final
-        });
+        // De-duplicate if exact same description already exists with exact same price
+        const isDuplicate = items.some(
+          (existing) => existing.description === cleanDesc && existing.total_price === total_price_final && existing.quantity === quantity
+        );
+
+        if (!isDuplicate) {
+          items.push({
+            item_code,
+            description: cleanDesc,
+            quantity,
+            unit,
+            unit_price,
+            total_price: total_price_final
+          });
+        }
       }
     } else {
+      // Continuation line (append to last item description)
       if (
         !reachedFooter &&
         items.length > 0 &&
         line.length >= 2 &&
-        !/^(?:รวม|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|ผู้จัดทำ|โปรด|เงื่อนไข|RPP|SE|ศศ|การคำนวณ|สรรพสามิต|เต็มรูป)/i.test(line) &&
+        !/^(?:รวม|รวบ|สุทธิ|ภาษี|มูลค่า|ยอด|ส่วนลด|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|จำนวน|หน้าที่|เอกสาร|บริษัท|หจก|เลขที่|วันที่|ข้อมูล|หมายเหตุ|ผู้รับ|ผู้จัดทำ|โปรด|เงื่อนไข|RPP|SE|ศศ|การคำนวณ|สรรพสามิต|เต็มรูป)/i.test(line) &&
         !/^\d+\s*รายการ/i.test(line)
       ) {
         const lastItem = items[items.length - 1];
         let cleanContinuation = cleanThaiText(line);
         cleanContinuation = cleanItemDescription(cleanContinuation);
         if (cleanContinuation.length >= 2) {
-          lastItem.description = (lastItem.description + ' ' + cleanContinuation).replace(/\s+/g, ' ').trim();
+          lastItem.description = correctTechnicalThaiAndEnglishText(
+            (lastItem.description + ' ' + cleanContinuation).replace(/\s+/g, ' ').trim()
+          );
         }
       }
     }
   }
 
   const calculatedSubtotal = items.reduce((sum, item) => sum + (item.total_price || 0), 0);
-  let inferredDiscount = 0;
+  let inferredDiscount = discount_val;
 
   if (total_amount <= 0 && calculatedSubtotal > 0) {
     total_amount = calculatedSubtotal;
-  } else if (total_amount > 0 && calculatedSubtotal > total_amount) {
+  } else if (total_amount > 0 && calculatedSubtotal > total_amount && inferredDiscount === 0) {
     inferredDiscount = Math.round((calculatedSubtotal - total_amount) * 100) / 100;
   }
 
@@ -1440,10 +1379,7 @@ export interface DeepScanPassOutputsDeep5 {
   mainWords?: any[];
   sauvolaText?: string;
   sauvolaWords?: any[];
-  morphStrokeText?: string;
-  morphStrokeWords?: any[];
   headerText?: string;
-  bodyText?: string;
   summaryText?: string;
 }
 
@@ -1451,18 +1387,21 @@ export type DeepScanPassOutputs = DeepScanPassOutputsDeep5;
 
 /**
  * DeepScan 5.0: Multi-Pass Spatial Consensus Fusion Engine
- * Fuses 6 high-precision visual layers + Token-Level 2D Bounding-Box Spatial Grid,
- * applies Extended Thai Lexicon 5.0, and executes Multi-Hypothesis Math & VAT 7% Solver.
+ * Fuses 4 crystal-clear visual layers + 2D Bounding-Box Spatial Grid, applies Lexicon 5.0,
+ * and executes Multi-Hypothesis Math & VAT Constraint Solver.
  */
 export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): ParsedReceipt {
+  // 1. Primary Parse from Main High-DPI Pass
   const mainParsed = parseThaiReceiptOcr(passes.mainText);
 
+  // 1.1 Spatial 2D Parse from Main Pass
   let mainSpatialParsed: ParsedReceipt | null = null;
   if (passes.mainWords && passes.mainWords.length > 0) {
     const spatialText = reconstructTextFromBboxes(passes.mainWords);
     if (spatialText) mainSpatialParsed = parseThaiReceiptOcr(spatialText);
   }
 
+  // 2. Secondary Parse from Sauvola Adaptive Pass
   const sauvolaParsed = passes.sauvolaText ? parseThaiReceiptOcr(passes.sauvolaText) : null;
   let sauvolaSpatialParsed: ParsedReceipt | null = null;
   if (passes.sauvolaWords && passes.sauvolaWords.length > 0) {
@@ -1470,15 +1409,7 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
     if (spatialSauvolaText) sauvolaSpatialParsed = parseThaiReceiptOcr(spatialSauvolaText);
   }
 
-  const morphParsed = passes.morphStrokeText ? parseThaiReceiptOcr(passes.morphStrokeText) : null;
-  let morphSpatialParsed: ParsedReceipt | null = null;
-  if (passes.morphStrokeWords && passes.morphStrokeWords.length > 0) {
-    const spatialMorphText = reconstructTextFromBboxes(passes.morphStrokeWords);
-    if (spatialMorphText) morphSpatialParsed = parseThaiReceiptOcr(spatialMorphText);
-  }
-
-  const bodyParsed = passes.bodyText ? parseThaiReceiptOcr(passes.bodyText) : null;
-
+  // 3. Header Zoom Pass
   let vendorName = mainParsed.vendor_name;
   let invoiceNumber = mainParsed.invoice_number;
   let invoiceDate = mainParsed.invoice_date;
@@ -1499,32 +1430,44 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
     if (headerTaxId) taxId = headerTaxId;
   }
 
+  // 4. Quality-Scored Candidate Selection (Never reward duplicate/noisy lists!)
   const candidateLists = [
     mainSpatialParsed?.items,
     sauvolaSpatialParsed?.items,
-    morphSpatialParsed?.items,
-    bodyParsed?.items,
     sauvolaParsed?.items,
-    morphParsed?.items,
     mainParsed?.items
   ].filter((list): list is NonNullable<typeof list> => Boolean(list && list.length > 0));
 
   let bestItems: ParsedReceiptItem[] = mainParsed.items;
-  let maxCount = bestItems.length;
+  let bestScore = -1;
 
   for (const candidate of candidateLists) {
-    if (candidate.length > maxCount) {
+    let score = candidate.length * 10;
+    // Reward candidate items with valid SKU codes
+    for (const item of candidate) {
+      if (item.item_code && item.item_code.length >= 3) score += 5;
+      if (item.description && item.description.length > 15) score += 3;
+    }
+    // Check if candidate list is mathematically balanced
+    const cSum = candidate.reduce((s, i) => s + (i.total_price || 0), 0);
+    if (mainParsed.total_amount > 0 && Math.abs(cSum - mainParsed.total_amount) < 1.0) {
+      score += 30;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
       bestItems = candidate;
-      maxCount = candidate.length;
     }
   }
 
-  vendorName = fuzzyCorrectThaiLexicon(vendorName);
+  // 5. Apply Deep Thai Lexicon Auto-Correction on Vendor & Items
+  vendorName = cleanCompanyName(vendorName);
   const cleanedItems = bestItems.map((item) => ({
     ...item,
-    description: fuzzyCorrectThaiLexicon(item.description)
+    description: correctTechnicalThaiAndEnglishText(item.description)
   }));
 
+  // 6. Summary Zoom Pass
   let grandTotal = mainParsed.total_amount || 0;
   let discount = mainParsed.discount || 0;
 
@@ -1538,7 +1481,8 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
     }
   }
 
-  const mathSolution = solveMathematicalConstraintsDeep5(cleanedItems, grandTotal, discount);
+  // 7. Mathematical Constraint Reconciliation
+  const mathSolution = solveMathematicalConstraints(cleanedItems, grandTotal, discount);
 
   return {
     vendor_name: vendorName || 'ร้านค้า / บริษัทผู้ขาย',

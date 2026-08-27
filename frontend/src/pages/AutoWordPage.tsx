@@ -326,35 +326,27 @@ export default function AutoWordPage() {
         setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/6: กำลังสแกนถอดรหัสข้อความแบบ Deep Multi-Pass Analysis...`);
         
         const passResults = await runMultiPassTesseract([
-          { id: 'main', label: '1/6: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
-          { id: 'sauvola', label: '2/6: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
-          { id: 'morph', label: '3/6: สแกนเชื่อมลายเส้นหมึกจาง & ดอทเมทริกซ์', src: layers.passMorphStroke },
-          { id: 'header', label: '4/6: สแกนเจาะลึกชื่อร้านค้า & เลข 13 หลัก', src: layers.passHeader },
-          { id: 'body', label: '5/6: สแกนเจาะลึกตารางรายการสินค้า & รหัส SKU', src: layers.passBody },
-          { id: 'summary', label: '6/6: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
+          { id: 'main', label: '1/4: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
+          { id: 'sauvola', label: '2/4: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
+          { id: 'header', label: '3/4: สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
+          { id: 'summary', label: '4/4: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
         ], (stepLabel, stepPct) => {
           setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${stepLabel}...`);
           setScanProgress(Math.round(((i + 0.15 + (stepPct * 0.65) / 100) / files.length) * 100));
         });
 
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/6: กำลังลงคะแนนโหวต Token-Level 2D Spatial Consensus Matrix...`);
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: กำลังลงคะแนนโหวต 2D Spatial Consensus & ซ่อมคำผิดพัสดุ...`);
         setScanProgress(Math.round(((i + 0.85) / files.length) * 100));
 
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 5/6: เทียบพจนานุกรมศัพท์พัสดุไทย 5.0 & ซ่อมคำผิด/สระลอย...`);
-        setScanProgress(Math.round(((i + 0.90) / files.length) * 100));
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 6/6: ตรวจสอบสมดุลคณิตศาสตร์ & VAT 7% Matrix Solver...`);
-        setScanProgress(Math.round(((i + 0.96) / files.length) * 100));
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/4: ตรวจสอบสมดุลคณิตศาสตร์ & กรองรายการซ้ำ...`);
+        setScanProgress(Math.round(((i + 0.95) / files.length) * 100));
 
         parsed = parseThaiReceiptOcrDeep5({
           mainText: passResults.main?.rawText || '',
           mainWords: passResults.main?.words || [],
           sauvolaText: passResults.sauvola?.rawText || '',
           sauvolaWords: passResults.sauvola?.words || [],
-          morphStrokeText: passResults.morph?.rawText || '',
-          morphStrokeWords: passResults.morph?.words || [],
           headerText: passResults.header?.rawText || '',
-          bodyText: passResults.body?.rawText || '',
           summaryText: passResults.summary?.rawText || '',
         });
 
