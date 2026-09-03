@@ -726,7 +726,7 @@ export function extractVendorNameFromText(text: string): string {
   }
 
   for (const line of lines.slice(0, 15)) {
-    if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global|IT CITY|Advice|MR\.?DIY|Big C|Lotus|7-Eleven|CRC|COL/i.test(line)) {
+    if (/ไทวัสดุ|ซีอาร์ซี|ซีโอแอล|OfficeMate|B2S|HomePro|DoHome|Global|IT CITY|Advice|MR\.?DIY|Big C|Lotus|7-Eleven|CRC|COL|ซีพี\s*แอ็กซ์ตร้า|CP\s*AXTRA|Makro|แม็คโคร/i.test(line)) {
       if (!/ใบกำกับภาษี|ใบเสร็จ/i.test(line)) {
         const cleaned = cleanCompanyName(cleanThaiText(line));
         if (cleaned.length >= 3) return cleaned;
@@ -845,6 +845,8 @@ export function reconstructTextFromBboxes(words: TesseractWord[]): string {
 export interface ParsedReceiptItem {
   item_code: string;
   description: string;
+  thai_name?: string;
+  english_name?: string;
   quantity: number;
   unit: string;
   unit_price: number;
@@ -945,15 +947,187 @@ export function solveMathematicalConstraints(
 }
 
 /**
+ * Header Line Detector
+ * Strictly prevents company headers, branch numbers, page counts, phone numbers,
+ * tax IDs, addresses, and postal codes from ever being parsed as product items.
+ */
+export function isHeaderLine(line: string): boolean {
+  const l = line.trim();
+  if (!l || l.length < 2) return true;
+
+  // 1. Company / Store Header
+  if (/(?:บริษัท|หจก\.|หจก|ร้านค้า|ร้าน|ห้างหุ้นส่วน|ห้างฯ|สมาคม|มูลนิธิ|Co\.,?\s*Ltd|Inc\.|Corp\.|Ltd\.)/i.test(l)) {
+    return true;
+  }
+  // 2. Branch (avoid \b after Thai characters)
+  if (/(?:สาขา|สาขาที่|Branch)(?:\s|:|\d|$)/i.test(l)) {
+    return true;
+  }
+  // 3. Tax ID / VAT Registration
+  if (/(?:เลขประจำตัวผู้เสียภาษี|ผู้เสียภาษี|TAX\s*ID|TAX\s*NO|ภ\.พ\.20)/i.test(l)) {
+    return true;
+  }
+  // 4. Document Types & Page Numbers
+  if (/(?:ใบกำกับภาษี|ใบเสร็จรับเงิน|Tax\s*Invoice|Receipt|ต้นฉบับ|สำเนา|เอกสารออกเป็นชุด|หน้าที่|หน้า\s*\d|Page\s*\d)/i.test(l)) {
+    return true;
+  }
+  // 5. Address / Location (including Thai abbreviations ต. อ. จ. ม. ถ. ซ.)
+  if (/(?:ที่อยู่|ม\.\s*\d|หมู่\s*\d|ต\.|ตำบล|อ\.|อำเภอ|จ\.|จังหวัด|แขวง|เขต|กทม|กรุงเทพ|ถนน|ถ\.|ซอย|ซ\.|รหัสไปรษณีย์|Address)/i.test(l)) {
+    return true;
+  }
+  // 6. Postal Code at end of line (e.g. "จ.ชลบุรี 20230")
+  if (/\b\d{5}$/.test(l) && /(?:ชลบุรี|กรุงเทพ|เชียงใหม่|ระยอง|นนทบุรี|ปทุมธานี|สมุทร|[ก-๙]{3,})/i.test(l)) {
+    return true;
+  }
+  // 7. Contact / Telecom
+  if (/(?:โทรศัพท์|โทรสาร|โทร\.|โทร\s|Tel|Fax|Email|Website|WWW)/i.test(l)) {
+    return true;
+  }
+  // 8. Customer / Buyer
+  if (/(?:ผู้ซื้อ|ลูกค้า|นามผู้ซื้อ|Customer|Bill\s*To|Ship\s*To)/i.test(l)) {
+    return true;
+  }
+  // 9. Document Number / Date
+  if (/(?:เลขที่ใบกำกับ|เลขที่ใบเสร็จ|เลขที่เอกสาร|Invoice\s*No|Doc\s*No|วันที่|Date)/i.test(l)) {
+    return true;
+  }
+  // 10. Bare Date lines e.g. "11/08/2569"
+  if (/^\s*(?:วันที่\s*)?\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\s*$/.test(l)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Summary and Footer Line Detector
+ * Strictly prevents payment terms, totals, VAT calculations, and signature lines from entering the items table.
+ */
+export function isSummaryOrFooterLine(line: string): boolean {
+  return /(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|จำนวนชิ้นรวม|SUBTOTAL|TOTAL|GRAND TOTAL|VAT|TAX|NET TOTAL|TOTAL DUE|BALANCE|เงื่อนไข|สินค้าสั่งพิเศษ|ใบเสร็จรับเงินนี้จะสมบูรณ์|ผู้รับเงิน|ผู้จ่ายเงิน|CASHIER|เงินสด|ทอนเงิน|CHANGE)/i.test(line);
+}
+
+/**
+ * Split and Format Mixed Thai and English Product Names
+ * e.g. "ARO KITCHEN TOWEL เอโร่ กระดาษอเนกประสงค์"
+ * -> thai: "เอโร่ กระดาษอเนกประสงค์", english: "ARO KITCHEN TOWEL", formatted: "เอโร่ กระดาษอเนกประสงค์ (ARO KITCHEN TOWEL)"
+ */
+export function splitThaiAndEnglishName(raw: string): {
+  thai: string;
+  english: string;
+  formatted: string;
+} {
+  let s = raw.trim().replace(/\s+/g, ' ');
+  const hasThai = /[\u0e00-\u0e7f]/.test(s);
+  const hasEnglish = /[A-Za-z]/.test(s);
+
+  if (!hasThai || !hasEnglish) {
+    return { thai: hasThai ? s : '', english: hasEnglish ? s : '', formatted: s };
+  }
+
+  // Check for explicit delimiter: "/" or "|"
+  const delimMatch = s.match(/^([A-Za-z0-9\s\.\&\+\-]+?)\s*[\/\|]\s*([\u0e00-\u0e7f0-9\s\.\&\+\-]+)$/);
+  if (delimMatch) {
+    const p1 = delimMatch[1].trim();
+    const p2 = delimMatch[2].trim();
+    const eng = /[A-Za-z]/.test(p1) ? p1 : p2;
+    const th = /[\u0e00-\u0e7f]/.test(p2) ? p2 : p1;
+    return { thai: th, english: eng, formatted: `${th} (${eng})` };
+  }
+
+  // Case A: English block at start, Thai block at end (e.g. Makro product naming)
+  const engStartMatch = s.match(/^([A-Za-z0-9][A-Za-z0-9\s\.\&\+\-\/]{1,40})\s+([\u0e00-\u0e7f][\u0e00-\u0e7f0-9\s\.\&\+\-\/]*)$/);
+  if (engStartMatch) {
+    const eng = engStartMatch[1].trim();
+    const th = engStartMatch[2].trim();
+    if (eng.length >= 2 && th.length >= 2 && !/[\u0e00-\u0e7f]/.test(eng)) {
+      return { thai: th, english: eng, formatted: `${th} (${eng})` };
+    }
+  }
+
+  // Case B: Thai block at start, English block at end
+  const thaiStartMatch = s.match(/^([\u0e00-\u0e7f][\u0e00-\u0e7f0-9\s\.\&\+\-\/]*?)\s+([A-Za-z][A-Za-z0-9\s\.\&\+\-\/]{1,40})$/);
+  if (thaiStartMatch) {
+    const th = thaiStartMatch[1].trim();
+    const eng = thaiStartMatch[2].trim();
+    if (th.length >= 2 && eng.length >= 2 && !/[A-Za-z]/.test(th)) {
+      return { thai: th, english: eng, formatted: `${th} (${eng})` };
+    }
+  }
+
+  return { thai: s, english: '', formatted: s };
+}
+
+/**
  * Universal Tail-Token Line Item Parser
  * Parses line items by analyzing numeric columns from the tail of the line.
  * Works seamlessly across any store, product domain, or column structure.
  */
 export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | null {
-  const line = correctTechnicalThaiAndEnglishText(rawLine);
+  if (isHeaderLine(rawLine) || isSummaryOrFooterLine(rawLine)) {
+    return null;
+  }
+
+  let line = correctTechnicalThaiAndEnglishText(rawLine);
   if (!line || line.length < 3) return null;
 
-  const tokens = line.split(' ');
+  // Strip trailing VAT / tax category indicators: " V", " N", " T", " B", " E", " 7%", " 0%", " *", " #"
+  line = line.replace(/[\s|]+(?:[VvNnBbTtEeXx\*#]|7%|0%)[\s|]*$/g, '');
+  line = line.replace(/(\d+(?:\.\d{1,2}))[VvNnBbTtEeXx\*#]$/g, '$1');
+
+  // Strip leading line index e.g. "1." or "1)" or "1 "
+  line = line.replace(/^\s*\d{1,3}[\.\)\s]+/, '').trim();
+
+  // Extract leading Barcode (8-14 digits) or SKU
+  let item_code = '';
+  const gluedMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]*)?(\d{13})\s+(.+)$/);
+  if (gluedMatch) {
+    item_code = gluedMatch[2];
+    line = gluedMatch[3].trim();
+  } else {
+    const splitMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s+(.+)$/);
+    if (splitMatch && splitMatch[2].length + splitMatch[3].length >= 12 && splitMatch[2].length + splitMatch[3].length <= 14) {
+      item_code = splitMatch[2] + splitMatch[3];
+      line = splitMatch[4].trim();
+    } else {
+      const barcodeMatch = line.match(/^(\d{8,14})\s*(.+)$/);
+      if (barcodeMatch) {
+        item_code = barcodeMatch[1];
+        line = barcodeMatch[2].trim();
+      } else {
+        const skuMatch = line.match(/^([A-Za-z0-9\-]{4,15})\s+(.+)$/);
+        if (skuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(skuMatch[1])) {
+          item_code = skuMatch[1];
+          line = skuMatch[2].trim();
+        }
+      }
+    }
+  }
+
+  // Pattern 1: With "@" symbol e.g. [Desc] [Qty] [Unit?] @ [UnitPrice] [Amount]
+  const atMatch = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*(?:([ก-๙a-zA-Z]{1,10})\s*)?@\s*(\d+(?:\.\d{1,2})?)\s+(\d+(?:\.\d{1,2})?)$/);
+  if (atMatch) {
+    const rawDesc = atMatch[1].trim();
+    const qty = parseFloat(atMatch[2]);
+    let unit = atMatch[3] || 'ชิ้น';
+    const unitPrice = parseFloat(atMatch[4]);
+    const totalAmount = parseFloat(atMatch[5]);
+
+    const names = splitThaiAndEnglishName(rawDesc);
+    return {
+      item_code,
+      description: names.formatted,
+      thai_name: names.thai || undefined,
+      english_name: names.english || undefined,
+      quantity: qty,
+      unit,
+      unit_price: unitPrice,
+      total_price: totalAmount
+    };
+  }
+
+  // Pattern 2: Standard whitespace tokenization from tail
+  const tokens = line.split(/\s+/).filter(Boolean);
   if (tokens.length < 2) return null;
 
   const cleanNum = (t: string) => {
@@ -1029,35 +1203,6 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
   let rawDesc = tokens.slice(0, descTokensEndIndex).join(' ').trim();
   if (!rawDesc) return null;
 
-  // Strip leading line index e.g. "1." or "1)" or "1 "
-  rawDesc = rawDesc.replace(/^\s*\d{1,3}[\.\)\s]+/, '').trim();
-
-  // Extract leading Barcode (8-14 digits) or SKU
-  let item_code = '';
-  const gluedMatch = rawDesc.match(/^\s*(?:(\d{1,2})[\s\.\)]*)?(\d{13})\s+(.+)$/);
-  if (gluedMatch) {
-    item_code = gluedMatch[2];
-    rawDesc = gluedMatch[3].trim();
-  } else {
-    const splitMatch = rawDesc.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s+(.+)$/);
-    if (splitMatch && splitMatch[2].length + splitMatch[3].length >= 12 && splitMatch[2].length + splitMatch[3].length <= 14) {
-      item_code = splitMatch[2] + splitMatch[3];
-      rawDesc = splitMatch[4].trim();
-    } else {
-      const barcodeMatch = rawDesc.match(/^(\d{8,14})\s*(.+)$/);
-      if (barcodeMatch) {
-        item_code = barcodeMatch[1];
-        rawDesc = barcodeMatch[2].trim();
-      } else {
-        const skuMatch = rawDesc.match(/^([A-Za-z0-9\-]{4,15})\s+(.+)$/);
-        if (skuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(skuMatch[1])) {
-          item_code = skuMatch[1];
-          rawDesc = skuMatch[2].trim();
-        }
-      }
-    }
-  }
-
   // Dynamic unit normalization
   if (/^แพ[ค็ค]+10$/i.test(unit)) unit = 'แพ็ค (10 ด้าม)';
   else if (/^แพ[ค็ค]+/i.test(unit)) unit = 'แพ็ค';
@@ -1080,9 +1225,13 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
     unit_price = Math.round((total_price / quantity) * 100) / 100;
   }
 
+  const names = splitThaiAndEnglishName(rawDesc);
+
   return {
     item_code,
-    description: rawDesc,
+    description: names.formatted,
+    thai_name: names.thai || undefined,
+    english_name: names.english || undefined,
     quantity,
     unit,
     unit_price,
@@ -1202,8 +1351,9 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     // Detect Table Header Row
     if (tableHeaderIndex === -1) {
       if (
-        /(?:ลำดับ|NO\.|ITEM|SKU|รหัส|รายการ|รายละเอียด|คำอธิบาย|DESCRIPTION|ชื่อสินค้า).*?(?:จำนวน|หน่วย|ราคา|จำนวนเงิน|QTY|UNIT|PRICE|AMOUNT|TOTAL)/i.test(l) ||
-        /^(?:ลำดับ|No\.|Item|SKU|รหัสสินค้า|รายการ|รายละเอียด)\s/i.test(l)
+        /(?:ลำดับ|NO\.|ITEM|SKU|รหัส|รายการ|รายละเอียด|คำอธิบาย|DESCRIPTION|ชื่อสินค้า|BARCODE).*?(?:จำนวน|หน่วย|ราคา|จำนวนเงิน|QTY|UNIT|PRICE|AMOUNT|TOTAL)/i.test(l) ||
+        /^(?:ลำดับ|No\.|Item|SKU|รหัสสินค้า|รายการ|รายละเอียด)\s/i.test(l) ||
+        /^(?:BARCODE|DESCRIPTION|รหัสสินค้า|รายการสินค้า|ชื่อสินค้า|ลำดับ|NO\.)(?:\s*[\/\-]\s*(?:BARCODE|DESCRIPTION|รายการ|ชื่อสินค้า|\w+))*$/i.test(l)
       ) {
         tableHeaderIndex = i;
         continue;
@@ -1224,6 +1374,7 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   if (tableHeaderIndex === -1) {
     for (let i = 0; i < lines.length; i++) {
       if (summaryAnchorIndex !== -1 && i >= summaryAnchorIndex) break;
+      if (isHeaderLine(lines[i])) continue;
       const testItem = parseUniversalItemLine(lines[i]);
       if (testItem) {
         tableHeaderIndex = Math.max(0, i - 1);
@@ -1237,11 +1388,37 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   }
 
   // 2. Extract Line Items strictly in the Table Body (between tableHeaderIndex and summaryAnchorIndex)
+  let pendingBarcode = '';
+  let pendingDesc = '';
+
   for (let i = tableHeaderIndex + 1; i < summaryAnchorIndex; i++) {
     const rawLine = lines[i];
+    if (isHeaderLine(rawLine) || isSummaryOrFooterLine(rawLine)) continue;
+
+    // Skip standalone table header lines
+    if (
+      /(?:ลำดับ|NO\.|ITEM|SKU|รหัส|รายการ|รายละเอียด|คำอธิบาย|DESCRIPTION|ชื่อสินค้า|BARCODE).*?(?:จำนวน|หน่วย|ราคา|จำนวนเงิน|QTY|UNIT|PRICE|AMOUNT|TOTAL)/i.test(rawLine) ||
+      /^(?:BARCODE|DESCRIPTION|รหัสสินค้า|รายการสินค้า|ชื่อสินค้า|ลำดับ|NO\.)(?:\s*[\/\-]\s*(?:BARCODE|DESCRIPTION|รายการ|ชื่อสินค้า|\w+))*$/i.test(rawLine)
+    ) {
+      pendingBarcode = '';
+      pendingDesc = '';
+      continue;
+    }
+
     const parsedItem = parseUniversalItemLine(rawLine);
 
     if (parsedItem) {
+      if (pendingBarcode && !parsedItem.item_code) {
+        parsedItem.item_code = pendingBarcode;
+      }
+      if (pendingDesc) {
+        const merged = `${pendingDesc} ${parsedItem.description}`.trim();
+        const sep = splitThaiAndEnglishName(merged);
+        parsedItem.description = sep.formatted;
+        parsedItem.thai_name = sep.thai || undefined;
+        parsedItem.english_name = sep.english || undefined;
+      }
+
       // Avoid duplicate row insertions
       const isDup = items.some(
         (existing) =>
@@ -1252,19 +1429,20 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       if (!isDup) {
         items.push(parsedItem);
       }
-    } else if (
-      items.length > 0 &&
-      rawLine.length >= 3 &&
-      !/^(?:ผู้รับ|ลงชื่อ|วันที่|หมายเหตุ|ชำระ|เงินสด|บัตร|สมาชิก|สาขา|หน้าที่|เอกสาร|sou)/i.test(rawLine) &&
-      !excludeKeywords.some((kw) => rawLine.toUpperCase().includes(kw.toUpperCase()))
-    ) {
-      // Multi-line description continuation: safely append to preceding item
-      const lastItem = items[items.length - 1];
-      const cleanContinuation = cleanItemDescription(cleanThaiText(rawLine));
-      if (cleanContinuation.length >= 2) {
-        lastItem.description = correctTechnicalThaiAndEnglishText(
-          (lastItem.description + ' ' + cleanContinuation).replace(/\s+/g, ' ').trim()
-        );
+      pendingBarcode = '';
+      pendingDesc = '';
+    } else {
+      // Check if this line is a barcode or product title row before a price row (e.g. Makro multi-line format)
+      const bcMatch = rawLine.match(/^(\d{8,14})\s*(.*)$/);
+      if (bcMatch) {
+        pendingBarcode = bcMatch[1];
+        pendingDesc = bcMatch[2].trim();
+      } else if (
+        /[A-Za-zก-๙]{3,}/.test(rawLine) &&
+        !/^\d+$/.test(rawLine) &&
+        !excludeKeywords.some((kw) => rawLine.toUpperCase().includes(kw.toUpperCase()))
+      ) {
+        pendingDesc = pendingDesc ? `${pendingDesc} ${rawLine}` : rawLine;
       }
     }
   }
@@ -1405,10 +1583,15 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
 
   // 5. Apply Deep Thai Lexicon Auto-Correction on Vendor & Items
   vendorName = cleanCompanyName(vendorName);
-  const cleanedItems = bestItems.map((item) => ({
-    ...item,
-    description: correctTechnicalThaiAndEnglishText(item.description)
-  }));
+  const cleanedItems = bestItems.map((item) => {
+    const sep = splitThaiAndEnglishName(item.description);
+    return {
+      ...item,
+      description: sep.formatted,
+      thai_name: item.thai_name || sep.thai || undefined,
+      english_name: item.english_name || sep.english || undefined
+    };
+  });
 
   // 6. Summary Zoom Pass
   let grandTotal = mainParsed.total_amount || 0;

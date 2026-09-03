@@ -29,6 +29,8 @@ interface Item {
   id: string;
   item_code: string;
   description: string;
+  thai_name?: string;
+  english_name?: string;
   quantity: number;
   unit: string;
   unit_price: number;
@@ -377,6 +379,8 @@ export default function AutoWordPage() {
                         id: Date.now().toString() + '_item_' + idx,
                         item_code: item.item_code || '',
                         description: item.description,
+                        thai_name: item.thai_name || undefined,
+                        english_name: item.english_name || undefined,
                         quantity: item.quantity,
                         unit: item.unit || 'ชิ้น',
                         unit_price: item.unit_price,
@@ -492,6 +496,8 @@ export default function AutoWordPage() {
                 id: Date.now().toString() + '_item_' + idx,
                 item_code: item.item_code || '',
                 description: item.description,
+                thai_name: item.thai_name || undefined,
+                english_name: item.english_name || undefined,
                 quantity: item.quantity,
                 unit: item.unit || 'ชิ้น',
                 unit_price: item.unit_price,
@@ -1848,6 +1854,66 @@ export default function AutoWordPage() {
                 </div>
               )}
 
+              {/* Mixed Thai-English Quick Format Toolbar */}
+              {activeInvoice.items.some(i => i.thai_name && i.english_name) && (
+                <div className="p-3 rounded-2xl bg-indigo-50/80 border border-indigo-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span className="font-bold text-indigo-950">
+                      ตรวจพบชื่อสินค้ามีทั้งภาษาไทยและอังกฤษในบิลนี้:
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] text-indigo-700 font-semibold">ปรับรูปแบบทั้งบิล:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = activeInvoice.items.map(it => {
+                          if (it.thai_name && it.english_name) {
+                            return { ...it, description: `${it.thai_name} (${it.english_name})` };
+                          }
+                          return it;
+                        });
+                        handleUpdateInvoice(activeInvoice.id, 'items', updated);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-[11px] border border-indigo-200 transition shadow-xs"
+                    >
+                      🇹🇭+🇬🇧 รวมไทย (อังกฤษ)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = activeInvoice.items.map(it => {
+                          if (it.thai_name) {
+                            return { ...it, description: it.thai_name };
+                          }
+                          return it;
+                        });
+                        handleUpdateInvoice(activeInvoice.id, 'items', updated);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-[11px] border border-indigo-200 transition shadow-xs"
+                    >
+                      🇹🇭 เฉพาะชื่อไทย
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = activeInvoice.items.map(it => {
+                          if (it.english_name) {
+                            return { ...it, description: it.english_name };
+                          }
+                          return it;
+                        });
+                        handleUpdateInvoice(activeInvoice.id, 'items', updated);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-700 font-bold rounded-xl text-[11px] border border-indigo-200 transition shadow-xs"
+                    >
+                      🇬🇧 เฉพาะ English
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Items Table */}
               <datalist id="thai-units">
                 {['ชิ้น', 'ชุด', 'กล่อง', 'แพ็ค', 'เครื่อง', 'ตัว', 'ม้วน', 'เล่ม', 'แผ่น', 'อัน', 'คู่', 'ตลับ', 'กิโลกรัม', 'เมตร'].map(u => (
@@ -1905,6 +1971,56 @@ export default function AutoWordPage() {
                                 isDuplicate ? 'border-amber-400 bg-amber-50/50 text-amber-900' : 'border-slate-200'
                               }`}
                             />
+                            {item.thai_name && item.english_name && (
+                              <div className="flex flex-wrap items-center gap-1 mt-1">
+                                <span className="text-[10px] text-slate-400 font-medium">แยกชื่อ:</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateItem(activeInvoice.id, item.id, 'description', `${item.thai_name} (${item.english_name})`);
+                                  }}
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+                                    item.description === `${item.thai_name} (${item.english_name})`
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  }`}
+                                  title="ชื่อไทย (English)"
+                                >
+                                  🇹🇭+🇬🇧 รวม
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateItem(activeInvoice.id, item.id, 'description', item.thai_name!);
+                                  }}
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+                                    item.description === item.thai_name
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  }`}
+                                  title="เฉพาะชื่อภาษาไทย"
+                                >
+                                  🇹🇭 เฉพาะไทย
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateItem(activeInvoice.id, item.id, 'description', item.english_name!);
+                                  }}
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition ${
+                                    item.description === item.english_name
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                  }`}
+                                  title="เฉพาะชื่อภาษาอังกฤษ"
+                                >
+                                  🇬🇧 English
+                                </button>
+                              </div>
+                            )}
                           </td>
                           <td className="p-2">
                             <input
