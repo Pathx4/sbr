@@ -5,8 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "7860:7860"
+    # ไม่ต้องเปิดพอร์ตสู่ Host (Zero Inbound Port) เพื่อไม่ให้ชนกับ Container อื่นบน Server
+    # ports:
+    #   - "7860:7860"
     environment:
       - PORT=7860
     restart: unless-stopped

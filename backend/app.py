@@ -6,7 +6,7 @@ import re
 import time
 import base64
 import requests
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from PIL import Image
 from google import genai
@@ -28,6 +28,23 @@ load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+# ==========================================
+# Serve Single Page Application (SPA) Frontend
+# ==========================================
+@app.route('/')
+def serve_index():
+    if os.path.exists(os.path.join(app.static_folder, 'index.html')):
+        return send_from_directory(app.static_folder, 'index.html')
+    return "Backend running. Please build frontend first.", 200
+
+@app.errorhandler(404)
+def spa_fallback(e):
+    if request.path.startswith('/api/'):
+        return jsonify({"error": "Not Found"}), 404
+    if os.path.exists(os.path.join(app.static_folder, 'index.html')):
+        return send_from_directory(app.static_folder, 'index.html')
+    return "Frontend build not found.", 404
 
 # API Key Placeholder
 HARDCODED_API_KEY = os.environ.get("API_KEY", "")
