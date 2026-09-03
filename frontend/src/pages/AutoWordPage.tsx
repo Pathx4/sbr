@@ -3,8 +3,8 @@ import { runTesseract, runMultiPassTesseract, setOcrModel, getOcrModel, type Ocr
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
-  Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic, Sparkles,
-  Hand, X, Zap
+  Loader2, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic, Sparkles,
+  Hand, Zap
 } from 'lucide-react';
 import { bahttext } from 'bahttext';
 import contactsData from '../data/contacts.json';
@@ -14,11 +14,7 @@ import {
   preprocessImageForOcr, 
   preprocessMultiPassImageForOcrDeep5,
   parseThaiReceiptOcr, 
-  parseThaiReceiptOcrDeep5,
-  extractVendorNameFromText, 
-  cleanCompanyName,
-  parseUniversalItemLine,
-  splitThaiAndEnglishName
+  parseThaiReceiptOcrDeep5
 } from '../utils/imageOcrOptimizer';
 import { isPdfFile, processPdfDocument } from '../utils/pdfOcrService';
 import { getStoredUser } from '../utils/auth';
@@ -154,10 +150,6 @@ export default function AutoWordPage() {
   const [activeInvoiceId, setActiveInvoiceId] = useState<string | null>(null);
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
 
-  // Interactive Crop Canvas State
-  const [cropSelection, setCropSelection] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
-  const [isDraggingCrop, setIsDraggingCrop] = useState(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   // OCR state
@@ -173,11 +165,10 @@ export default function AutoWordPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Image Studio & Effects State
+  // Image Viewer & Effects State
   const [zoomLevel, setZoomLevel] = useState(1);
   const [rotationAngle, setRotationAngle] = useState(0);
   const [filterMode, setFilterMode] = useState<'normal' | 'contrast' | 'invert'>('normal');
-  const [activeTool, setActiveTool] = useState<'pan' | 'crop'>('pan');
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
@@ -186,15 +177,6 @@ export default function AutoWordPage() {
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [scanEngineMode, setScanEngineMode] = useState<'deep' | 'quick'>('deep');
   const [ocrModelQuality, setOcrModelQuality] = useState<OcrModelType>(getOcrModel());
-
-  // Studio v3.0 Crop Inspector State
-  const [cropResultModal, setCropResultModal] = useState<{
-    isOpen: boolean;
-    previewUrl: string;
-    rawText: string;
-    parsedItem: any | null;
-    parsedVendor: string;
-  } | null>(null);
 
 
 
@@ -558,129 +540,10 @@ export default function AutoWordPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Perform Zone OCR Scan on Cropped Selection (Studio v3.0 Super-Sampling)
-  const handleCropScan = async (targetType: 'items' | 'vendor' | 'auto' | 'inspect' = 'inspect') => {
-    if (!activeInvoice || !activeInvoice.imagePreview) {
-      setStatusMsg({ type: 'error', text: 'กรุณาอัปโหลดหรือเลือกรูปบิลก่อนสแกน' });
-      return;
-    }
-
-    if (!cropSelection || cropSelection.width < 10 || cropSelection.height < 10) {
-      setStatusMsg({ type: 'error', text: 'กรุณาลากกรอบสี่เหลี่ยมบนรูปภาพบิลเพื่อเลือกพื้นที่สแกน' });
-      return;
-    }
-
-    const img = imageRef.current;
-    if (!img) return;
-
-    setIsScanning(true);
-    setScanStatus('Studio v3.0: กำลังขยายความละเอียด 300 DPI และถอดรหัสข้อความด้วย Neural OCR...');
-
-    try {
-      // 1. Calculate scale between displayed image and natural image dimensions
-      const scaleX = img.naturalWidth / img.width;
-      const scaleY = img.naturalHeight / img.height;
-
-      const cropX = cropSelection.x * scaleX;
-      const cropY = cropSelection.y * scaleY;
-      const cropW = cropSelection.width * scaleX;
-      const cropH = cropSelection.height * scaleY;
-
-      // 2. High-DPI Super-sampling canvas (at least 1800px wide, or 3.5x scale)
-      const canvas = document.createElement('canvas');
-      let targetW = cropW;
-      let targetH = cropH;
-      const minW = 1800;
-      if (targetW < minW) {
-        const r = minW / targetW;
-        targetW = minW;
-        targetH = Math.round(targetH * r);
-      }
-
-      canvas.width = targetW;
-      canvas.height = targetH;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error("Canvas context failed");
-
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
-
-      // 3. Contrast sharpening filter on crop
-      const imgData = ctx.getImageData(0, 0, targetW, targetH);
-      const d = imgData.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        const enhanced = gray > 180 ? 255 : Math.max(0, gray * 0.85);
-        d[i] = enhanced;
-        d[i + 1] = enhanced;
-        d[i + 2] = enhanced;
-      }
-      ctx.putImageData(imgData, 0, 0);
-
-      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.98);
-
-      // 4. Run Tesseract with PSM.SINGLE_BLOCK for accurate line detection
-      const { rawText: text } = await runTesseract(croppedDataUrl, undefined, { psm: '6' });
-      console.log("Studio v3.0 Crop OCR Raw Text:", text);
-
-      const cleanText = text.trim();
-      const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
-
-      // 5. Try parsing as single item or multi-line item
-      let detectedItem: any = null;
-      for (const line of lines) {
-        const it = parseUniversalItemLine(line);
-        if (it) {
-          detectedItem = it;
-          break;
-        }
-      }
-      if (!detectedItem) {
-        const fullParsed = parseThaiReceiptOcr(cleanText);
-        if (fullParsed.items && fullParsed.items.length > 0) {
-          detectedItem = fullParsed.items[0];
-        }
-      }
-
-      // 6. Try parsing as vendor
-      const cleanVendor = extractVendorNameFromText(cleanText) || cleanCompanyName(cleanText);
-
-      // 7. If targetType is directly 'vendor' and vendor detected, auto-apply:
-      if (targetType === 'vendor' && cleanVendor) {
-        handleUpdateInvoice(activeInvoice.id, 'vendor_name', cleanVendor);
-        setStatusMsg({ type: 'success', text: `ดึงชื่อร้านค้าจากพื้นที่เลือก: "${cleanVendor}"` });
-        setCropSelection(null);
-        return;
-      }
-
-      // 8. Open Crop Result Inspector Modal
-      setCropResultModal({
-        isOpen: true,
-        previewUrl: croppedDataUrl,
-        rawText: cleanText,
-        parsedItem: detectedItem,
-        parsedVendor: cleanVendor,
-      });
-
-      setStatusMsg({
-        type: 'success',
-        text: `Studio v3.0 ถอดข้อความสำเร็จ: ${lines.length} บรรทัด`,
-      });
-
-    } catch (err: any) {
-      console.error(err);
-      setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนพื้นที่เลือก: ${err.message || err}` });
-    } finally {
-      setIsScanning(false);
-    }
-  };
-
   // Pan & Zoom Controls
   const handleResetPanZoom = () => {
     setZoomLevel(1);
     setPanPosition({ x: 0, y: 0 });
-    setCropSelection(null);
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
@@ -692,24 +555,14 @@ export default function AutoWordPage() {
     });
   };
 
-  // Mouse Handlers for Pan & Crop Tools
+  // Smooth Mouse Pan Handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
-    if (activeTool === 'pan' || e.button === 1 || e.altKey) {
-      setIsPanning(true);
-      setPanStart({
-        x: e.clientX - panPosition.x,
-        y: e.clientY - panPosition.y
-      });
-    } else {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      setDragStart({ x, y });
-      setCropSelection({ x, y, width: 0, height: 0 });
-      setIsDraggingCrop(true);
-    }
+    setIsPanning(true);
+    setPanStart({
+      x: e.clientX - panPosition.x,
+      y: e.clientY - panPosition.y
+    });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -719,28 +572,11 @@ export default function AutoWordPage() {
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y
       });
-    } else if (isDraggingCrop && dragStart) {
-      e.preventDefault();
-      const rect = e.currentTarget.getBoundingClientRect();
-      const currentX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-      const currentY = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
-
-      const width = currentX - dragStart.x;
-      const height = currentY - dragStart.y;
-
-      setCropSelection({
-        x: width < 0 ? currentX : dragStart.x,
-        y: height < 0 ? currentY : dragStart.y,
-        width: Math.abs(width),
-        height: Math.abs(height)
-      });
     }
   };
 
   const handleMouseUp = () => {
     setIsPanning(false);
-    setIsDraggingCrop(false);
-    setDragStart(null);
   };
 
   const getTodayThaiDate = () => {
@@ -1247,36 +1083,6 @@ export default function AutoWordPage() {
           {activeInvoice && activeInvoice.imagePreview && (
             <div className="space-y-2">
               <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-50 rounded-2xl border border-slate-200/70 text-xs">
-                {/* Tool Mode Selector: Pan vs Crop */}
-                <div className="flex items-center p-0.5 bg-slate-200/70 rounded-xl">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTool('pan')}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      activeTool === 'pan'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                    title="โหมดเลื่อนดูรูป (คลิกลากเพื่อเลื่อนดูส่วนต่างๆ)"
-                  >
-                    <Hand className="w-3.5 h-3.5" />
-                    <span>เลื่อนดูรูป</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTool('crop')}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
-                      activeTool === 'crop'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                    title="โหมดลากกรอบสแกนเฉพาะจุด (Crop Box)"
-                  >
-                    <Crop className="w-3.5 h-3.5" />
-                    <span>ลากกรอบสแกน</span>
-                  </button>
-                </div>
-
                 {/* Zoom Controls with 1-click Reset */}
                 <div className="flex items-center gap-1">
                   <button
@@ -1309,7 +1115,7 @@ export default function AutoWordPage() {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => setRotationAngle(prev => (prev + 90) % 360)}
-                    className="flex items-center gap-1 px-2 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-xs text-[11px] font-semibold"
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg border border-slate-200 shadow-xs text-[11px] font-semibold"
                     title="หมุนภาพ 90 องศา"
                   >
                     <RotateCw className="w-3.5 h-3.5 text-blue-600" />
@@ -1317,7 +1123,7 @@ export default function AutoWordPage() {
                   </button>
                   <button
                     onClick={() => setFilterMode(prev => prev === 'normal' ? 'contrast' : 'normal')}
-                    className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border shadow-xs text-[11px] font-semibold transition ${
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border shadow-xs text-[11px] font-semibold transition ${
                       filterMode === 'contrast'
                         ? 'bg-blue-600 text-white border-blue-600'
                         : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
@@ -1333,17 +1139,8 @@ export default function AutoWordPage() {
               {/* Status Hint Bar */}
               <div className="flex items-center justify-between px-3 py-1 bg-blue-50/70 border border-blue-200/60 rounded-xl text-[11px] text-blue-800">
                 <span className="flex items-center gap-1.5">
-                  {activeTool === 'pan' ? (
-                    <>
-                      <Hand className="w-3.5 h-3.5 text-blue-600" />
-                      <span><strong>โหมดเลื่อนดูรูป:</strong> คลิกค้างแล้วลากเพื่อเลื่อนดูส่วนต่างๆ • หมุนลูกกลิ้งเมาส์เพื่อซูมเข้า/ออก</span>
-                    </>
-                  ) : (
-                    <>
-                      <Crop className="w-3.5 h-3.5 text-blue-600" />
-                      <span><strong>โหมดลากกรอบ:</strong> คลิกค้างแล้วลากสี่เหลี่ยมคลุมข้อความที่ต้องการสแกนเจาะจง</span>
-                    </>
-                  )}
+                  <Hand className="w-3.5 h-3.5 text-blue-600" />
+                  <span>คลิกค้างแล้วลากเพื่อเลื่อนดูส่วนต่างๆ • หมุนลูกกลิ้งเมาส์เพื่อซูมเข้า/ออก</span>
                 </span>
                 {(zoomLevel !== 1 || panPosition.x !== 0 || panPosition.y !== 0) && (
                   <button
@@ -1357,14 +1154,12 @@ export default function AutoWordPage() {
             </div>
           )}
 
-          {/* Interactive PanZoom & Crop Image Canvas */}
+          {/* Interactive PanZoom Image Canvas */}
           {activeInvoice && activeInvoice.imagePreview ? (
             <div className="space-y-3">
               <div
                 className={`relative bg-slate-950 rounded-2xl overflow-hidden select-none border border-slate-300 min-h-[440px] max-h-[620px] flex items-center justify-center shadow-inner ${
-                  activeTool === 'pan'
-                    ? isPanning ? 'cursor-grabbing' : 'cursor-grab'
-                    : 'cursor-crosshair'
+                  isPanning ? 'cursor-grabbing' : 'cursor-grab'
                 }`}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
@@ -1390,52 +1185,7 @@ export default function AutoWordPage() {
                   }}
                   className="max-w-full max-h-[600px] object-contain select-none pointer-events-none"
                 />
-
-                {/* Selection Bounding Box Overlay (Active in Crop Mode) */}
-                {activeTool === 'crop' && cropSelection && cropSelection.width > 0 && cropSelection.height > 0 && (
-                  <div
-                    className="absolute border-2 border-blue-400 bg-blue-500/25 backdrop-blur-[1px] shadow-lg pointer-events-none ring-2 ring-blue-500/30 animate-pulse"
-                    style={{
-                      left: `${cropSelection.x}px`,
-                      top: `${cropSelection.y}px`,
-                      width: `${cropSelection.width}px`,
-                      height: `${cropSelection.height}px`
-                    }}
-                  >
-                    <span className="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded shadow">
-                      พื้นที่สแกน ({Math.round(cropSelection.width)} × {Math.round(cropSelection.height)} px)
-                    </span>
-                  </div>
-                )}
               </div>
-
-              {/* Action Buttons for Crop Scan */}
-              {activeTool === 'crop' && (
-                <div className="flex flex-wrap gap-2 pt-1 animate-in fade-in duration-200">
-                  <button
-                    onClick={() => handleCropScan('auto')}
-                    disabled={isScanning || !cropSelection}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 disabled:opacity-40"
-                  >
-                    {isScanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crop className="w-3.5 h-3.5" />}
-                    <span>สแกนเฉพาะกรอบที่ลากคลุม</span>
-                  </button>
-                  <button
-                    onClick={() => handleCropScan('vendor')}
-                    disabled={isScanning || !cropSelection}
-                    className="flex items-center gap-1 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold text-xs rounded-xl border border-indigo-200 transition disabled:opacity-40"
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>ดึงชื่อร้าน</span>
-                  </button>
-                  <button
-                    onClick={() => setCropSelection(null)}
-                    className="px-3 py-2 text-slate-500 hover:bg-slate-100 text-xs font-medium rounded-xl transition"
-                  >
-                    ล้างกรอบ
-                  </button>
-                </div>
-              )}
             </div>
           ) : (
             <div
@@ -2352,159 +2102,6 @@ export default function AutoWordPage() {
         </div>
       </div>
 
-      {/* Studio v3.0 Interactive Crop Result Inspector Modal */}
-      {cropResultModal && cropResultModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200/80 space-y-5">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
-                    ผลการถอดข้อความจากกรอบ (Studio v3.0 Inspector)
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    โมเดล Neural ความแม่นยำสูง (Tessdata Best) • ขยายคมชัด 300 DPI
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCropResultModal(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Cropped Image Snippet Preview */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-700">ภาพพื้นที่ที่คุณลากกรอบ (300 DPI Super-Sampling):</label>
-              <div className="p-2 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center max-h-36 overflow-hidden">
-                <img src={cropResultModal.previewUrl} alt="Cropped Preview" className="max-h-32 object-contain rounded-lg" />
-              </div>
-            </div>
-
-            {/* Extracted Text (Editable) */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-slate-700">ข้อความที่ระบบถอดได้ (แก้ไขได้ทันที):</label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(cropResultModal.rawText);
-                    setStatusMsg({ type: 'success', text: 'คัดลอกข้อความลงคลิปบอร์ดแล้ว' });
-                  }}
-                  className="flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold"
-                >
-                  <Copy className="w-3 h-3" />
-                  <span>คัดลอกข้อความ</span>
-                </button>
-              </div>
-              <textarea
-                value={cropResultModal.rawText}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const it = parseUniversalItemLine(val);
-                  setCropResultModal(prev => prev ? { ...prev, rawText: val, parsedItem: it } : null);
-                }}
-                rows={3}
-                className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:ring-2 focus:ring-indigo-500"
-                placeholder="ข้อความที่ถอดได้..."
-              />
-            </div>
-
-            {/* Parsed Item Card Preview (if detected) */}
-            {cropResultModal.parsedItem ? (
-              <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>ตรวจพบข้อมูลสินค้า:</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div><span className="text-slate-500">ชื่อสินค้า:</span> <span className="font-semibold text-slate-800">{cropResultModal.parsedItem.description}</span></div>
-                  <div><span className="text-slate-500">SKU / บาร์โค้ด:</span> <span className="font-mono">{cropResultModal.parsedItem.item_code || '-'}</span></div>
-                  <div><span className="text-slate-500">จำนวน:</span> <span className="font-semibold">{cropResultModal.parsedItem.quantity} {cropResultModal.parsedItem.unit}</span></div>
-                  <div><span className="text-slate-500">ราคาต่อหน่วย:</span> <span className="font-semibold">฿{cropResultModal.parsedItem.unit_price}</span></div>
-                  <div className="col-span-2 pt-1 border-t border-emerald-200/60 text-emerald-800 font-bold">
-                    ยอดรวม: ฿{cropResultModal.parsedItem.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-[11px] text-slate-600">
-                ℹ️ หากต้องการเพิ่มเป็นสินค้า ให้ใส่จำนวนและราคาต่อท้ายข้อความ หรือกดปุ่ม "บันทึกเป็นชื่อร้านค้า" ด้านล่าง
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setCropResultModal(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
-              >
-                ปิด
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!activeInvoice) return;
-                  const vName = cleanCompanyName(cropResultModal.rawText.split('\n')[0].trim());
-                  handleUpdateInvoice(activeInvoice.id, 'vendor_name', vName || cropResultModal.rawText.trim());
-                  setStatusMsg({ type: 'success', text: `บันทึกชื่อร้านค้า "${vName || cropResultModal.rawText.trim()}" สำเร็จ!` });
-                  setCropResultModal(null);
-                  setCropSelection(null);
-                }}
-                className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-200 transition"
-              >
-                🏪 บันทึกเป็นชื่อร้านค้า
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!activeInvoice) return;
-                  const it = cropResultModal.parsedItem || {
-                    item_code: '',
-                    description: cropResultModal.rawText.split('\n')[0].trim() || 'พัสดุ',
-                    quantity: 1,
-                    unit: 'ชิ้น',
-                    unit_price: 0,
-                    total_price: 0,
-                  };
-                  const sep = splitThaiAndEnglishName(it.description);
-                  const newItem: Item = {
-                    id: Date.now().toString() + '_crop',
-                    item_code: it.item_code || '',
-                    description: sep.formatted,
-                    thai_name: it.thai_name || sep.thai || undefined,
-                    english_name: it.english_name || sep.english || undefined,
-                    quantity: it.quantity,
-                    unit: it.unit || 'ชิ้น',
-                    unit_price: it.unit_price,
-                    total_price: it.total_price,
-                  };
-                  setInvoices(prev => prev.map(inv => {
-                    if (inv.id === activeInvoice.id) {
-                      return { ...inv, items: [...inv.items, newItem] };
-                    }
-                    return inv;
-                  }));
-                  setStatusMsg({ type: 'success', text: `เพิ่มรายการ "${newItem.description}" เข้าตารางพัสดุสำเร็จ!` });
-                  setCropResultModal(null);
-                  setCropSelection(null);
-                }}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
-              >
-                + เพิ่มเป็นรายการสินค้า
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Document Live Preview Modal */}
       <DocumentPreviewModal

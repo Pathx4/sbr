@@ -340,7 +340,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
           height = Math.round(height * ratio);
         }
 
-        // 1. Pass Main: Color-Suppressed Background Normalization + Sharp Edge Mask (for Thai Tone Marks & Vowels)
+        // 1. Pass Main: Color-Suppressed Background Normalization (Crisp, zero-halo for Thai vowels & tone marks)
         const canvasMain = document.createElement('canvas');
         canvasMain.width = width;
         canvasMain.height = height;
@@ -354,7 +354,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
         const imgDataMain = ctxMain.getImageData(0, 0, width, height);
         const dataMain = imgDataMain.data;
 
-        // Apply document background normalization (erases blue/cyan watermark & paper tint)
+        // Apply document background normalization (erases blue/cyan watermark, stamps & paper shadows)
         const normGray = normalizeDocumentBackground(dataMain, width, height, true);
         for (let i = 0, j = 0; i < dataMain.length; i += 4, j++) {
           const g = normGray[j];
@@ -362,42 +362,31 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
           dataMain[i + 1] = g;
           dataMain[i + 2] = g;
         }
-
-        const sharpBuffer = new Uint8ClampedArray(dataMain);
-        const w = width;
-        const h = height;
-        for (let y = 1; y < h - 1; y++) {
-          for (let x = 1; x < w - 1; x++) {
-            const idx = (y * w + x) * 4;
-            const blurred = (
-              sharpBuffer[((y - 1) * w + (x - 1)) * 4] + sharpBuffer[((y - 1) * w + x) * 4] * 2 + sharpBuffer[((y - 1) * w + (x + 1)) * 4] +
-              sharpBuffer[(y * w + (x - 1)) * 4] * 2 + sharpBuffer[(y * w + x) * 4] * 4 + sharpBuffer[(y * w + (x + 1)) * 4] * 2 +
-              sharpBuffer[((y + 1) * w + (x - 1)) * 4] + sharpBuffer[((y + 1) * w + x) * 4] * 2 + sharpBuffer[((y + 1) * w + (x + 1)) * 4]
-            ) / 16;
-            const orig = sharpBuffer[idx];
-            const sharpened = Math.max(0, Math.min(255, Math.round(orig + 1.25 * (orig - blurred))));
-            dataMain[idx] = sharpened;
-            dataMain[idx + 1] = sharpened;
-            dataMain[idx + 2] = sharpened;
-          }
-        }
         ctxMain.putImageData(imgDataMain, 0, 0);
         const passMain = canvasMain.toDataURL('image/jpeg', 0.98);
 
-        // 2. Pass Sauvola: Adaptive Binarization on Normalized Gray (for Clean Digits & Column Boundaries)
-        const canvasSauvola = document.createElement('canvas');
-        canvasSauvola.width = width;
-        canvasSauvola.height = height;
-        const ctxSauvola = canvasSauvola.getContext('2d');
-        if (!ctxSauvola) throw new Error('No Sauvola context');
+        // 2. Pass Contrast: Adaptive High-Contrast Stretch (ideal for faint thermal paper & dot-matrix ink)
+        const canvasContrast = document.createElement('canvas');
+        canvasContrast.width = width;
+        canvasContrast.height = height;
+        const ctxContrast = canvasContrast.getContext('2d');
+        if (!ctxContrast) throw new Error('No Contrast context');
 
-        ctxSauvola.drawImage(img, 0, 0, width, height);
-        const imgDataSauvola = ctxSauvola.getImageData(0, 0, width, height);
-        applySauvolaThreshold(imgDataSauvola.data, width, height, 71, 0.22, normGray);
-        ctxSauvola.putImageData(imgDataSauvola, 0, 0);
-        const passSauvola = canvasSauvola.toDataURL('image/jpeg', 0.98);
+        const imgDataContrast = ctxContrast.createImageData(width, height);
+        const dataContrast = imgDataContrast.data;
+        for (let i = 0, j = 0; i < dataContrast.length; i += 4, j++) {
+          const g = normGray[j];
+          // Gentle linear contrast stretch without binary threshold destruction
+          const stretched = g < 140 ? Math.max(0, Math.round(g * 0.7)) : g > 200 ? 255 : g;
+          dataContrast[i] = stretched;
+          dataContrast[i + 1] = stretched;
+          dataContrast[i + 2] = stretched;
+          dataContrast[i + 3] = 255;
+        }
+        ctxContrast.putImageData(imgDataContrast, 0, 0);
+        const passSauvola = canvasContrast.toDataURL('image/jpeg', 0.98);
 
-        // 3. Pass Header: Top 38% zoomed
+        // 3. Pass Header: Top 38% zoomed for vendor & invoice metadata
         const canvasHeader = document.createElement('canvas');
         const headerH = Math.round(height * 0.38);
         canvasHeader.width = width;
@@ -408,7 +397,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
         }
         const passHeader = canvasHeader.toDataURL('image/jpeg', 0.98);
 
-        // 4. Pass Summary: Bottom 35% zoomed
+        // 4. Pass Summary: Bottom 35% zoomed for totals, discount & VAT
         const canvasSummary = document.createElement('canvas');
         const summaryH = Math.round(height * 0.35);
         const summaryY = height - summaryH;
@@ -416,7 +405,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
         canvasSummary.height = summaryH;
         const ctxSummary = canvasSummary.getContext('2d');
         if (ctxSummary) {
-          ctxSummary.drawImage(canvasSauvola, 0, summaryY, width, summaryH, 0, 0, width, summaryH);
+          ctxSummary.drawImage(canvasContrast, 0, summaryY, width, summaryH, 0, 0, width, summaryH);
         }
         const passSummary = canvasSummary.toDataURL('image/jpeg', 0.98);
 
@@ -752,12 +741,21 @@ export function extractVendorNameFromText(text: string): string {
 export function extractTaxId13Digits(text: string): string {
   const lines = text.split('\n');
   for (const line of lines) {
-    const match = line.match(/(?:เลขประจำตัวผู้เสียภาษี|ผู้เสียภาษี|TAX\s*ID|TAX\s*NO)[\s\:\#\-]*(\d[\d\-\s]{12,18}\d)/i);
+    const match = line.match(/(?:เลขประจำตัวผู้เสียภาษี|ผู้เสียภาษี|TAX\s*ID|TAX\s*NO|Taxpayer\s*ID)[\s\:\#\-]*([0-9\-\s]{13,22})/i);
     if (match) {
-      const digitsOnly = match[1].replace(/[\-\s]/g, '');
+      const digitsOnly = match[1].replace(/\D/g, '');
       if (digitsOnly.length === 13) return digitsOnly;
     }
   }
+
+  // Fallback: Check for any standalone 13-digit sequence in the top 20 lines
+  for (const line of lines.slice(0, 20)) {
+    const digitsOnly = line.replace(/\D/g, '');
+    if (digitsOnly.length === 13 && /^(?:0|1|3)/.test(digitsOnly)) {
+      return digitsOnly;
+    }
+  }
+
   return '';
 }
 
@@ -910,26 +908,28 @@ export function solveMathematicalConstraints(
   const calculatedSum = Math.round(balancedItems.reduce((s, i) => s + (i.total_price || 0), 0) * 100) / 100;
   let finalGrandTotal = extractedGrandTotal;
   let finalDiscount = extractedDiscount;
+  let vatAmount = 0;
 
   if (finalGrandTotal <= 0 && calculatedSum > 0) {
     finalGrandTotal = calculatedSum - (finalDiscount || 0);
   } else if (finalGrandTotal > 0 && calculatedSum > 0) {
+    const withVat7 = Math.round(calculatedSum * 1.07 * 100) / 100;
     if (Math.abs(calculatedSum - finalGrandTotal) < 1.0) {
-      // Perfect match between items sum and extracted total
+      // Perfect match between items sum and extracted total (VAT-inclusive or exempt)
       finalGrandTotal = calculatedSum;
+      finalDiscount = 0;
+    } else if (Math.abs(withVat7 - finalGrandTotal) < 1.0) {
+      // Subtotal before 7% VAT! Extracted total is true grand total
+      vatAmount = Math.round((finalGrandTotal - calculatedSum) * 100) / 100;
       finalDiscount = 0;
     } else if (finalDiscount > 0 && Math.abs((calculatedSum - finalDiscount) - finalGrandTotal) < 1.0) {
       // Verified explicit discount matching the total
+    } else if (finalGrandTotal > calculatedSum) {
+      // Difference likely represents tax / charges
+      vatAmount = Math.round((finalGrandTotal - calculatedSum) * 100) / 100;
     } else if (finalDiscount === 0) {
-      // No explicit discount was found on the bill. Do not fabricate phantom discounts.
       finalGrandTotal = calculatedSum;
     }
-  }
-
-  let vatAmount = 0;
-  const withVat7 = Math.round(calculatedSum * 1.07 * 100) / 100;
-  if (finalGrandTotal > 0 && Math.abs(withVat7 - finalGrandTotal) < 0.10) {
-    vatAmount = Math.round((finalGrandTotal - calculatedSum) * 100) / 100;
   }
 
   const isMatched = Math.abs((calculatedSum - finalDiscount) - finalGrandTotal) < 0.05 ||
@@ -1075,8 +1075,8 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
   line = line.replace(/[\s|]+(?:[VvNnBbTtEeXx\*#]|7%|0%)[\s|]*$/g, '');
   line = line.replace(/(\d+(?:\.\d{1,2}))[VvNnBbTtEeXx\*#]$/g, '$1');
 
-  // Strip leading line index e.g. "1." or "1)" or "1 "
-  line = line.replace(/^\s*\d{1,3}[\.\)\s]+/, '').trim();
+  // Strip leading line index e.g. "1." or "1)" or "(1)" or "#1" (NOT bare quantities like "2 @")
+  line = line.replace(/^\s*(?:#\s*\d{1,3}|\(?\d{1,3}[\.\)\:\-]\s*)/, '').trim();
 
   // Extract leading Barcode (8-14 digits) or SKU
   let item_code = '';
@@ -1104,16 +1104,16 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
     }
   }
 
-  // Pattern 1: With "@" symbol e.g. [Desc] [Qty] [Unit?] @ [UnitPrice] [Amount]
-  const atMatch = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*(?:([ก-๙a-zA-Z]{1,10})\s*)?@\s*(\d+(?:\.\d{1,2})?)\s+(\d+(?:\.\d{1,2})?)$/);
+  // Pattern 1: With "@" symbol e.g. [Desc?] [Qty] [Unit?] @ [UnitPrice] [Amount]
+  const atMatch = line.match(/^(?:(.+?)\s+)?(\d+(?:\.\d+)?)\s*(?:([ก-๙a-zA-Z]{1,10})\s*)?@\s*(\d+(?:\.\d{1,2})?)\s+(\d+(?:\.\d{1,2})?)$/);
   if (atMatch) {
-    const rawDesc = atMatch[1].trim();
+    const rawDesc = atMatch[1] ? atMatch[1].trim() : '';
     const qty = parseFloat(atMatch[2]);
-    let unit = atMatch[3] || 'ชิ้น';
+    let unit = atMatch[3] ? atMatch[3].trim() : 'ชิ้น';
     const unitPrice = parseFloat(atMatch[4]);
     const totalAmount = parseFloat(atMatch[5]);
 
-    const names = splitThaiAndEnglishName(rawDesc);
+    const names = rawDesc ? splitThaiAndEnglishName(rawDesc) : { formatted: '', thai: '', english: '' };
     return {
       item_code,
       description: names.formatted,
@@ -1361,23 +1361,24 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
 
     // Detect Summary Anchor Row (Strict boundary that permanently shuts down line item extraction)
-    if (summaryAnchorIndex === -1 && (tableHeaderIndex === -1 || i > tableHeaderIndex)) {
+    if (summaryAnchorIndex === -1 && !isHeaderLine(l) && (tableHeaderIndex === -1 || i > tableHeaderIndex)) {
       if (
-        /(?:^|\s)(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|SUBTOTAL|TOTAL|GRAND TOTAL|VAT|TAX|NET TOTAL|TOTAL DUE|BALANCE)(?:\s|:|$|\d)/i.test(l)
+        /(?:^|\s)(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|\bSUBTOTAL\b|\bGRAND\s*TOTAL\b|\bNET\s*TOTAL\b|\bTOTAL\s*DUE\b|\bBALANCE\b)(?:\s|:|$|\d)/i.test(l)
       ) {
         summaryAnchorIndex = i;
       }
     }
   }
 
-  // Fallback: If no explicit table header keyword was present, find the first line matching an item row
+  // Fallback: If no explicit table header keyword was present, find the first product line or item row
   if (tableHeaderIndex === -1) {
     for (let i = 0; i < lines.length; i++) {
       if (summaryAnchorIndex !== -1 && i >= summaryAnchorIndex) break;
       if (isHeaderLine(lines[i])) continue;
       const testItem = parseUniversalItemLine(lines[i]);
-      if (testItem) {
-        tableHeaderIndex = Math.max(0, i - 1);
+      const isProductLine = /^(\d{6,14})\s+[A-Za-zก-๙]/.test(lines[i]);
+      if (testItem || isProductLine) {
+        tableHeaderIndex = Math.max(-1, i - 1);
         break;
       }
     }
@@ -1412,29 +1413,31 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
         parsedItem.item_code = pendingBarcode;
       }
       if (pendingDesc) {
-        const merged = `${pendingDesc} ${parsedItem.description}`.trim();
+        const merged = parsedItem.description ? `${pendingDesc} ${parsedItem.description}`.trim() : pendingDesc.trim();
         const sep = splitThaiAndEnglishName(merged);
         parsedItem.description = sep.formatted;
         parsedItem.thai_name = sep.thai || undefined;
         parsedItem.english_name = sep.english || undefined;
       }
 
-      // Avoid duplicate row insertions
-      const isDup = items.some(
-        (existing) =>
-          existing.description === parsedItem.description &&
-          existing.total_price === parsedItem.total_price &&
-          existing.quantity === parsedItem.quantity
-      );
-      if (!isDup) {
-        items.push(parsedItem);
+      // Avoid inserting empty description items
+      if (parsedItem.description && parsedItem.description !== '@' && parsedItem.total_price > 0) {
+        const isDup = items.some(
+          (existing) =>
+            existing.description === parsedItem.description &&
+            existing.total_price === parsedItem.total_price &&
+            existing.quantity === parsedItem.quantity
+        );
+        if (!isDup) {
+          items.push(parsedItem);
+        }
       }
       pendingBarcode = '';
       pendingDesc = '';
     } else {
       // Check if this line is a barcode or product title row before a price row (e.g. Makro multi-line format)
-      const bcMatch = rawLine.match(/^(\d{8,14})\s*(.*)$/);
-      if (bcMatch) {
+      const bcMatch = rawLine.match(/^(\d{6,14})\s*(.*)$/);
+      if (bcMatch && bcMatch[2].trim()) {
         pendingBarcode = bcMatch[1];
         pendingDesc = bcMatch[2].trim();
       } else if (
@@ -1450,12 +1453,23 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   // 3. Extract Summary Totals & VAT strictly from the Summary Zone (summaryAnchorIndex onwards)
   const summaryLines = lines.slice(summaryAnchorIndex);
   let summaryVat = 0;
+  let subtotalCandidate = 0;
+  let grandTotalCandidate = 0;
 
   for (const l of summaryLines) {
-    if (total_amount === 0) {
-      const totMatch = l.match(/(?:ยอดสุทธิ|ยอดเงินสุทธิ|รวมทั้งสิ้น|จำนวนเงินทั้งสิ้น|ยอดชำระ|Grand\s*Total|Total|Net\s*Total)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
-      if (totMatch) {
-        total_amount = parseFloat(totMatch[1].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+    // Priority 1: True Grand Total (ยอดรวมสุทธิ / ยอดเงินสุทธิ / รวมทั้งสิ้น / TOTAL AMOUNT / GRAND TOTAL)
+    if (grandTotalCandidate === 0) {
+      const grandMatch = l.match(/(?:ยอดรวมสุทธิ|ยอดเงินสุทธิ|รวมทั้งสิ้น|จำนวนเงินทั้งสิ้น|ยอดชำระ|Grand\s*Total|Total\s*Amount|Net\s*Total)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
+      if (grandMatch) {
+        grandTotalCandidate = parseFloat(grandMatch[1].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      }
+    }
+
+    // Priority 2: General Total / Subtotal (ยอดรวม / รวมเป็นเงิน / รวมเงิน / SUBTOTAL / TOTAL)
+    if (subtotalCandidate === 0) {
+      const subMatch = l.match(/(?:ยอดรวม|รวมเป็นเงิน|รวมเงิน|จำนวนเงินรวม|ราคารวม|Subtotal|Total)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
+      if (subMatch) {
+        subtotalCandidate = parseFloat(subMatch[1].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
       }
     }
 
@@ -1473,6 +1487,8 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
     }
   }
+
+  total_amount = grandTotalCandidate > 0 ? grandTotalCandidate : subtotalCandidate;
 
   // 4. Mathematical Constraint Solver Reconciliation
   const mathSolution = solveMathematicalConstraints(items, total_amount, discount_val);
@@ -1515,22 +1531,10 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
   // 1. Primary Parse from Main High-DPI Pass
   const mainParsed = parseThaiReceiptOcr(passes.mainText);
 
-  // 1.1 Spatial 2D Parse from Main Pass
-  let mainSpatialParsed: ParsedReceipt | null = null;
-  if (passes.mainWords && passes.mainWords.length > 0) {
-    const spatialText = reconstructTextFromBboxes(passes.mainWords);
-    if (spatialText) mainSpatialParsed = parseThaiReceiptOcr(spatialText);
-  }
+  // 2. Secondary Parse from High-Contrast Pass
+  const contrastParsed = passes.sauvolaText ? parseThaiReceiptOcr(passes.sauvolaText) : null;
 
-  // 2. Secondary Parse from Sauvola Adaptive Pass
-  const sauvolaParsed = passes.sauvolaText ? parseThaiReceiptOcr(passes.sauvolaText) : null;
-  let sauvolaSpatialParsed: ParsedReceipt | null = null;
-  if (passes.sauvolaWords && passes.sauvolaWords.length > 0) {
-    const spatialSauvolaText = reconstructTextFromBboxes(passes.sauvolaWords);
-    if (spatialSauvolaText) sauvolaSpatialParsed = parseThaiReceiptOcr(spatialSauvolaText);
-  }
-
-  // 3. Header Zoom Pass
+  // 3. Header Zoom Pass: Extract Vendor & Document Metadata
   let vendorName = mainParsed.vendor_name;
   let invoiceNumber = mainParsed.invoice_number;
   let invoiceDate = mainParsed.invoice_date;
@@ -1551,33 +1555,43 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
     if (headerTaxId) taxId = headerTaxId;
   }
 
-  // 4. Quality-Scored Candidate Selection (Never reward duplicate/noisy lists!)
-  const candidateLists = [
-    mainSpatialParsed?.items,
-    sauvolaSpatialParsed?.items,
-    sauvolaParsed?.items,
-    mainParsed?.items
-  ].filter((list): list is NonNullable<typeof list> => Boolean(list && list.length > 0));
+  // 4. Robust Candidate Consensus Evaluation
+  // Evaluates both passes to select the mathematically superior and noise-free line items
+  const candidates = [
+    { source: 'main', receipt: mainParsed },
+    ...(contrastParsed ? [{ source: 'contrast', receipt: contrastParsed }] : [])
+  ].filter(c => c.receipt.items && c.receipt.items.length > 0);
 
   let bestItems: ParsedReceiptItem[] = mainParsed.items;
-  let bestScore = -1;
+  let bestScore = -999;
 
-  for (const candidate of candidateLists) {
-    let score = candidate.length * 10;
-    // Reward candidate items with valid SKU codes
-    for (const item of candidate) {
-      if (item.item_code && item.item_code.length >= 3) score += 5;
-      if (item.description && item.description.length > 15) score += 3;
-    }
-    // Check if candidate list is mathematically balanced
-    const cSum = candidate.reduce((s, i) => s + (i.total_price || 0), 0);
-    if (mainParsed.total_amount > 0 && Math.abs(cSum - mainParsed.total_amount) < 1.0) {
+  for (const c of candidates) {
+    const candidateItems = c.receipt.items;
+    let score = 0;
+
+    // Check if candidate list is mathematically balanced with invoice total
+    const cSum = candidateItems.reduce((s, i) => s + (i.total_price || 0), 0);
+    const targetTotal = mainParsed.total_amount > 0 ? mainParsed.total_amount : c.receipt.total_amount;
+    if (targetTotal > 0 && Math.abs(cSum - targetTotal) < 1.0) {
+      score += 80;
+    } else if (targetTotal > 0 && Math.abs(cSum - targetTotal) < 10.0) {
       score += 30;
+    }
+
+    // Evaluate individual items for validity
+    for (const item of candidateItems) {
+      if (isHeaderLine(item.description) || isSummaryOrFooterLine(item.description)) {
+        score -= 60; // Heavy penalty for header leakage!
+      } else {
+        if (item.total_price > 0) score += 10;
+        if (item.item_code && item.item_code.length >= 6) score += 10;
+        if (item.description && item.description.length >= 4) score += 5;
+      }
     }
 
     if (score > bestScore) {
       bestScore = score;
-      bestItems = candidate;
+      bestItems = candidateItems;
     }
   }
 

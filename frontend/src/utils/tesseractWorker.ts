@@ -154,6 +154,10 @@ export async function runMultiPassTesseract(
   onProgress?: (stepLabel: string, percent: number) => void
 ): Promise<Record<string, OcrResult>> {
   const w = await initWorker('tha+eng');
+  await w.setParameters({ 
+    tessedit_pageseg_mode: PSM.SINGLE_BLOCK as any,
+    preserve_interword_spaces: '1'
+  });
   const results: Record<string, OcrResult> = {};
   const total = passes.length;
 
