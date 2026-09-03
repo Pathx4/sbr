@@ -4,7 +4,7 @@
 // & Electronic Component Invoices (Shopee, Lazada, Microcontrollers, IT & Stationery)
 // ============================================================================
 
-import { applyThaiEnglishDictionary } from './thaiEnglishDictionary';
+import { applyThaiEnglishDictionary, ENGLISH_DICTIONARY_SET } from './thaiEnglishDictionary';
 
 /**
  * Otsu Global Thresholding Algorithm
@@ -367,7 +367,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
         ctxMain.putImageData(imgDataMain, 0, 0);
         const passMain = canvasMain.toDataURL('image/jpeg', 0.98);
 
-        // 2. Pass Contrast: Adaptive High-Contrast Stretch (ideal for faint thermal paper & dot-matrix ink)
+        // 2. Pass Contrast & Dot-Matrix Pin Connection (connects discrete needle dots into solid strokes)
         const canvasContrast = document.createElement('canvas');
         canvasContrast.width = width;
         canvasContrast.height = height;
@@ -376,14 +376,22 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
 
         const imgDataContrast = ctxContrast.createImageData(width, height);
         const dataContrast = imgDataContrast.data;
-        for (let i = 0, j = 0; i < dataContrast.length; i += 4, j++) {
-          const g = normGray[j];
-          // Gentle linear contrast stretch without binary threshold destruction
-          const stretched = g < 140 ? Math.max(0, Math.round(g * 0.7)) : g > 200 ? 255 : g;
-          dataContrast[i] = stretched;
-          dataContrast[i + 1] = stretched;
-          dataContrast[i + 2] = stretched;
-          dataContrast[i + 3] = 255;
+        for (let y = 0; y < height; y++) {
+          const row = y * width;
+          for (let x = 0; x < width; x++) {
+            const idx = row + x;
+            const g = normGray[idx];
+            const gLeft = x > 0 ? normGray[idx - 1] : g;
+            const gRight = x < width - 1 ? normGray[idx + 1] : g;
+            // 1-pixel horizontal dilation on dark pixels connects dot-matrix printer pins
+            const darkMin = Math.min(g, gLeft, gRight);
+            const stretched = darkMin < 155 ? Math.max(0, Math.round(darkMin * 0.65)) : darkMin > 210 ? 255 : darkMin;
+            const pIdx = idx * 4;
+            dataContrast[pIdx] = stretched;
+            dataContrast[pIdx + 1] = stretched;
+            dataContrast[pIdx + 2] = stretched;
+            dataContrast[pIdx + 3] = 255;
+          }
         }
         ctxContrast.putImageData(imgDataContrast, 0, 0);
         const passSauvola = canvasContrast.toDataURL('image/jpeg', 0.98);
@@ -1018,7 +1026,8 @@ export function splitThaiAndEnglishName(raw: string): {
   if (engStartMatch) {
     const eng = engStartMatch[1].trim();
     const th = engStartMatch[2].trim();
-    if (eng.length >= 2 && th.length >= 2 && !/[\u0e00-\u0e7f]/.test(eng)) {
+    const isValidEng = /[aeiouy]/i.test(eng) || ENGLISH_DICTIONARY_SET.has(eng.toUpperCase());
+    if (isValidEng && eng.length >= 2 && th.length >= 2 && !/[\u0e00-\u0e7f]/.test(eng)) {
       return { thai: th, english: eng, formatted: `${th} (${eng})` };
     }
   }
@@ -1028,7 +1037,8 @@ export function splitThaiAndEnglishName(raw: string): {
   if (thaiStartMatch) {
     const th = thaiStartMatch[1].trim();
     const eng = thaiStartMatch[2].trim();
-    if (th.length >= 2 && eng.length >= 2 && !/[A-Za-z]/.test(th)) {
+    const isValidEng = /[aeiouy]/i.test(eng) || ENGLISH_DICTIONARY_SET.has(eng.toUpperCase());
+    if (isValidEng && th.length >= 2 && eng.length >= 2 && !/[A-Za-z]/.test(th)) {
       return { thai: th, english: eng, formatted: `${th} (${eng})` };
     }
   }
@@ -1053,34 +1063,44 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
   line = line.replace(/[\s|]+(?:[VvNnBbTtEeXx\*#]|7%|0%)[\s|]*$/g, '');
   line = line.replace(/(\d+(?:\.\d{1,2}))[VvNnBbTtEeXx\*#]$/g, '$1');
 
-  // Strip leading line index e.g. "1." or "1)" or "(1)" or "#1" (NOT bare quantities like "2 @")
-  line = line.replace(/^\s*(?:#\s*\d{1,3}|\(?\d{1,3}[\.\)\:\-]\s*)/, '').trim();
-
-  // Extract leading Barcode (8-14 digits) or SKU
+  // Extract leading Barcode (8-14 digits) or SKU with optional index & tax flag (v, V, ง, N, |, #)
   let item_code = '';
-  const gluedMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]*)?(\d{13})\s+(.+)$/);
-  if (gluedMatch) {
-    item_code = gluedMatch[2];
-    line = gluedMatch[3].trim();
+
+  // Pattern A: Barcode preceded by optional line number and tax/status flag (v, V, ง, N, |)
+  // e.g. "3 ง 8851899501107 กาวแท่ง TAI-FC" or "10 v 8859298504125 เคเบิลแกลนด"
+  const prefixBarcodeMatch = line.match(/^\s*(?:(?:\d{1,3}|[๐-๙]{1,3})\s*[vVง\|\.\-\)]*\s+)?(\d{8,14})\s+(.+)$/);
+  if (prefixBarcodeMatch) {
+    item_code = prefixBarcodeMatch[1];
+    line = prefixBarcodeMatch[2].trim();
   } else {
-    const splitMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s+(.+)$/);
-    if (splitMatch && splitMatch[2].length + splitMatch[3].length >= 12 && splitMatch[2].length + splitMatch[3].length <= 14) {
-      item_code = splitMatch[2] + splitMatch[3];
-      line = splitMatch[4].trim();
+    // Pattern B: Embedded barcode after wrapped trailing text e.g. "100ชิ้น ดำ 8 ง 2000603173666 หัวแร้ง"
+    const embeddedBarcodeMatch = line.match(/^(?:.*?\s+)?(?:\d{1,3}\s*[vVง\|\.\-\)]*\s+)(\d{8,14})\s+(.+)$/);
+    if (embeddedBarcodeMatch) {
+      item_code = embeddedBarcodeMatch[1];
+      line = embeddedBarcodeMatch[2].trim();
     } else {
-      const barcodeMatch = line.match(/^(\d{8,14})\s*(.+)$/);
-      if (barcodeMatch) {
-        item_code = barcodeMatch[1];
-        line = barcodeMatch[2].trim();
+      const splitMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s+(.+)$/);
+      if (splitMatch && splitMatch[2].length + splitMatch[3].length >= 12 && splitMatch[2].length + splitMatch[3].length <= 14) {
+        item_code = splitMatch[2] + splitMatch[3];
+        line = splitMatch[4].trim();
       } else {
-        const skuMatch = line.match(/^([A-Za-z0-9\-]{4,15})\s+(.+)$/);
-        if (skuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(skuMatch[1])) {
-          item_code = skuMatch[1];
-          line = skuMatch[2].trim();
+        const barcodeMatch = line.match(/^(\d{8,14})\s*(.+)$/);
+        if (barcodeMatch) {
+          item_code = barcodeMatch[1];
+          line = barcodeMatch[2].trim();
+        } else {
+          const skuMatch = line.match(/^([A-Za-z0-9\-]{4,15})\s+(.+)$/);
+          if (skuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(skuMatch[1])) {
+            item_code = skuMatch[1];
+            line = skuMatch[2].trim();
+          }
         }
       }
     }
   }
+
+  // Strip residual leading line number + flag e.g. "3 ง " or "10 v " if barcode was not present
+  line = line.replace(/^\s*(?:\d{1,3}|[๐-๙]{1,3})\s*[vVง\|\.\-\)]+\s+/g, '').trim();
 
   // Pattern 1: With "@" symbol e.g. [Desc?] [Qty] [Unit?] @ [UnitPrice] [Amount]
   const atMatch = line.match(/^(?:(.+?)\s+)?(\d+(?:\.\d+)?)\s*(?:([ก-๙a-zA-Z]{1,10})\s*)?@\s*(\d+(?:\.\d{1,2})?)\s+(\d+(?:\.\d{1,2})?)$/);
@@ -1135,25 +1155,37 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
   const t3 = tokens.length >= 4 ? cleanNum(tokens[tokens.length - 3]) : null;
   const t4 = tokens.length >= 5 ? cleanNum(tokens[tokens.length - 4]) : null;
 
-  // Case 1: [Desc] [Qty] [Unit] [Price] [Discount] [Amount]
+  // Case 1: [Desc] [Qty] [Unit] [Price] [Discount] [Amount] OR [Desc] [Qty] [UnitPrice] [Amount]
   if (t2 !== null && t3 !== null) {
-    const unitCand = tokens[tokens.length - 4];
-    const qtyCand = tokens.length >= 5 ? cleanNum(tokens[tokens.length - 5]) : null;
-
-    if (qtyCand !== null && qtyCand > 0 && unitCand && !/^\d+(?:\.\d+)?$/.test(unitCand)) {
-      unit_price = t3;
-      discount = t2;
-      unit = unitCand;
-      quantity = qtyCand;
-      descTokensEndIndex = tokens.length - 5;
-    } else if (t4 !== null && t4 > 0) {
-      quantity = t4;
-      unit_price = t3;
-      discount = t2;
-      descTokensEndIndex = tokens.length - 4;
-    } else {
+    if (Math.abs((t3 * t2) - total_price) < 0.05) {
+      // Textbook match: Qty=t3, UnitPrice=t2, Total=total_price (e.g. 1 @ 53 = 53 or 2 @ 13 = 26 or 1 @ 58 = 58)
+      quantity = t3;
       unit_price = t2;
-      descTokensEndIndex = tokens.length - 2;
+      descTokensEndIndex = tokens.length - 3;
+    } else {
+      const unitCand = tokens[tokens.length - 4];
+      const qtyCand = tokens.length >= 5 ? cleanNum(tokens[tokens.length - 5]) : null;
+
+      if (qtyCand !== null && qtyCand > 0 && unitCand && !/^\d+(?:\.\d+)?$/.test(unitCand)) {
+        unit_price = t3;
+        discount = t2;
+        unit = unitCand;
+        quantity = qtyCand;
+        descTokensEndIndex = tokens.length - 5;
+      } else if (t4 !== null && t4 > 0 && Math.abs((t4 * t3) - total_price) < 0.05) {
+        quantity = t4;
+        unit_price = t3;
+        discount = t2;
+        descTokensEndIndex = tokens.length - 4;
+      } else if (t4 !== null && t4 > 0) {
+        quantity = t4;
+        unit_price = t3;
+        discount = t2;
+        descTokensEndIndex = tokens.length - 4;
+      } else {
+        unit_price = t2;
+        descTokensEndIndex = tokens.length - 2;
+      }
     }
   } else if (t2 !== null) {
     // Case 2: [Desc] [Qty] [Unit] [Price] [Amount]
