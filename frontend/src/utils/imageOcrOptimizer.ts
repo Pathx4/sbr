@@ -4,6 +4,8 @@
 // & Electronic Component Invoices (Shopee, Lazada, Microcontrollers, IT & Stationery)
 // ============================================================================
 
+import { applyThaiEnglishDictionary } from './thaiEnglishDictionary';
+
 /**
  * Otsu Global Thresholding Algorithm
  */
@@ -588,41 +590,17 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     .replace(/^\(\s*\(/g, '(')
     .replace(/\)\s*\)/g, ')');
 
-  // 2. Thai Character-Level Linguistic Repairs
-  // Broken Sara-Ae: เ + เ -> แ
-  text = text.replace(/\u0e40\u0e40/g, '\u0e41');
-  // Broken Sara-Am: ํ + า -> ำ
-  text = text.replace(/\u0e4d\u0e32/g, '\u0e33');
-  // Detached upper/lower vowels & tone marks
-  text = text.replace(/([ก-ฮ])\s+([\u0e31\u0e34-\u0e3a\u0e47-\u0e4e])/g, '$1$2');
-  // Leading dangling tone marks/vowels
-  text = text.replace(/^[\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]+/g, '');
+  // 2. Comprehensive Thai & English Procurement Dictionary & Fuzzy Spell Checker
+  text = applyThaiEnglishDictionary(text);
 
-  // 3. Spacing around common units & technical specifications
-  text = text
-    .replace(/([ก-๙a-zA-Z])(\d+(?:\.\d+)?(?:sq\.?mm|ตร\.?มม\.?|มม\.?|ซม\.?|เมตร|mm|cm|kg|ml|oz|v|w|g|l))\b/gi, '$1 $2')
-    .replace(/\b(\d+(?:\.\d+)?(?:sq\.?mm|ตร\.?มม\.?|มม\.?|ซม\.?|เมตร|mm|cm|kg|ml|oz|v|w|g|l))([ก-๙a-zA-Z])/gi, '$1 $2')
-    .replace(/\b(\d+)\s*mเห\b/gi, '$1 mm');
-
-  // 4. Common Thai OCR Ligature & Corporate Typo Corrections (Universal)
-  text = text
-    .replace(/บหาชน/g, 'มหาชน')
-    .replace(/จำกัค|จำกัต|จํากัด/g, 'จำกัด')
-    .replace(/บรษท/g, 'บริษัท')
-    .replace(/หจก(?!\.)/g, 'หจก.')
-    .replace(/ปลิ๊ก|ปลื๊ก|บลั๊ก|ปลัก(?!ๆ)/g, 'ปลั๊ก')
-    .replace(/ใส้เต็ม/g, 'ไส้เต็ม')
-    .replace(/สวิทช์/g, 'สวิตช์')
-    .replace(/กันน[ำา\u0e4d\u0e32]*/g, 'กันน้ำ');
-
-  // 5. Restore balanced parentheses for model specifications
+  // 3. Restore balanced parentheses for model specifications
   const openCount = (text.match(/\(/g) || []).length;
   const closeCount = (text.match(/\)/g) || []).length;
   if (openCount > closeCount) {
     text = text + ')'.repeat(openCount - closeCount);
   }
 
-  // 6. General whitespace & border artifact cleanup
+  // 4. General whitespace & border artifact cleanup
   return text
     .replace(/[«»“”~_`^{}|]+/g, ' ')
     .replace(/\.{2,}/g, ' ')
@@ -1251,7 +1229,10 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   }
 
   const headerText = typeof headerData === 'string' ? headerData : (headerData?.text || '');
-  const lines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+  const lines = text
+    .split('\n')
+    .map((l) => applyThaiEnglishDictionary(l.trim()))
+    .filter((l) => l.length > 0);
 
   let vendor_name = '';
   let invoice_number = '';
@@ -1298,6 +1279,17 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     ) {
       invoice_number = match[1];
       break;
+    }
+  }
+
+  // Fallback: Detect standard invoice code formats e.g. ABB-20260312-0892, RC-6902-8812, IV-6902-0044
+  if (!invoice_number) {
+    for (const line of lines) {
+      const codeMatch = line.match(/\b((?:ABB|INV|IV|RC|REC|TAX|SO|PO)[\-\d\/]{5,25})\b/i);
+      if (codeMatch && !/^\d{13}$/.test(codeMatch[1])) {
+        invoice_number = codeMatch[1];
+        break;
+      }
     }
   }
 
