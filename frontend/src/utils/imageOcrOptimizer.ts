@@ -1587,10 +1587,11 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
     }
   }
 
-  // 5. Apply Deep Thai Lexicon Auto-Correction on Vendor & Items
+  // 5. Apply Deep Thai & English Dictionary Auto-Correction & Linguistic Decoding
   vendorName = cleanCompanyName(vendorName);
   const cleanedItems = bestItems.map((item) => {
-    const sep = splitThaiAndEnglishName(item.description);
+    const dictCleanedDesc = applyThaiEnglishDictionary(item.description);
+    const sep = splitThaiAndEnglishName(dictCleanedDesc);
     return {
       ...item,
       description: sep.formatted,

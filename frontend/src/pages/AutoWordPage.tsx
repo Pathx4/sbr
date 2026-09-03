@@ -442,7 +442,7 @@ export default function AutoWordPage() {
           setScanProgress(Math.round(((i + 0.15 + (stepPct * 0.65) / 100) / files.length) * 100));
         });
 
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: กำลังลงคะแนนโหวต 2D Spatial Consensus & ซ่อมคำผิดพัสดุ...`);
+        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: เทียบเคียงคำศัพท์ผ่านระบบพจนานุกรมไทย-อังกฤษ & ถอดรหัสคำเพี้ยน (Dictionary & Linguistic Decoder)...`);
         setScanProgress(Math.round(((i + 0.85) / files.length) * 100));
 
         setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/4: ตรวจสอบสมดุลคณิตศาสตร์ & กรองรายการซ้ำ...`);
