@@ -427,6 +427,14 @@ export function applyThaiEnglishDictionary(text: string): string {
   result = result.replace(/W44M|W4M/g, 'น้ำเงิน M');
   result = result.replace(/เขียว#โท/g, 'เขียว');
 
+  // 1.8 Script Boundary Normalization: ensure glued Thai & English tokens are cleanly separated
+  result = result
+    .replace(/([\u0e00-\u0e7f])([A-Za-z])/g, '$1 $2')
+    .replace(/([A-Za-z])([\u0e00-\u0e7f])/g, '$1 $2');
+
+  // Trailing Sara-E on Latin words is impossible in Thai orthography (misread 't' or 'l')
+  result = result.replace(/([A-Za-z]{2,})[เ\u0e40](?=\s|$|[^ก-๙])/g, '$1t');
+
   // 2. High-Frequency Thai Procurement Lexicon Typos
   for (const [pattern, replacement] of THAI_OCR_FIXES) {
     result = result.replace(pattern, replacement);

@@ -1379,9 +1379,12 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     }
 
     // Detect Summary Anchor Row (Strict boundary that permanently shuts down line item extraction)
-    if (summaryAnchorIndex === -1 && !isHeaderLine(l) && (tableHeaderIndex === -1 || i > tableHeaderIndex)) {
+    // Must NOT be a column header row (e.g. "ลำดับ รายการ จำนวน ราคา จำนวนเงินรวม") and must contain a monetary amount
+    const isColHeader = /(?:ลำดับ|NO\.|ITEM|SKU|รหัส|รายการ|รายละเอียด|คำอธิบาย|DESCRIPTION|ชื่อสินค้า|BARCODE).*?(?:จำนวน|หน่วย|ราคา|จำนวนเงิน|QTY|UNIT|PRICE|AMOUNT)/i.test(l);
+    if (summaryAnchorIndex === -1 && !isHeaderLine(l) && !isColHeader && (tableHeaderIndex === -1 || i > tableHeaderIndex)) {
       if (
-        /(?:^|\s)(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|\bSUBTOTAL\b|\bGRAND\s*TOTAL\b|\bNET\s*TOTAL\b|\bTOTAL\s*DUE\b|\bBALANCE\b)(?:\s|:|$|\d)/i.test(l)
+        /(?:^|\s)(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|\bSUBTOTAL\b|\bGRAND\s*TOTAL\b|\bNET\s*TOTAL\b|\bTOTAL\s*DUE\b|\bBALANCE\b)(?:\s|:|$|\d)/i.test(l) &&
+        /[\d,]+(?:\.\d{2}|\.-)/.test(l)
       ) {
         summaryAnchorIndex = i;
       }
