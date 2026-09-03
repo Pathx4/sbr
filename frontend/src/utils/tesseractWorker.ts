@@ -59,27 +59,56 @@ function createPatchedWorkerUrl(): string {
   return URL.createObjectURL(blob);
 }
 
+export type OcrModelType = 'best' | 'fast';
+let currentModel: OcrModelType = 'best';
+
+export function setOcrModel(model: OcrModelType) {
+  if (currentModel !== model) {
+    currentModel = model;
+    terminateWorker();
+  }
+}
+
+export function getOcrModel(): OcrModelType {
+  return currentModel;
+}
+
 export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
       const patchedWorkerPath = createPatchedWorkerUrl();
-      const w = await createWorker(lang, OEM.LSTM_ONLY, {
-        workerPath: patchedWorkerPath,
-        workerBlobURL: false,
-        logger: (m: any) => {
-          const msg = typeof m === 'string' ? m : m?.message ?? '';
-          if (msg.includes(NOISY_PARAM_WARNING)) return;
-          console.log('[Tesseract]', m);
-        },
-        errorHandler: (err: any) => {
-          const msg = typeof err === 'string' ? err : err?.message ?? String(err);
-          if (msg.includes(NOISY_PARAM_WARNING)) return;
-          console.error('[Tesseract error]', err);
-        },
-      } as any);
+      const langPath = currentModel === 'best'
+        ? 'https://cdn.jsdelivr.net/gh/tesseract-ocr/tessdata_best@main'
+        : 'https://cdn.jsdelivr.net/gh/tesseract-ocr/tessdata_fast@main';
+
+      let w: any;
+      try {
+        w = await createWorker(lang, OEM.LSTM_ONLY, {
+          workerPath: patchedWorkerPath,
+          workerBlobURL: false,
+          langPath,
+          logger: (m: any) => {
+            const msg = typeof m === 'string' ? m : m?.message ?? '';
+            if (msg.includes(NOISY_PARAM_WARNING)) return;
+            console.log('[Tesseract Neural]', m);
+          },
+          errorHandler: (err: any) => {
+            const msg = typeof err === 'string' ? err : err?.message ?? String(err);
+            if (msg.includes(NOISY_PARAM_WARNING)) return;
+            console.error('[Tesseract error]', err);
+          },
+        } as any);
+      } catch (err) {
+        console.warn('Fallback to standard model repository:', err);
+        w = await createWorker(lang, OEM.LSTM_ONLY, {
+          workerPath: patchedWorkerPath,
+          workerBlobURL: false,
+          logger: () => {},
+        } as any);
+      }
 
       await w.setParameters({
-        tessedit_pageseg_mode: PSM.AUTO as any,
+        tessedit_pageseg_mode: PSM.SINGLE_BLOCK as any,
         preserve_interword_spaces: '1',
         user_defined_dpi: '300',
       });
@@ -93,8 +122,15 @@ export async function initWorker(lang: string = 'tha+eng') {
 export async function runTesseract(
   imageSource: File | string,
   onProgress?: (pct: number) => void,
+  options?: { psm?: string }
 ): Promise<OcrResult> {
   const w = await initWorker('tha+eng');
+  if (options?.psm) {
+    await w.setParameters({ tessedit_pageseg_mode: options.psm as any });
+  } else {
+    await w.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK as any });
+  }
+
   const ret = await w.recognize(imageSource);
   if (onProgress) onProgress(100);
 

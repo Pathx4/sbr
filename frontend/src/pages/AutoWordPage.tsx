@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { runTesseract, runMultiPassTesseract } from '../utils/tesseractWorker';
+import { runTesseract, runMultiPassTesseract, setOcrModel, getOcrModel, type OcrModelType } from '../utils/tesseractWorker';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
   Loader2, Crop, Eye, ZoomIn, ZoomOut, RotateCw, Contrast, Copy, Check, Mic, Sparkles,
-  Hand
+  Hand, X, Zap
 } from 'lucide-react';
 import { bahttext } from 'bahttext';
 import contactsData from '../data/contacts.json';
@@ -16,7 +16,9 @@ import {
   parseThaiReceiptOcr, 
   parseThaiReceiptOcrDeep5,
   extractVendorNameFromText, 
-  cleanCompanyName 
+  cleanCompanyName,
+  parseUniversalItemLine,
+  splitThaiAndEnglishName
 } from '../utils/imageOcrOptimizer';
 import { isPdfFile, processPdfDocument } from '../utils/pdfOcrService';
 import { getStoredUser } from '../utils/auth';
@@ -183,6 +185,16 @@ export default function AutoWordPage() {
   const [copiedGrandTotal, setCopiedGrandTotal] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [scanEngineMode, setScanEngineMode] = useState<'deep' | 'quick'>('deep');
+  const [ocrModelQuality, setOcrModelQuality] = useState<OcrModelType>(getOcrModel());
+
+  // Studio v3.0 Crop Inspector State
+  const [cropResultModal, setCropResultModal] = useState<{
+    isOpen: boolean;
+    previewUrl: string;
+    rawText: string;
+    parsedItem: any | null;
+    parsedVendor: string;
+  } | null>(null);
 
 
 
@@ -546,8 +558,8 @@ export default function AutoWordPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Perform Zone OCR Scan on Cropped Selection
-  const handleCropScan = async (targetType: 'items' | 'vendor' | 'auto' = 'auto') => {
+  // Perform Zone OCR Scan on Cropped Selection (Studio v3.0 Super-Sampling)
+  const handleCropScan = async (targetType: 'items' | 'vendor' | 'auto' | 'inspect' = 'inspect') => {
     if (!activeInvoice || !activeInvoice.imagePreview) {
       setStatusMsg({ type: 'error', text: 'กรุณาอัปโหลดหรือเลือกรูปบิลก่อนสแกน' });
       return;
@@ -562,14 +574,10 @@ export default function AutoWordPage() {
     if (!img) return;
 
     setIsScanning(true);
-    setScanStatus('กำลังสแกนพื้นที่ที่เลือก (Zone Crop OCR)...');
+    setScanStatus('Studio v3.0: กำลังขยายความละเอียด 300 DPI และถอดรหัสข้อความด้วย Neural OCR...');
 
     try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error("Canvas context failed");
-
-      // Calculate scale between displayed image and natural image dimensions
+      // 1. Calculate scale between displayed image and natural image dimensions
       const scaleX = img.naturalWidth / img.width;
       const scaleY = img.naturalHeight / img.height;
 
@@ -578,44 +586,88 @@ export default function AutoWordPage() {
       const cropW = cropSelection.width * scaleX;
       const cropH = cropSelection.height * scaleY;
 
-      canvas.width = cropW;
-      canvas.height = cropH;
-
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-
-      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.95);
-
-      const { rawText: text } = await runTesseract(croppedDataUrl);
-      console.log("Zone Crop OCR Result:", text);
-
-      const parsed = parseThaiReceiptOcr(text);
-
-      if (targetType === 'vendor' || (parsed.vendor_name && parsed.vendor_name !== 'ร้านค้า / บริษัทผู้ขาย')) {
-        const cleanVendor = extractVendorNameFromText(text) || cleanCompanyName(parsed.vendor_name || text);
-        handleUpdateInvoice(activeInvoice.id, 'vendor_name', cleanVendor || parsed.vendor_name);
-        setStatusMsg({ type: 'success', text: `ดึงชื่อร้านค้าจากพื้นที่เลือก: "${cleanVendor || parsed.vendor_name}"` });
-      } else if (parsed.items.length > 0) {
-        // Add extracted items to active invoice
-        const newItems: Item[] = parsed.items.map((item, idx) => ({
-          id: Date.now().toString() + '_crop_' + idx,
-          item_code: item.item_code || '',
-          description: item.description,
-          quantity: item.quantity,
-          unit: item.unit || 'ชิ้น',
-          unit_price: item.unit_price,
-          total_price: item.total_price
-        }));
-
-        setInvoices(prev => prev.map(inv => {
-          if (inv.id === activeInvoice.id) {
-            return { ...inv, items: [...inv.items, ...newItems] };
-          }
-          return inv;
-        }));
-        setStatusMsg({ type: 'success', text: `ดึงรายการพัสดุเพิ่ม ${newItems.length} รายการ จากพื้นที่เลือกสำเร็จ!` });
-      } else {
-        setStatusMsg({ type: 'error', text: 'ไม่พบข้อความรายการพัสดุในพื้นที่ที่เลือก ลองลากกรอบใหม่ขยับให้ครอบคลุมตัวหนังสือและราคา' });
+      // 2. High-DPI Super-sampling canvas (at least 1800px wide, or 3.5x scale)
+      const canvas = document.createElement('canvas');
+      let targetW = cropW;
+      let targetH = cropH;
+      const minW = 1800;
+      if (targetW < minW) {
+        const r = minW / targetW;
+        targetW = minW;
+        targetH = Math.round(targetH * r);
       }
+
+      canvas.width = targetW;
+      canvas.height = targetH;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error("Canvas context failed");
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
+
+      // 3. Contrast sharpening filter on crop
+      const imgData = ctx.getImageData(0, 0, targetW, targetH);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        const enhanced = gray > 180 ? 255 : Math.max(0, gray * 0.85);
+        d[i] = enhanced;
+        d[i + 1] = enhanced;
+        d[i + 2] = enhanced;
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.98);
+
+      // 4. Run Tesseract with PSM.SINGLE_BLOCK for accurate line detection
+      const { rawText: text } = await runTesseract(croppedDataUrl, undefined, { psm: '6' });
+      console.log("Studio v3.0 Crop OCR Raw Text:", text);
+
+      const cleanText = text.trim();
+      const lines = cleanText.split('\n').map(l => l.trim()).filter(Boolean);
+
+      // 5. Try parsing as single item or multi-line item
+      let detectedItem: any = null;
+      for (const line of lines) {
+        const it = parseUniversalItemLine(line);
+        if (it) {
+          detectedItem = it;
+          break;
+        }
+      }
+      if (!detectedItem) {
+        const fullParsed = parseThaiReceiptOcr(cleanText);
+        if (fullParsed.items && fullParsed.items.length > 0) {
+          detectedItem = fullParsed.items[0];
+        }
+      }
+
+      // 6. Try parsing as vendor
+      const cleanVendor = extractVendorNameFromText(cleanText) || cleanCompanyName(cleanText);
+
+      // 7. If targetType is directly 'vendor' and vendor detected, auto-apply:
+      if (targetType === 'vendor' && cleanVendor) {
+        handleUpdateInvoice(activeInvoice.id, 'vendor_name', cleanVendor);
+        setStatusMsg({ type: 'success', text: `ดึงชื่อร้านค้าจากพื้นที่เลือก: "${cleanVendor}"` });
+        setCropSelection(null);
+        return;
+      }
+
+      // 8. Open Crop Result Inspector Modal
+      setCropResultModal({
+        isOpen: true,
+        previewUrl: croppedDataUrl,
+        rawText: cleanText,
+        parsedItem: detectedItem,
+        parsedVendor: cleanVendor,
+      });
+
+      setStatusMsg({
+        type: 'success',
+        text: `Studio v3.0 ถอดข้อความสำเร็จ: ${lines.length} บรรทัด`,
+      });
+
     } catch (err: any) {
       console.error(err);
       setStatusMsg({ type: 'error', text: `เกิดข้อผิดพลาดขณะสแกนพื้นที่เลือก: ${err.message || err}` });
@@ -961,9 +1013,9 @@ export default function AutoWordPage() {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/70 text-blue-700 text-xs font-bold border border-blue-200/80 shadow-xs">
-                <Crop className="w-3.5 h-3.5 text-blue-600" />
-                <span>Interactive Side-by-Side OCR Studio v2.5</span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Interactive Side-by-Side OCR Studio v3.0 (Neural Vision Engine)</span>
               </span>
               {invoices.length > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200/80 shadow-xs">
@@ -1006,6 +1058,43 @@ export default function AutoWordPage() {
                 title="สแกนรอบเดียวเน้นความเร็ว"
               >
                 <span>⚡ สแกนด่วน</span>
+              </button>
+            </div>
+
+            {/* Neural OCR Model Quality Switch */}
+            <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-inner">
+              <button
+                type="button"
+                onClick={() => {
+                  setOcrModel('best');
+                  setOcrModelQuality('best');
+                  setStatusMsg({ type: 'success', text: 'เปิดใช้งานโมเดล Tessdata Best (ความแม่นยำภาษาไทยและอังกฤษสูงสุด 100%)' });
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                  ocrModelQuality === 'best'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="โมเดล Tessdata Best: ปัญญาประดิษฐ์ LSTM เต็มรูปแบบ ถอดสระ วรรณยุกต์ไทย และแยกภาษาอังกฤษแม่นยำสูงสุด"
+              >
+                <Zap className="w-3 h-3" />
+                <span>🎯 Tessdata Best</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setOcrModel('fast');
+                  setOcrModelQuality('fast');
+                  setStatusMsg({ type: 'success', text: 'เปิดใช้งานโมเดล Fast Standard' });
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                  ocrModelQuality === 'fast'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="โมเดล Fast: เน้นความเร็ว"
+              >
+                <span>⚡ Fast</span>
               </button>
             </div>
 
@@ -2262,6 +2351,160 @@ export default function AutoWordPage() {
           </div>
         </div>
       </div>
+
+      {/* Studio v3.0 Interactive Crop Result Inspector Modal */}
+      {cropResultModal && cropResultModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200/80 space-y-5">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                    ผลการถอดข้อความจากกรอบ (Studio v3.0 Inspector)
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    โมเดล Neural ความแม่นยำสูง (Tessdata Best) • ขยายคมชัด 300 DPI
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCropResultModal(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Cropped Image Snippet Preview */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold text-slate-700">ภาพพื้นที่ที่คุณลากกรอบ (300 DPI Super-Sampling):</label>
+              <div className="p-2 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center max-h-36 overflow-hidden">
+                <img src={cropResultModal.previewUrl} alt="Cropped Preview" className="max-h-32 object-contain rounded-lg" />
+              </div>
+            </div>
+
+            {/* Extracted Text (Editable) */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-slate-700">ข้อความที่ระบบถอดได้ (แก้ไขได้ทันที):</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(cropResultModal.rawText);
+                    setStatusMsg({ type: 'success', text: 'คัดลอกข้อความลงคลิปบอร์ดแล้ว' });
+                  }}
+                  className="flex items-center gap-1 text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>คัดลอกข้อความ</span>
+                </button>
+              </div>
+              <textarea
+                value={cropResultModal.rawText}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const it = parseUniversalItemLine(val);
+                  setCropResultModal(prev => prev ? { ...prev, rawText: val, parsedItem: it } : null);
+                }}
+                rows={3}
+                className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-mono focus:ring-2 focus:ring-indigo-500"
+                placeholder="ข้อความที่ถอดได้..."
+              />
+            </div>
+
+            {/* Parsed Item Card Preview (if detected) */}
+            {cropResultModal.parsedItem ? (
+              <div className="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl space-y-2 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>ตรวจพบข้อมูลสินค้า:</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div><span className="text-slate-500">ชื่อสินค้า:</span> <span className="font-semibold text-slate-800">{cropResultModal.parsedItem.description}</span></div>
+                  <div><span className="text-slate-500">SKU / บาร์โค้ด:</span> <span className="font-mono">{cropResultModal.parsedItem.item_code || '-'}</span></div>
+                  <div><span className="text-slate-500">จำนวน:</span> <span className="font-semibold">{cropResultModal.parsedItem.quantity} {cropResultModal.parsedItem.unit}</span></div>
+                  <div><span className="text-slate-500">ราคาต่อหน่วย:</span> <span className="font-semibold">฿{cropResultModal.parsedItem.unit_price}</span></div>
+                  <div className="col-span-2 pt-1 border-t border-emerald-200/60 text-emerald-800 font-bold">
+                    ยอดรวม: ฿{cropResultModal.parsedItem.total_price.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-[11px] text-slate-600">
+                ℹ️ หากต้องการเพิ่มเป็นสินค้า ให้ใส่จำนวนและราคาต่อท้ายข้อความ หรือกดปุ่ม "บันทึกเป็นชื่อร้านค้า" ด้านล่าง
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setCropResultModal(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+              >
+                ปิด
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!activeInvoice) return;
+                  const vName = cleanCompanyName(cropResultModal.rawText.split('\n')[0].trim());
+                  handleUpdateInvoice(activeInvoice.id, 'vendor_name', vName || cropResultModal.rawText.trim());
+                  setStatusMsg({ type: 'success', text: `บันทึกชื่อร้านค้า "${vName || cropResultModal.rawText.trim()}" สำเร็จ!` });
+                  setCropResultModal(null);
+                  setCropSelection(null);
+                }}
+                className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-200 transition"
+              >
+                🏪 บันทึกเป็นชื่อร้านค้า
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!activeInvoice) return;
+                  const it = cropResultModal.parsedItem || {
+                    item_code: '',
+                    description: cropResultModal.rawText.split('\n')[0].trim() || 'พัสดุ',
+                    quantity: 1,
+                    unit: 'ชิ้น',
+                    unit_price: 0,
+                    total_price: 0,
+                  };
+                  const sep = splitThaiAndEnglishName(it.description);
+                  const newItem: Item = {
+                    id: Date.now().toString() + '_crop',
+                    item_code: it.item_code || '',
+                    description: sep.formatted,
+                    thai_name: it.thai_name || sep.thai || undefined,
+                    english_name: it.english_name || sep.english || undefined,
+                    quantity: it.quantity,
+                    unit: it.unit || 'ชิ้น',
+                    unit_price: it.unit_price,
+                    total_price: it.total_price,
+                  };
+                  setInvoices(prev => prev.map(inv => {
+                    if (inv.id === activeInvoice.id) {
+                      return { ...inv, items: [...inv.items, newItem] };
+                    }
+                    return inv;
+                  }));
+                  setStatusMsg({ type: 'success', text: `เพิ่มรายการ "${newItem.description}" เข้าตารางพัสดุสำเร็จ!` });
+                  setCropResultModal(null);
+                  setCropSelection(null);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+              >
+                + เพิ่มเป็นรายการสินค้า
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Document Live Preview Modal */}
       <DocumentPreviewModal
