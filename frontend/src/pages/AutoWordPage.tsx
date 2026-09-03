@@ -18,6 +18,7 @@ import {
   extractVendorNameFromText, 
   cleanCompanyName 
 } from '../utils/imageOcrOptimizer';
+import { isPdfFile, processPdfDocument } from '../utils/pdfOcrService';
 import { getStoredUser } from '../utils/auth';
 import { DocumentPreviewModal } from '../components/common/DocumentPreviewModal';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
@@ -308,8 +309,116 @@ export default function AutoWordPage() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const imagePreview = URL.createObjectURL(file);
 
+      // Check if uploaded file is a PDF (e-Tax digital invoice or photocopier scanned PDF)
+      if (isPdfFile(file)) {
+        setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] กำลังโหลดและวิเคราะห์โครงสร้างไฟล์ PDF...`);
+        setScanProgress(Math.round(((i + 0.05) / files.length) * 100));
+
+        try {
+          const pdfPages = await processPdfDocument(file, (statusText, pct) => {
+            setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] ${statusText}`);
+            setScanProgress(Math.round(((i + (pct / 100) * 0.4) / files.length) * 100));
+          });
+
+          for (let pIdx = 0; pIdx < pdfPages.length; pIdx++) {
+            const page = pdfPages[pIdx];
+            let pageParsed: any = null;
+
+            if (page.isDigital) {
+              // 1. Digital PDF text stream extraction: 100% accurate, zero OCR typo artifacts
+              setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: ดึงข้อมูลดิจิทัลโดยตรง (Typo-Free 100%)...`);
+              setScanProgress(Math.round(((i + 0.5 + ((pIdx + 1) / pdfPages.length) * 0.4) / files.length) * 100));
+              pageParsed = parseThaiReceiptOcr(page.rawText);
+            } else {
+              // 2. Photocopier Scanned PDF: Rendered 300 DPI Canvas processed with Multi-Pass OCR
+              if (scanEngineMode === 'deep') {
+                setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: DeepScan 5.0 (ประมวลผลสแกนความละเอียดสูง)...`);
+                const layers = await preprocessMultiPassImageForOcrDeep5(page.canvasDataUrl);
+                const passResults = await runMultiPassTesseract([
+                  { id: 'main', label: '1/4: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
+                  { id: 'sauvola', label: '2/4: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
+                  { id: 'header', label: '3/4: สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
+                  { id: 'summary', label: '4/4: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
+                ], (stepLabel, stepPct) => {
+                  setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: ${stepLabel}...`);
+                  setScanProgress(Math.round(((i + 0.3 + (stepPct * 0.5) / 100) / files.length) * 100));
+                });
+
+                pageParsed = parseThaiReceiptOcrDeep5({
+                  mainText: passResults.main?.rawText || '',
+                  mainWords: passResults.main?.words || [],
+                  sauvolaText: passResults.sauvola?.rawText || '',
+                  sauvolaWords: passResults.sauvola?.words || [],
+                  headerText: passResults.header?.rawText || '',
+                  summaryText: passResults.summary?.rawText || '',
+                });
+              } else {
+                setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: สแกนด่วน...`);
+                const preprocessedUrl = await preprocessImageForOcr(page.canvasDataUrl, 'grayscale');
+                const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+                  setScanProgress(Math.round(((i + 0.3 + (pct * 0.5) / 100) / files.length) * 100));
+                });
+                pageParsed = parseThaiReceiptOcr(rawText);
+              }
+            }
+
+            if (pageParsed) {
+              const newInvId = Date.now().toString() + `_${i}_p${pIdx}`;
+              const newInvoice: Invoice = {
+                id: newInvId,
+                vendor_name: pageParsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
+                invoice_number: pageParsed.invoice_number || '',
+                invoice_date: pageParsed.invoice_date || getTodayThaiDate(),
+                discount: pageParsed.discount || 0,
+                items:
+                  pageParsed.items && pageParsed.items.length > 0
+                    ? pageParsed.items.map((item: any, idx: number) => ({
+                        id: Date.now().toString() + '_item_' + idx,
+                        item_code: item.item_code || '',
+                        description: item.description,
+                        quantity: item.quantity,
+                        unit: item.unit || 'ชิ้น',
+                        unit_price: item.unit_price,
+                        total_price: item.total_price,
+                      }))
+                    : [
+                        {
+                          id: Date.now().toString() + '_item_0',
+                          item_code: '',
+                          description: 'รายการพัสดุ/สินค้า',
+                          quantity: 1,
+                          unit: 'ชิ้น',
+                          unit_price: pageParsed.total_amount || 0,
+                          total_price: pageParsed.total_amount || 0,
+                        },
+                      ],
+                imagePreview: page.previewUrl,
+                fileObject: file,
+                isMultiPage: pdfPages.length > 1,
+              };
+
+              setInvoices((prev) => [...prev, newInvoice]);
+              setActiveInvoiceId(newInvId);
+            }
+          }
+
+          setStatusMsg({
+            type: 'success',
+            text: `ประมวลผลไฟล์ PDF "${file.name}" จำนวน ${pdfPages.length} หน้าสำเร็จ!`,
+          });
+        } catch (pdfErr: any) {
+          console.error('PDF parsing error:', pdfErr);
+          setStatusMsg({
+            type: 'error',
+            text: `เกิดข้อผิดพลาดในการอ่านไฟล์ PDF: ${pdfErr?.message || 'ไม่สามารถเปิดไฟล์ได้'}`,
+          });
+        }
+        continue;
+      }
+
+      // Process standard image file
+      const imagePreview = URL.createObjectURL(file);
       let parsed: any = null;
 
       if (scanEngineMode === 'deep') {
@@ -899,13 +1008,13 @@ export default function AutoWordPage() {
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-2xl shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-all active:scale-[0.98]"
             >
               <Upload className="w-4 h-4" />
-              <span>+ อัปโหลดใบกำกับภาษี/ใบเสร็จ</span>
+              <span>+ อัปโหลดรูปภาพ / ไฟล์ PDF ใบเสร็จ</span>
             </button>
             <input
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/*"
+              accept="image/*,application/pdf,.pdf"
               onChange={handleFileUpload}
               className="hidden"
             />
@@ -1242,8 +1351,8 @@ export default function AutoWordPage() {
                 <Upload className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-800">คลิกที่นี่ เพื่อเลือกรูปภาพใบกำกับภาษี / ใบเสร็จรับเงิน</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">รองรับรูปถ่ายใบกำกับภาษีเต็มรูปแบบ, ใบเสร็จรับเงิน JPG, PNG, WEBP</p>
+                <p className="text-xs font-bold text-slate-800">คลิกที่นี่ เพื่อเลือกรูปภาพหรือไฟล์ PDF ใบเสร็จรับเงิน</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">รองรับไฟล์ PDF (e-Tax, สแกนเอกสาร) และรูปถ่าย JPG, PNG, WEBP</p>
               </div>
             </div>
           )}
