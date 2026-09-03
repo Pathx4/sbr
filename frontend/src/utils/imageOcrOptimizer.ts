@@ -49,6 +49,109 @@ export function otsuThreshold(pixels: Uint8ClampedArray, width: number, height: 
 }
 
 /**
+ * Color-Aware Document Background Normalization & Watermark/Stamp Removal
+ * 1. Suppresses red rubber stamps ("จ่ายแล้ว", "PAID") and colored background watermarks (cyan/blue)
+ * 2. Normalizes paper illumination using 2D block-wise background division
+ * 3. Enhances dot-matrix ink contrast while keeping background pure white (255)
+ */
+export function normalizeDocumentBackground(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  suppressColorStamps = true
+): Uint8Array {
+  const totalPixels = width * height;
+  const gray = new Uint8Array(totalPixels);
+
+  // 1. Color-Suppression Grayscale Conversion:
+  // Black text is dark in all 3 channels (R, G, B are all low).
+  // Red ink stamp ("จ่ายแล้ว") has high R (180-255) and low G/B.
+  // Using Math.max(r, Math.min(g, b)) makes red stamps bright (invisible)
+  // while keeping black text dark!
+  for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    if (suppressColorStamps) {
+      const redDominance = r - Math.max(g, b);
+      if (redDominance > 25 && r > 110) {
+        // Pixel belongs to red stamp -> map to paper highlight
+        gray[j] = Math.max(r, 240);
+      } else {
+        // Standard weighted gray, slightly favoring green/blue to suppress cyan watermarks
+        gray[j] = Math.round(0.20 * r + 0.50 * g + 0.30 * b);
+      }
+    } else {
+      gray[j] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+    }
+  }
+
+  // 2. Fast 2D Block-Grid Background Illumination Estimation
+  const blockSize = Math.max(32, Math.min(64, Math.round(width / 50)));
+  const gridW = Math.ceil(width / blockSize);
+  const gridH = Math.ceil(height / blockSize);
+  const bgGrid = new Float32Array(gridW * gridH);
+
+  for (let gy = 0; gy < gridH; gy++) {
+    const startY = gy * blockSize;
+    const endY = Math.min(height, startY + blockSize);
+    for (let gx = 0; gx < gridW; gx++) {
+      const startX = gx * blockSize;
+      const endX = Math.min(width, startX + blockSize);
+
+      let maxVal = 0;
+      for (let y = startY; y < endY; y += 2) {
+        const rowOffset = y * width;
+        for (let x = startX; x < endX; x += 2) {
+          const v = gray[rowOffset + x];
+          if (v > maxVal) maxVal = v;
+        }
+      }
+      bgGrid[gy * gridW + gx] = Math.max(128, maxVal);
+    }
+  }
+
+  // 3. Bilinear Background Division & Contrast Expansion
+  const out = new Uint8Array(totalPixels);
+  const invBlock = 1 / blockSize;
+
+  for (let y = 0; y < height; y++) {
+    const gyFloat = (y - blockSize * 0.5) * invBlock;
+    const gy0 = Math.max(0, Math.min(gridH - 1, Math.floor(gyFloat)));
+    const gy1 = Math.min(gridH - 1, gy0 + 1);
+    const ty = Math.max(0, Math.min(1, gyFloat - gy0));
+
+    const rowOffset = y * width;
+    for (let x = 0; x < width; x++) {
+      const gxFloat = (x - blockSize * 0.5) * invBlock;
+      const gx0 = Math.max(0, Math.min(gridW - 1, Math.floor(gxFloat)));
+      const gx1 = Math.min(gridW - 1, gx0 + 1);
+      const tx = Math.max(0, Math.min(1, gxFloat - gx0));
+
+      const b00 = bgGrid[gy0 * gridW + gx0];
+      const b10 = bgGrid[gy0 * gridW + gx1];
+      const b01 = bgGrid[gy1 * gridW + gx0];
+      const b11 = bgGrid[gy1 * gridW + gx1];
+
+      const bgVal = (b00 * (1 - tx) + b10 * tx) * (1 - ty) + (b01 * (1 - tx) + b11 * tx) * ty;
+      const g = gray[rowOffset + x];
+
+      // Divide by background to flatten paper tint & watermark to 255
+      let norm = (g / (bgVal || 255)) * 255;
+      if (norm > 210) {
+        norm = 255; // Paper highlight -> pure white
+      } else if (norm < 140) {
+        // Dark text -> expand contrast
+        norm = (norm / 140) * 110;
+      }
+      out[rowOffset + x] = Math.max(0, Math.min(255, Math.round(norm)));
+    }
+  }
+
+  return out;
+}
+
+/**
  * Sauvola Local Adaptive Thresholding for Thermal Receipts & Faded Dot-Matrix Ink
  * Formula: T(x, y) = m(x, y) * (1 + k * (s(x, y) / R - 1))
  */
@@ -56,17 +159,21 @@ export function applySauvolaThreshold(
   data: Uint8ClampedArray,
   width: number,
   height: number,
-  windowSize = 31,
-  k = 0.18
+  windowSize = 71,
+  k = 0.22,
+  precomputedGray?: Uint8Array
 ): void {
   const w = width;
   const h = height;
-  const halfWin = Math.floor(windowSize / 2);
+  const effectiveWin = windowSize >= 45 ? windowSize : Math.max(51, Math.min(91, Math.round(w / 35) | 1));
+  const halfWin = Math.floor(effectiveWin / 2);
   const R = 128;
 
-  const gray = new Uint8Array(w * h);
-  for (let i = 0, j = 0; i < data.length; i += 4, j++) {
-    gray[j] = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+  const gray = precomputedGray || new Uint8Array(w * h);
+  if (!precomputedGray) {
+    for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+      gray[j] = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+    }
   }
 
   const integral = new Float64Array((w + 1) * (h + 1));
@@ -160,12 +267,12 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'graysc
         const data = imageData.data;
 
         if (mode === 'grayscale') {
-          // CLAHE-inspired tile local contrast + Unsharp Masking
-          for (let i = 0; i < data.length; i += 4) {
-            const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-            data[i] = gray;
-            data[i + 1] = gray;
-            data[i + 2] = gray;
+          const normGray = normalizeDocumentBackground(data, width, height, true);
+          for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+            const g = normGray[j];
+            data[i] = g;
+            data[i + 1] = g;
+            data[i + 2] = g;
           }
 
           const sharpBuffer = new Uint8ClampedArray(data);
@@ -187,7 +294,8 @@ export function preprocessImageForOcr(file: File, mode: PreprocessMode = 'graysc
             }
           }
         } else {
-          applySauvolaThreshold(data, width, height, 31, 0.18);
+          const normGray = normalizeDocumentBackground(data, width, height, true);
+          applySauvolaThreshold(data, width, height, 71, 0.22, normGray);
         }
 
         ctx.putImageData(imageData, 0, 0);
@@ -214,10 +322,11 @@ export interface MultiPassProcessedImagesDeep5 {
 /**
  * DeepScan 5.0 Multi-Pass Preprocessor: Generates 4 Crystal-Clear Visual Layers (No Skew Distortion)
  */
-export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPassProcessedImagesDeep5> {
+export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promise<MultiPassProcessedImagesDeep5> {
   return new Promise((resolve) => {
     const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
+    const isBlobUrl = typeof file !== 'string';
+    const objectUrl = typeof file === 'string' ? file : URL.createObjectURL(file);
 
     img.onload = () => {
       try {
@@ -230,7 +339,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
           height = Math.round(height * ratio);
         }
 
-        // 1. Pass Main: CLAHE Grayscale + Sharp Edge Mask (for Thai Tone Marks & Vowels)
+        // 1. Pass Main: Color-Suppressed Background Normalization + Sharp Edge Mask (for Thai Tone Marks & Vowels)
         const canvasMain = document.createElement('canvas');
         canvasMain.width = width;
         canvasMain.height = height;
@@ -244,11 +353,13 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         const imgDataMain = ctxMain.getImageData(0, 0, width, height);
         const dataMain = imgDataMain.data;
 
-        for (let i = 0; i < dataMain.length; i += 4) {
-          const gray = Math.round(0.299 * dataMain[i] + 0.587 * dataMain[i + 1] + 0.114 * dataMain[i + 2]);
-          dataMain[i] = gray;
-          dataMain[i + 1] = gray;
-          dataMain[i + 2] = gray;
+        // Apply document background normalization (erases blue/cyan watermark & paper tint)
+        const normGray = normalizeDocumentBackground(dataMain, width, height, true);
+        for (let i = 0, j = 0; i < dataMain.length; i += 4, j++) {
+          const g = normGray[j];
+          dataMain[i] = g;
+          dataMain[i + 1] = g;
+          dataMain[i + 2] = g;
         }
 
         const sharpBuffer = new Uint8ClampedArray(dataMain);
@@ -272,7 +383,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         ctxMain.putImageData(imgDataMain, 0, 0);
         const passMain = canvasMain.toDataURL('image/jpeg', 0.98);
 
-        // 2. Pass Sauvola: Local Adaptive Binarization (for Clean Digits & Column Boundaries)
+        // 2. Pass Sauvola: Adaptive Binarization on Normalized Gray (for Clean Digits & Column Boundaries)
         const canvasSauvola = document.createElement('canvas');
         canvasSauvola.width = width;
         canvasSauvola.height = height;
@@ -281,18 +392,18 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
 
         ctxSauvola.drawImage(img, 0, 0, width, height);
         const imgDataSauvola = ctxSauvola.getImageData(0, 0, width, height);
-        applySauvolaThreshold(imgDataSauvola.data, width, height, 31, 0.18);
+        applySauvolaThreshold(imgDataSauvola.data, width, height, 71, 0.22, normGray);
         ctxSauvola.putImageData(imgDataSauvola, 0, 0);
         const passSauvola = canvasSauvola.toDataURL('image/jpeg', 0.98);
 
-        // 3. Pass Header: Top 35% zoomed
+        // 3. Pass Header: Top 38% zoomed
         const canvasHeader = document.createElement('canvas');
-        const headerH = Math.round(height * 0.35);
+        const headerH = Math.round(height * 0.38);
         canvasHeader.width = width;
         canvasHeader.height = headerH;
         const ctxHeader = canvasHeader.getContext('2d');
         if (ctxHeader) {
-          ctxHeader.drawImage(canvasSauvola, 0, 0, width, headerH, 0, 0, width, headerH);
+          ctxHeader.drawImage(canvasMain, 0, 0, width, headerH, 0, 0, width, headerH);
         }
         const passHeader = canvasHeader.toDataURL('image/jpeg', 0.98);
 
@@ -308,7 +419,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File): Promise<MultiPa
         }
         const passSummary = canvasSummary.toDataURL('image/jpeg', 0.98);
 
-        URL.revokeObjectURL(objectUrl);
+        if (isBlobUrl) URL.revokeObjectURL(objectUrl);
         resolve({
           passMain,
           passSauvola,
@@ -418,6 +529,13 @@ export const MASTER_VENDOR_DICTIONARY = [
   'บริษัท นัฐพงษ์ เซลส์แอนด์เซอร์วิส จำกัด',
   'บริษัท ศุภการ เอ็นจิเนียริ่ง จำกัด',
   'บริษัท ไทยพิพัฒน์ ฮาร์ดแวร์ จำกัด',
+  'บริษัท แหลมฉบังเครื่องเขียน 1995 จำกัด',
+  'บริษัท แหลมฉบังเครื่องเขียน จำกัด',
+  'หจก. แหลมฉบังเครื่องเขียน 1995',
+  'บริษัท อุดมผลเครื่องเขียน จำกัด',
+  'บริษัท นานมี จำกัด',
+  'บริษัท ดีเอชเอ สยามวาลา จำกัด',
+  'บริษัท สมใจ สเตชั่นเนอรี่ จำกัด',
   'Shopee Official Store',
   'Lazada Official Store',
   'TikTok Shop'
@@ -428,7 +546,9 @@ const HARDWARE_MASTER_DICTIONARY = [
   'สวิตช์', 'โมดูล', 'ความร้อน', 'ฉนวน', 'สแตนเลส', 'อะลูมิเนียม', 'พลาสติก', 'น็อต', 'สกรู',
   'คอนเนคเตอร์', 'หม้อแปลง', 'อะแดปเตอร์', 'ตัวต้านทาน', 'ตัวเก็บประจุ', 'ไดโอด', 'รีเลย์',
   'เซนเซอร์', 'เคเบิ้ลไทร์', 'เทปพันสายไฟ', 'ตลับเมตร', 'ด้ามปืน', 'กาวร้อน', 'คัตเตอร์',
-  'กระดาษ', 'แฟ้ม', 'ซอง', 'กล่อง', 'เครื่อง', 'พร้อม', 'ใส้เต็ม', 'ไส้เต็ม', 'อิเล็กทรอนิกส์'
+  'กระดาษ', 'แฟ้ม', 'ซอง', 'กล่อง', 'เครื่อง', 'พร้อม', 'ใส้เต็ม', 'ไส้เต็ม', 'อิเล็กทรอนิกส์',
+  'ปากกา', 'Permanent', 'STAEDTLER', 'น้ำเงิน', 'เขียว', 'แพ็ค', 'แพค', 'เคมี',
+  'เครื่องเขียน', 'ดินสอ', 'ยางลบ', 'ไม้บรรทัด', 'กรรไกร', 'สมุด', 'ชิ้น', 'ด้าม'
 ];
 
 const TYPO_MAP: Record<string, string> = {
@@ -500,7 +620,27 @@ const TYPO_MAP: Record<string, string> = {
   '%16019': 'XL6019',
   '%14015': 'XL4015',
   '%14016': 'XL4016',
-  '%17015': 'XL7015'
+  '%17015': 'XL7015',
+  'อกอทอก': 'Permanent',
+  'าอกอทอก': 'Permanent',
+  'ตาอกอก': 'Permanent',
+  '8๓ตาอกอก': 'Permanent',
+  'เซสเหอก': 'STAEDTLER',
+  'เดซหอ': 'STAEDTLER',
+  'สเตดเลอร์': 'STAEDTLER',
+  'สเต็ดเล่อร์': 'STAEDTLER',
+  'STAEDLER': 'STAEDTLER',
+  'STAEDLERK': 'STAEDTLER K-10',
+  'STAEDTLERK': 'STAEDTLER K-10',
+  'W44M': 'น้ำเงิน-M',
+  'W44': 'น้ำเงิน',
+  'นาเงิน': 'น้ำเงิน',
+  'น้าเงิน': 'น้ำเงิน',
+  'เขียว#โท': 'เขียว-M',
+  'เขียวโท': 'เขียว-M',
+  'เ2ลก': 'ดำ-M',
+  'า0ยก': 'แดง-M',
+  '1.0mเห': '1.0mm'
 };
 
 export function levenshteinDistance(a: string, b: string): number {
@@ -665,7 +805,29 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
     // Thai Watsadu Power Plug
     .replace(/สาขา\s*3\s*ม\.?/g, 'สาย 3 ม.')
     .replace(/สาขา\s*5\s*ม\.?/g, 'สาย 5 ม.')
-    .replace(/ปลัก\s*5\s*ช่อง\s*5\s*สวิตช์/g, 'ปลั๊ก 5 ช่อง 5 สวิตช์');
+    .replace(/ปลัก\s*5\s*ช่อง\s*5\s*สวิตช์/g, 'ปลั๊ก 5 ช่อง 5 สวิตช์')
+
+    // Stationery & Office Supplies (STAEDTLER, Pens, Colors, Markers, Paper)
+    .replace(/(?:STAEDLER|STAEDTLER|STAEDLERK|STAEDTLERK|เซสเหอก|เดซหอ|สเตดเลอร์|สเต็ดเล่อร์)[\s\-_]*([Kk]-?10)?/gi, 'STAEDTLER K-10')
+    .replace(/\b(?:STAEDLER|STAEDTLER)\b/gi, 'STAEDTLER')
+    .replace(/\b[Kk]-?10\b/gi, 'K-10')
+    .replace(/1\.0\s*(?:mเห|mm|มม\.?)/gi, '1.0mm')
+    .replace(/0\.5\s*(?:mเห|mm|มม\.?)/gi, '0.5mm')
+    .replace(/0\.7\s*(?:mเห|mm|มม\.?)/gi, '0.7mm')
+    .replace(/(?:ปากก[\.\s_~-]*[าๅ]|ปากก\.\.[\sา]*|ปากก[_\.\s]*)\s*(?:Permanent|Permanen|อกอทอก|าอกอทอก|ตาอกอก|8๓ตาอกอก|เพอร์มาเนนท์)?/gi, 'ปากกา Permanent ')
+    .replace(/\b(?:Permanent|Permanen|Pemanent)\b/gi, 'Permanent')
+    .replace(/(?:น[ำา\u0e4d\u0e32]+เงิน|W44M|W44|นาเงิน|น้าเงิน|นําเงิน)\s*(?:[\-_]?\s*[Mm])?/gi, 'น้ำเงิน-M ')
+    .replace(/(?:เขียว[\s#โท]*|เขียวโท)\s*(?:[\-_]?\s*[Mm])?(?:#โท)?/gi, 'เขียว-M ')
+    .replace(/(?:ด[ำ\u0e4d\u0e32]+|เ2ลก)\s*(?:[\-_]?\s*[Mm])?/gi, 'ดำ-M ')
+    .replace(/(?:^|\s)(?:0ยก|า0ยก)(?:\s|$)/g, ' แดง-M ')
+    .replace(/(?:แดง)(?:\s*[\-_]?\s*[Mm])?/gi, 'แดง-M ')
+    .replace(/([ก-๙a-zA-Z])(\d+\.\d+mm)/gi, '$1 $2')
+    .replace(/(\d+\.\d+mm)([ก-๙a-zA-Z])/gi, '$1 $2')
+    .replace(/-(?:M|m)(?=\d)/g, '-M ')
+    .replace(/Permanent\s+Permanent/gi, 'Permanent')
+    .replace(/STAEDTLER\s+K-10\s+K-10/gi, 'STAEDTLER K-10')
+    .replace(/STAEDTLER\s+STAEDTLER/gi, 'STAEDTLER')
+    .replace(/ปากกา\s+ปากกา/g, 'ปากกา');
 
   // 5. Thai Technical & Hardware Word Corrections
   text = text
@@ -898,13 +1060,22 @@ export function reconstructTextFromBboxes(words: TesseractWord[]): string {
 
     for (let i = 0; i < row.length; i++) {
       const word = row[i];
+      const prevWord = i > 0 ? row[i - 1] : null;
       const gap = word.bbox.x0 - lastX;
-      if (i > 0 && gap > 35) {
+
+      // If previous word and current word are pure digits with narrow gap (< 22px),
+      // merge them together so 13-digit barcodes aren't split by font kerning!
+      if (prevWord && /^\d+$/.test(prevWord.text) && /^\d+$/.test(word.text) && gap < 22) {
+        lineText += word.text;
+      } else if (i > 0 && gap > 28) {
         lineText += '    ';
+        lineText += word.text;
       } else if (i > 0) {
         lineText += ' ';
+        lineText += word.text;
+      } else {
+        lineText += word.text;
       }
-      lineText += word.text;
       lastX = word.bbox.x1;
     }
     rebuiltLines.push(lineText.trim());
@@ -980,9 +1151,18 @@ export function solveMathematicalConstraints(
   let finalDiscount = extractedDiscount;
 
   if (finalGrandTotal <= 0 && calculatedSum > 0) {
-    finalGrandTotal = calculatedSum - finalDiscount;
-  } else if (finalGrandTotal > 0 && calculatedSum > finalGrandTotal && finalDiscount === 0) {
-    finalDiscount = Math.round((calculatedSum - finalGrandTotal) * 100) / 100;
+    finalGrandTotal = calculatedSum - (finalDiscount || 0);
+  } else if (finalGrandTotal > 0 && calculatedSum > 0) {
+    if (Math.abs(calculatedSum - finalGrandTotal) < 1.0) {
+      // Perfect match between items sum and extracted total
+      finalGrandTotal = calculatedSum;
+      finalDiscount = 0;
+    } else if (finalDiscount > 0 && Math.abs((calculatedSum - finalDiscount) - finalGrandTotal) < 1.0) {
+      // Verified explicit discount matching the total
+    } else if (finalDiscount === 0) {
+      // No explicit discount was found on the bill. Do not fabricate phantom discounts.
+      finalGrandTotal = calculatedSum;
+    }
   }
 
   let vatAmount = 0;
@@ -1174,24 +1354,57 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
 
     if (isAddressLine || isTableHeader) continue;
 
-    const thaiWatsadu4Col = line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/);
-    const threeColDecimals = !thaiWatsadu4Col ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/) : null;
-    const standard3Col = !thaiWatsadu4Col && !threeColDecimals ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-|\|\s*[\d,]+(?:\.\d{2,3}|\.-)))\s*\|\s*([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
-                                        || line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/) : null;
-    const standard2Price = !thaiWatsadu4Col && !threeColDecimals && !standard3Col ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/) : null;
-    const singlePriceMatch = (!thaiWatsadu4Col && !threeColDecimals && !standard3Col && !standard2Price && (hasRowPrefix || Boolean(skuBracketTest)))
+    // Pattern 1: Multi-column with Unit and Discount (Desc Qty Unit Price Discount Amount)
+    // e.g. "1 4007817310535 ปากกาPermanent น้ำเงิน 1.0mm STAEDTLER K-10 1 แพค10 415.00 0.00 415.00"
+    const fullTableWithUnitAndDiscount = line.match(
+      /^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([ก-๙a-zA-Z]+(?:\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/
+    );
+
+    // Pattern 2: Multi-column with Unit (Desc Qty Unit Price Amount)
+    // e.g. "ปากกา... 1 แพค10 415.00 415.00"
+    const fullTableWithUnit = !fullTableWithUnitAndDiscount
+      ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([ก-๙a-zA-Z]+(?:\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+      : null;
+
+    const thaiWatsadu4Col = !fullTableWithUnitAndDiscount && !fullTableWithUnit
+      ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+      : null;
+    const threeColDecimals = !fullTableWithUnitAndDiscount && !fullTableWithUnit && !thaiWatsadu4Col
+      ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+      : null;
+    const standard3Col = !fullTableWithUnitAndDiscount && !fullTableWithUnit && !thaiWatsadu4Col && !threeColDecimals
+      ? line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-|\|\s*[\d,]+(?:\.\d{2,3}|\.-)))\s*\|\s*([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+        || line.match(/^(.+?)\s+(\d{1,4}(?:\.\d{1,3})?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+      : null;
+    const standard2Price = !fullTableWithUnitAndDiscount && !fullTableWithUnit && !thaiWatsadu4Col && !threeColDecimals && !standard3Col
+      ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
+      : null;
+    const singlePriceMatch = (!fullTableWithUnitAndDiscount && !fullTableWithUnit && !thaiWatsadu4Col && !threeColDecimals && !standard3Col && !standard2Price && (hasRowPrefix || Boolean(skuBracketTest)))
       ? line.match(/^(.+?)\s+([\d,]+(?:\.\d{2,3}|\.-))\s*$/)
       : null;
 
-    const isNewItemRow = Boolean(thaiWatsadu4Col) || Boolean(threeColDecimals) || Boolean(standard3Col) || Boolean(standard2Price) || Boolean(singlePriceMatch);
+    const isNewItemRow = Boolean(fullTableWithUnitAndDiscount) || Boolean(fullTableWithUnit) || Boolean(thaiWatsadu4Col) || Boolean(threeColDecimals) || Boolean(standard3Col) || Boolean(standard2Price) || Boolean(singlePriceMatch);
 
     if (isNewItemRow) {
       let cleanDesc = line;
       let quantity = 1;
       let unit_price = 0;
       let total_price_final = 0;
+      let rawExtractedUnit = '';
 
-      if (thaiWatsadu4Col) {
+      if (fullTableWithUnitAndDiscount) {
+        cleanDesc = fullTableWithUnitAndDiscount[1];
+        quantity = parseFloat(fullTableWithUnitAndDiscount[2]) || 1;
+        rawExtractedUnit = fullTableWithUnitAndDiscount[3];
+        unit_price = parseFloat(fullTableWithUnitAndDiscount[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(fullTableWithUnitAndDiscount[6].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (fullTableWithUnit) {
+        cleanDesc = fullTableWithUnit[1];
+        quantity = parseFloat(fullTableWithUnit[2]) || 1;
+        rawExtractedUnit = fullTableWithUnit[3];
+        unit_price = parseFloat(fullTableWithUnit[4].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+        total_price_final = parseFloat(fullTableWithUnit[5].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
+      } else if (thaiWatsadu4Col) {
         cleanDesc = thaiWatsadu4Col[1];
         quantity = parseFloat(thaiWatsadu4Col[2]) || 1;
         unit_price = parseFloat(thaiWatsadu4Col[3].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
@@ -1231,55 +1444,73 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       cleanDesc = cleanDesc.replace(/^\s*\d{1,3}[\.\)\s\|]+/, '');
 
       let item_code = '';
-      const leadingBarcodeMatch = cleanDesc.match(/^\s*(\d{8,14})\s*(.+)$/);
-      if (leadingBarcodeMatch) {
-        item_code = leadingBarcodeMatch[1];
-        cleanDesc = leadingBarcodeMatch[2].trim();
-      } else {
-        // Shopee Bracket SKU matching & normalization
-        const bracketSku = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Za-z0-9\-\u0e00-\u0e7f]{3,10}?)[\)\]\}\|1\s]\s*(.+)$/i);
-        if (bracketSku && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV|ORDER)$/i.test(bracketSku[1])) {
-          let code = bracketSku[1]
-            .replace(/^ม/gi, 'M')
-            .replace(/^พ/gi, 'P')
-            .replace(/^แห/gi, 'H')
-            .replace(/^pJ/i, 'P0')
-            .replace(/^P041T/i, 'P0410')
-            .replace(/^501/i, 'S01')
-            .replace(/^903/i, 'S03')
-            .replace(/^ย903/i, 'S03')
-            .replace(/^603/i, 'G03')
-            .replace(/^604/i, 'G04')
-            .replace(/^A03/i, 'G03')
-            .replace(/^048/i, 'G048')
-            .replace(/^1688$/i, 'H1688')
-            .replace(/^อ0420/i, 'P0420')
-            .replace(/^0420/i, 'P0420')
-            .replace(/^M15371$/i, 'M1537');
 
-          if (/^[A-Z0-9\-]{3,15}$/i.test(code)) {
-            item_code = code;
-            cleanDesc = bracketSku[2].trim();
-          }
+      // 1. Check for glued row index + 13-digit barcode (e.g. 14007817310535 or 1 4007817310535)
+      const gluedBarcodeMatch = cleanDesc.match(/^\s*(?:(\d{1,2})[\s\.\)]*)?(\d{13})\s*(.+)$/);
+      if (gluedBarcodeMatch) {
+        item_code = gluedBarcodeMatch[2];
+        cleanDesc = gluedBarcodeMatch[3].trim();
+      } else {
+        // 2. Check if barcode was split into two chunks (e.g. 40078 7310564)
+        const splitBarcodeMatch = cleanDesc.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s*(.+)$/);
+        if (splitBarcodeMatch && (splitBarcodeMatch[2].length + splitBarcodeMatch[3].length >= 12 && splitBarcodeMatch[2].length + splitBarcodeMatch[3].length <= 14)) {
+          item_code = splitBarcodeMatch[2] + splitBarcodeMatch[3];
+          cleanDesc = splitBarcodeMatch[4].trim();
         } else {
-          // Check prefix SKU patterns like "อ0420 Solar..." or "ย9033 ชุด..." or "60483 18#..."
-          const prefixSkuMatch = cleanDesc.match(/^(อ0420|ย9033|60483|A0325|A0327|0484|1688|M0204|M1537|P0002|M0103|P0164|P041T|P0319)\s+(.+)$/i);
-          if (prefixSkuMatch) {
-            let code = prefixSkuMatch[1]
-              .replace(/^อ0420/i, 'P0420')
-              .replace(/^ย9033/i, 'S033')
-              .replace(/^60483/i, 'G0483')
-              .replace(/^A0325/i, 'G0325')
-              .replace(/^A0327/i, 'G0327')
-              .replace(/^0484/i, 'G0484')
-              .replace(/^1688/i, 'H1688')
-              .replace(/^P041T/i, 'P0410');
-            item_code = code;
-            cleanDesc = prefixSkuMatch[2].trim();
+          // 3. Normal leading barcode 8-14 digits
+          const leadingBarcodeMatch = cleanDesc.match(/^\s*(\d{8,14})\s*(.+)$/);
+          if (leadingBarcodeMatch) {
+            item_code = leadingBarcodeMatch[1];
+            cleanDesc = leadingBarcodeMatch[2].trim();
+          } else {
+            // Shopee Bracket SKU matching & normalization
+            const bracketSku = cleanDesc.match(/^\s*[\|\(\[\{\/\\]*([A-Za-z0-9\-\u0e00-\u0e7f]{3,10}?)[\)\]\}\|1\s]\s*(.+)$/i);
+            if (bracketSku && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|SKU|DOC|INV|ORDER)$/i.test(bracketSku[1])) {
+              let code = bracketSku[1]
+                .replace(/^ม/gi, 'M')
+                .replace(/^พ/gi, 'P')
+                .replace(/^แห/gi, 'H')
+                .replace(/^pJ/i, 'P0')
+                .replace(/^P041T/i, 'P0410')
+                .replace(/^501/i, 'S01')
+                .replace(/^903/i, 'S03')
+                .replace(/^ย903/i, 'S03')
+                .replace(/^603/i, 'G03')
+                .replace(/^604/i, 'G04')
+                .replace(/^A03/i, 'G03')
+                .replace(/^048/i, 'G048')
+                .replace(/^1688$/i, 'H1688')
+                .replace(/^อ0420/i, 'P0420')
+                .replace(/^0420/i, 'P0420')
+                .replace(/^M15371$/i, 'M1537');
+
+              if (/^[A-Z0-9\-]{3,15}$/i.test(code)) {
+                item_code = code;
+                cleanDesc = bracketSku[2].trim();
+              }
+            } else {
+              // Check prefix SKU patterns like "อ0420 Solar..." or "ย9033 ชุด..." or "60483 18#..."
+              const prefixSkuMatch = cleanDesc.match(/^(อ0420|ย9033|60483|A0325|A0327|0484|1688|M0204|M1537|P0002|M0103|P0164|P041T|P0319)\s+(.+)$/i);
+              if (prefixSkuMatch) {
+                let code = prefixSkuMatch[1]
+                  .replace(/^อ0420/i, 'P0420')
+                  .replace(/^ย9033/i, 'S033')
+                  .replace(/^60483/i, 'G0483')
+                  .replace(/^A0325/i, 'G0325')
+                  .replace(/^A0327/i, 'G0327')
+                  .replace(/^0484/i, 'G0484')
+                  .replace(/^1688/i, 'H1688')
+                  .replace(/^P041T/i, 'P0410');
+                item_code = code;
+                cleanDesc = prefixSkuMatch[2].trim();
+              }
+            }
           }
         }
       }
 
+      // If cleanDesc still has a standalone 6-14 digit number at the start, remove it
+      cleanDesc = cleanDesc.replace(/^\s*\d{6,14}\s+/, '').trim();
       cleanDesc = cleanDesc.replace(/^[\|\/\\\[\]\(\)\{\}\!\?\s\-\.:]+/g, '').trim();
       cleanDesc = cleanThaiText(cleanDesc);
       cleanDesc = cleanItemDescription(cleanDesc);
@@ -1291,30 +1522,51 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
       }
 
       let unit = 'ชิ้น';
-      const allText = cleanDesc;
-      if (/กล่อง/i.test(allText)) unit = 'กล่อง';
-      else if (/แพ็ค|แพค/i.test(allText)) unit = 'แพ็ค';
-      else if (/เครื่อง/i.test(allText)) unit = 'เครื่อง';
-      else if (/ม้วน/i.test(allText)) unit = 'ม้วน';
-      else if (/ถัง/i.test(allText)) unit = 'ถัง';
-      else if (/ชุด/i.test(allText)) unit = 'ชุด';
-      else if (/แท่ง/i.test(allText)) unit = 'แท่ง';
-      else if (/เส้น/i.test(allText)) unit = 'เส้น';
-      else if (/อัน/i.test(allText)) unit = 'อัน';
-      else if (/แผ่น/i.test(allText)) unit = 'แผ่น';
-      else if (/ด้าม/i.test(allText)) unit = 'ด้าม';
-      else if (/ตัว/i.test(allText)) unit = 'ตัว';
-      else if (/เล่ม/i.test(allText)) unit = 'เล่ม';
-      else if (/รีม/i.test(allText)) unit = 'รีม';
-      else if (/ซอง/i.test(allText)) unit = 'ซอง';
-      else if (/ก้อน/i.test(allText)) unit = 'ก้อน';
-      else if (/ขวด/i.test(allText)) unit = 'ขวด';
-      else if (/หลอด/i.test(allText)) unit = 'หลอด';
-      else if (/ถุง/i.test(allText)) unit = 'ถุง';
-      else if (/คู่/i.test(allText)) unit = 'คู่';
-      else if (/แกลลอน/i.test(allText)) unit = 'แกลลอน';
-      else if (/กิโลกรัม|กก\./i.test(allText)) unit = 'กิโลกรัม';
-      else if (/(?:^|\s)เมตร(?:\s|$)|หน่วย.*เมตร|ยาว.*เมตร/i.test(allText)) unit = 'เมตร';
+      if (rawExtractedUnit) {
+        const u = rawExtractedUnit.trim();
+        if (/^แพ[ค็ค]+(?:10)?$/i.test(u)) unit = 'แพ็ค (10 ด้าม)';
+        else if (/^แพ[ค็ค]+/i.test(u)) unit = 'แพ็ค';
+        else if (/^กล่อง/i.test(u)) unit = 'กล่อง';
+        else if (/^ด้าม/i.test(u)) unit = 'ด้าม';
+        else if (/^เล่ม/i.test(u)) unit = 'เล่ม';
+        else if (/^ชุด/i.test(u)) unit = 'ชุด';
+        else if (/^อัน/i.test(u)) unit = 'อัน';
+        else if (/^รีม/i.test(u)) unit = 'รีม';
+        else if (/^ม้วน/i.test(u)) unit = 'ม้วน';
+        else if (/^ขวด/i.test(u)) unit = 'ขวด';
+        else if (/^แผ่น/i.test(u)) unit = 'แผ่น';
+        else if (/^หลอด/i.test(u)) unit = 'หลอด';
+        else if (/^ก้อน/i.test(u)) unit = 'ก้อน';
+        else if (/^เครื่อง/i.test(u)) unit = 'เครื่อง';
+        else if (/^โหล/i.test(u)) unit = 'โหล';
+        else if (/^ชิ้น/i.test(u)) unit = 'ชิ้น';
+        else unit = u;
+      } else {
+        const allText = cleanDesc;
+        if (/กล่อง/i.test(allText)) unit = 'กล่อง';
+        else if (/แพ็ค|แพค/i.test(allText)) unit = 'แพ็ค';
+        else if (/เครื่อง/i.test(allText)) unit = 'เครื่อง';
+        else if (/ม้วน/i.test(allText)) unit = 'ม้วน';
+        else if (/ถัง/i.test(allText)) unit = 'ถัง';
+        else if (/ชุด/i.test(allText)) unit = 'ชุด';
+        else if (/แท่ง/i.test(allText)) unit = 'แท่ง';
+        else if (/เส้น/i.test(allText)) unit = 'เส้น';
+        else if (/อัน/i.test(allText)) unit = 'อัน';
+        else if (/แผ่น/i.test(allText)) unit = 'แผ่น';
+        else if (/ด้าม/i.test(allText)) unit = 'ด้าม';
+        else if (/ตัว/i.test(allText)) unit = 'ตัว';
+        else if (/เล่ม/i.test(allText)) unit = 'เล่ม';
+        else if (/รีม/i.test(allText)) unit = 'รีม';
+        else if (/ซอง/i.test(allText)) unit = 'ซอง';
+        else if (/ก้อน/i.test(allText)) unit = 'ก้อน';
+        else if (/ขวด/i.test(allText)) unit = 'ขวด';
+        else if (/หลอด/i.test(allText)) unit = 'หลอด';
+        else if (/ถุง/i.test(allText)) unit = 'ถุง';
+        else if (/คู่/i.test(allText)) unit = 'คู่';
+        else if (/แกลลอน/i.test(allText)) unit = 'แกลลอน';
+        else if (/(?:^|\s)(?:กิโลกรัม|กก\.)(?:\s|$)/i.test(allText)) unit = 'กิโลกรัม';
+        else if (/(?:^|\s)เมตร(?:\s|$)|หน่วย.*เมตร|ยาว.*เมตร/i.test(allText)) unit = 'เมตร';
+      }
 
       const isZeroPriceJunk = unit_price === 0 && !item_code && cleanDesc.length < 5;
       const isLowPriceGarbage = total_price_final <= 1.05 && !item_code && cleanDesc.length < 15;
