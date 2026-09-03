@@ -367,7 +367,7 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
         ctxMain.putImageData(imgDataMain, 0, 0);
         const passMain = canvasMain.toDataURL('image/jpeg', 0.98);
 
-        // 2. Pass Contrast & Dot-Matrix Pin Connection (connects discrete needle dots into solid strokes)
+        // 2. Pass Contrast: Gentle Linear Contrast Stretch (preserves Thai character loops without smudging)
         const canvasContrast = document.createElement('canvas');
         canvasContrast.width = width;
         canvasContrast.height = height;
@@ -376,22 +376,13 @@ export function preprocessMultiPassImageForOcrDeep5(file: File | string): Promis
 
         const imgDataContrast = ctxContrast.createImageData(width, height);
         const dataContrast = imgDataContrast.data;
-        for (let y = 0; y < height; y++) {
-          const row = y * width;
-          for (let x = 0; x < width; x++) {
-            const idx = row + x;
-            const g = normGray[idx];
-            const gLeft = x > 0 ? normGray[idx - 1] : g;
-            const gRight = x < width - 1 ? normGray[idx + 1] : g;
-            // 1-pixel horizontal dilation on dark pixels connects dot-matrix printer pins
-            const darkMin = Math.min(g, gLeft, gRight);
-            const stretched = darkMin < 155 ? Math.max(0, Math.round(darkMin * 0.65)) : darkMin > 210 ? 255 : darkMin;
-            const pIdx = idx * 4;
-            dataContrast[pIdx] = stretched;
-            dataContrast[pIdx + 1] = stretched;
-            dataContrast[pIdx + 2] = stretched;
-            dataContrast[pIdx + 3] = 255;
-          }
+        for (let i = 0, j = 0; i < dataContrast.length; i += 4, j++) {
+          const g = normGray[j];
+          const stretched = g < 140 ? Math.max(0, Math.round(g * 0.7)) : g > 200 ? 255 : g;
+          dataContrast[i] = stretched;
+          dataContrast[i + 1] = stretched;
+          dataContrast[i + 2] = stretched;
+          dataContrast[i + 3] = 255;
         }
         ctxContrast.putImageData(imgDataContrast, 0, 0);
         const passSauvola = canvasContrast.toDataURL('image/jpeg', 0.98);
@@ -990,6 +981,7 @@ export function isHeaderLine(line: string): boolean {
  * Strictly prevents payment terms, totals, VAT calculations, and signature lines from entering the items table.
  */
 export function isSummaryOrFooterLine(line: string): boolean {
+  if (/^\s*%/i.test(line)) return true;
   return /(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|จำนวนชิ้นรวม|SUBTOTAL|TOTAL|GRAND TOTAL|VAT|TAX|NET TOTAL|TOTAL DUE|BALANCE|เงื่อนไข|สินค้าสั่งพิเศษ|ใบเสร็จรับเงินนี้จะสมบูรณ์|ผู้รับเงิน|ผู้จ่ายเงิน|CASHIER|เงินสด|ทอนเงิน|CHANGE)/i.test(line);
 }
 
@@ -1099,8 +1091,10 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
     }
   }
 
-  // Strip residual leading line number + flag e.g. "3 ง " or "10 v " if barcode was not present
+  // Strip residual leading line number + flag e.g. "3 ง " or "10 v " or "1." or "1) " or "1 แฟ้ม..."
   line = line.replace(/^\s*(?:\d{1,3}|[๐-๙]{1,3})\s*[vVง\|\.\-\)]+\s+/g, '').trim();
+  line = line.replace(/^\s*(?:#\s*\d{1,3}|\(?\d{1,3}[\.\)\:\-]\s*)/, '').trim();
+  line = line.replace(/^\s*(?:\d{1,3}|[๐-๙]{1,3})\s+(?=[\u0e00-\u0e7f]{2,})/, '').trim();
 
   // Pattern 1: With "@" symbol e.g. [Desc?] [Qty] [Unit?] @ [UnitPrice] [Amount]
   const atMatch = line.match(/^(?:(.+?)\s+)?(\d+(?:\.\d+)?)\s*(?:([ก-๙a-zA-Z]{1,10})\s*)?@\s*(\d+(?:\.\d{1,2})?)\s+(\d+(?:\.\d{1,2})?)$/);
@@ -1593,7 +1587,15 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
     const candidateItems = c.receipt.items;
     let score = 0;
 
-    // Check if candidate list is mathematically balanced with invoice total
+    // 1. Reward candidate that extracted multiple valid line items
+    score += candidateItems.length * 25;
+
+    // Disqualify 1-item candidate if another candidate found 2 or more items
+    if (candidateItems.length === 1 && candidates.some(other => other.receipt.items && other.receipt.items.length >= 2)) {
+      score -= 200;
+    }
+
+    // 2. Check if candidate list is mathematically balanced with invoice total
     const cSum = candidateItems.reduce((s, i) => s + (i.total_price || 0), 0);
     const targetTotal = mainParsed.total_amount > 0 ? mainParsed.total_amount : c.receipt.total_amount;
     if (targetTotal > 0 && Math.abs(cSum - targetTotal) < 1.0) {
@@ -1602,14 +1604,14 @@ export function parseThaiReceiptOcrDeep5(passes: DeepScanPassOutputsDeep5): Pars
       score += 30;
     }
 
-    // Evaluate individual items for validity
+    // 3. Evaluate individual items for validity
     for (const item of candidateItems) {
       if (isHeaderLine(item.description) || isSummaryOrFooterLine(item.description)) {
-        score -= 60; // Heavy penalty for header leakage!
+        score -= 80; // Heavy penalty for header/footer leakage!
       } else {
         if (item.total_price > 0) score += 10;
-        if (item.item_code && item.item_code.length >= 6) score += 10;
-        if (item.description && item.description.length >= 4) score += 5;
+        if (item.item_code && item.item_code.length >= 6) score += 20;
+        if (item.description && item.description.length >= 4) score += 10;
       }
     }
 
