@@ -695,8 +695,7 @@ export function correctTechnicalThaiAndEnglishText(str: string): string {
   // 6. Run TYPO_MAP dictionary
   Object.keys(TYPO_MAP).forEach((typo) => {
     if (typo) {
-      const re = new RegExp(typo.replace(/%/g, '\\%'), 'g');
-      text = text.replace(re, TYPO_MAP[typo]);
+      text = text.split(typo).join(TYPO_MAP[typo]);
     }
   });
 
