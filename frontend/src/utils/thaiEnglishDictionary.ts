@@ -36,7 +36,8 @@ export function levenshteinDistance(a: string, b: string): number {
 
 export const MASTER_ENGLISH_DICTIONARY: string[] = [
   // Major Brands (Office, Hardware, Electronics, Retail)
-  'DOUBLE A', 'HORSE', 'ELEPHANT', 'PILOT', 'PENTEL', 'STABILO', 'FABER-CASTELL', 'ROTEL',
+  'DOUBLE A', 'HORSE', 'ELEPHANT', 'STAEDTLER', 'PILOT', 'PENTEL', 'STABILO', 'FABER-CASTELL', 'ROTEL',
+  'QUANTUM', 'FASTER', 'MONAMI', 'ZEBRA', 'ARTLINE', 'CASIO',
   '3M', 'SCOTT', 'KLEENEX', 'POST-IT', 'SCOTCH', 'ARROW', 'ARO', 'TOWA',
   'CANON', 'EPSON', 'HP', 'BROTHER', 'FUJITSU', 'PANASONIC', 'PHILIPS', 'SAMSUNG', 'SONY',
   'SCHNEIDER', 'BOSCH', 'MAKITA', 'STANLEY', 'DEWALT', 'TOTAL', 'INGCO',
@@ -282,6 +283,12 @@ export const ENGLISH_OCR_EXACT_MAP: Record<string, string> = {
   'RECIEPT': 'RECEIPT',
   'KLEEN3X': 'KLEENEX',
   'ELEPH4NT': 'ELEPHANT',
+  'STAEDLER': 'STAEDTLER',
+  'STAEDTLERK': 'STAEDTLER',
+  'STAEDTLER-': 'STAEDTLER',
+  'PERMANET': 'PERMANENT',
+  'PERMENENT': 'PERMANENT',
+  'PEMANENT': 'PERMANENT',
   'PIL0T': 'PILOT',
   'PENT3L': 'PENTEL'
 };
@@ -392,6 +399,28 @@ export function applyThaiEnglishDictionary(text: string): string {
   result = result.replace(/([ก-ฮ])\s+([\u0e31\u0e34-\u0e3a\u0e47-\u0e4e])/g, '$1$2');
   // Leading dangling tone marks/vowels
   result = result.replace(/^[\u0e31\u0e34-\u0e3a\u0e47-\u0e4e]+/g, '');
+
+  // 1.5. Transliterate pseudo-Thai OCR characters back to English brands & products
+  result = result.replace(/ปากก[\.\s_~]+า/g, 'ปากกา ');
+  result = result.replace(/ปากดา/g, 'ปากกา');
+
+  // Combined Permanent + Staedtler e.g. "l2ลทเขสเทอ" or "0ยก เขสเทอก"
+  result = result.replace(/l2ลท\s*เข[สล]เทอ[กรก!\d]*/gi, 'Permanent STAEDTLER');
+  result = result.replace(/(?:0ยก|า0ยก)\s*เข[สล]เทอ[กรก!\d]*/gi, 'Permanent STAEDTLER');
+
+  // Standalone STAEDTLER (e.g. เขสเทอก, เขสเทอก!, เขสเทอ, เขลเทอก)
+  result = result.replace(/เข[สล]เทอ[กรก!\d]*/gi, 'STAEDTLER');
+
+  // Standalone Permanent (e.g. 6๓กลกอทเ, ๓กลกอทเ, อถอทอทก, 8๓ตาสกอก)
+  result = result.replace(/6?๓กลกอท[เtT]?/gi, 'Permanent');
+  result = result.replace(/(?:อถอทอทก!|อถอทอทก|8๓ตาสกอก!|8๓ตาสกอก)/gi, 'Permanent');
+
+  // Units: 1.0mเ -> 1.0mm, 0.5mเ -> 0.5mm, 0.7mเ -> 0.7mm
+  result = result.replace(/(\d+(?:\.\d+)?)\s*m[เ1Il|](?=\s|$|[^ก-๙a-zA-Z])/gi, '$1mm');
+
+  // Color / Marker codes: W44M / W4M -> น้ำเงิน M, เขียว#โท -> เขียว
+  result = result.replace(/W44M|W4M/g, 'น้ำเงิน M');
+  result = result.replace(/เขียว#โท/g, 'เขียว');
 
   // 2. High-Frequency Thai Procurement Lexicon Typos
   for (const [pattern, replacement] of THAI_OCR_FIXES) {

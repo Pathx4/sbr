@@ -1449,9 +1449,9 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   let grandTotalCandidate = 0;
 
   for (const l of summaryLines) {
-    // Priority 1: True Grand Total (ยอดรวมสุทธิ / ยอดเงินสุทธิ / รวมทั้งสิ้น / TOTAL AMOUNT / GRAND TOTAL)
+    // Priority 1: True Grand Total (ยอดรวมสุทธิ / ยอดเงินสุทธิ / ยอดสุทธิ / รวมทั้งสิ้น / TOTAL AMOUNT / GRAND TOTAL)
     if (grandTotalCandidate === 0) {
-      const grandMatch = l.match(/(?:ยอดรวมสุทธิ|ยอดเงินสุทธิ|รวมทั้งสิ้น|จำนวนเงินทั้งสิ้น|ยอดชำระ|Grand\s*Total|Total\s*Amount|Net\s*Total)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
+      const grandMatch = l.match(/(?:ยอดรวมสุทธิ|ยอดเงินสุทธิ|ยอดสุทธิ|รวมทั้งสิ้น|จำนวนเงินทั้งสิ้น|ยอดชำระ|Grand\s*Total|Total\s*Amount|Net\s*Total)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
       if (grandMatch) {
         grandTotalCandidate = parseFloat(grandMatch[1].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
       }
