@@ -1,6 +1,7 @@
 // frontend/src/services/ocrService.ts
 import axios from 'axios';
-import { runTesseract, type OcrWord, type OcrResult } from '../utils/tesseractWorker';
+import { type OcrWord, type OcrResult } from '../utils/tesseractWorker';
+import { getAuthHeaders } from '../utils/auth';
 
 export interface OcrExtractionResponse {
   words: OcrWord[];
@@ -26,11 +27,13 @@ function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 /**
- * Send receipt image to PaddleOCR (PP-OCRv5) on backend
+ * Send receipt image to PaddleOCR (PP-OCRv5) on backend with Bearer Auth
+ * Strictly performs PaddleOCR without falling back to Tesseract.
  */
 export async function extractWithPaddleOcr(
   imageSource: File | Blob | string,
-  timeoutMs = 240000
+  onProgress?: (status: string, percent: number) => void,
+  timeoutMs = 300000
 ): Promise<OcrResult & { parsed?: any }> {
   let formData: FormData | null = null;
   let jsonPayload: { image: string } | null = null;
@@ -51,61 +54,67 @@ export async function extractWithPaddleOcr(
     formData.append('file', imageSource, 'receipt.jpg');
   }
 
-  let response;
-  if (formData) {
-    response = await axios.post('/api/extract-bill', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: timeoutMs,
-    });
-  } else {
-    response = await axios.post('/api/extract-bill', jsonPayload, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: timeoutMs,
-    });
-  }
+  const authHeaders = getAuthHeaders();
 
-  if (response.data && Array.isArray(response.data.words)) {
-    const rawText = response.data.rawText || response.data.words.map((w: any) => w.text).join('\n');
-    return {
-      words: response.data.words.map((w: any) => ({
-        text: w.text || '',
-        bbox: w.bbox || { x0: 0, y0: 0, x1: 0, y1: 0 },
-      })),
-      rawText,
-      parsed: response.data.parsed || undefined,
-    };
-  }
+  if (onProgress) onProgress('กำลังส่งภาพและเชื่อมต่อ PaddleOCR AI (PP-OCRv5)...', 35);
 
-  throw new Error(response.data?.error || 'รูปแบบการตอบกลับจาก PaddleOCR ไม่ถูกต้อง');
+  try {
+    let response;
+    if (formData) {
+      response = await axios.post('/api/extract-bill', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...authHeaders,
+        },
+        timeout: timeoutMs,
+      });
+    } else {
+      response = await axios.post('/api/extract-bill', jsonPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        timeout: timeoutMs,
+      });
+    }
+
+    if (onProgress) onProgress('PaddleOCR สแกนถอดข้อความสำเร็จ 100%', 95);
+
+    if (response.data && Array.isArray(response.data.words)) {
+      const rawText = response.data.rawText || response.data.words.map((w: any) => w.text).join('\n');
+      return {
+        words: response.data.words.map((w: any) => ({
+          text: w.text || '',
+          bbox: w.bbox || { x0: 0, y0: 0, x1: 0, y1: 0 },
+        })),
+        rawText,
+        parsed: response.data.parsed || undefined,
+      };
+    }
+
+    throw new Error(response.data?.error || 'รูปแบบข้อมูลตอบกลับจากเซิร์ฟเวอร์ไม่ถูกต้อง');
+  } catch (err: any) {
+    if (err.response?.status === 401) {
+      throw new Error('เซสชันการเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+    }
+    if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+      throw new Error('เซิร์ฟเวอร์ใช้เวลาประมวลผลนานเกินกำหนด กรุณากดลองใหม่อีกครั้ง');
+    }
+    const serverErr = err.response?.data?.error || err.response?.data?.message || err.message;
+    throw new Error(`ไม่สามารถเชื่อมต่อ PaddleOCR เซิร์ฟเวอร์ได้: ${serverErr}`);
+  }
 }
 
 /**
- * Run OCR with high-accuracy PaddleOCR primary and client-side Tesseract.js fallback
+ * Backward compatibility function for existing callers, but NEVER silently falls back to Tesseract.
  */
 export async function runOcrWithFallback(
   imageSource: File | Blob | string,
   onProgress?: (status: string, percent: number) => void
 ): Promise<OcrExtractionResponse> {
-  try {
-    if (onProgress) onProgress('กำลังประมวลผลด้วย PaddleOCR (PP-OCRv5 ไทย-อังกฤษ)...', 45);
-    const result = await extractWithPaddleOcr(imageSource);
-    if (onProgress) onProgress('PaddleOCR สแกนสำเร็จ 100%', 100);
-    return {
-      ...result,
-      engine: 'paddle',
-    };
-  } catch (paddleErr: any) {
-    console.warn('[OCR Service] PaddleOCR failed, automatically falling back to Tesseract.js:', paddleErr);
-    if (onProgress) onProgress('เซิร์ฟเวอร์ตอบสนองช้า สลับไปใช้ Tesseract.js (Offline Fallback)...', 55);
-
-    // Fallback to client-side Tesseract
-    const fallbackResult = await runTesseract(imageSource as any, (pct) => {
-      if (onProgress) onProgress(`Tesseract.js กำลังสแกน... ${pct}%`, Math.round(55 + (pct * 0.45)));
-    });
-
-    return {
-      ...fallbackResult,
-      engine: 'tesseract',
-    };
-  }
+  const result = await extractWithPaddleOcr(imageSource, onProgress);
+  return {
+    ...result,
+    engine: 'paddle',
+  };
 }

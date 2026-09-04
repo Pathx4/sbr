@@ -4,7 +4,13 @@ import tempfile
 import copy
 import re
 import time
+import json
 import base64
+import hmac
+import hashlib
+import secrets
+import threading
+from functools import wraps
 import requests
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
@@ -25,6 +31,79 @@ from bahttext import bahttext
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Prevent PaddleOCR slow source checks
+os.environ['PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK'] = 'True'
+
+# Auth Secret & System Passcode
+AUTH_SECRET = os.environ.get("SBR_JWT_SECRET", "sbr_gistda_secure_auth_key_2026_x9")
+SBR_PASSCODE = os.environ.get("SBR_PASSCODE", "gistda2026")
+
+ALLOWED_USERS = [
+    'pakimthamthung@gmail.com',
+    'siripak@gistda.or.th',
+    'thanthiya@gistda.or.th',
+    'watcharee@gistda.or.th',
+    'wageeporn@gistda.or.th',
+]
+
+def generate_auth_token(user_email: str, expires_in_days: int = 30) -> str:
+    payload = {
+        "email": user_email.lower(),
+        "exp": int(time.time()) + (expires_in_days * 86400),
+        "nonce": secrets.token_hex(8)
+    }
+    payload_json = json.dumps(payload, separators=(',', ':')).encode('utf-8')
+    payload_b64 = base64.urlsafe_b64encode(payload_json).decode('utf-8').rstrip('=')
+    sig = hmac.new(AUTH_SECRET.encode('utf-8'), payload_b64.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{payload_b64}.{sig}"
+
+def verify_auth_token(token: str) -> Optional[dict]:
+    if not token or '.' not in token:
+        return None
+    try:
+        payload_b64, sig = token.split('.', 1)
+        expected_sig = hmac.new(AUTH_SECRET.encode('utf-8'), payload_b64.encode('utf-8'), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        padding = '=' * (-len(payload_b64) % 4)
+        payload_json = base64.urlsafe_b64decode((payload_b64 + padding).encode('utf-8'))
+        payload = json.loads(payload_json.decode('utf-8'))
+        if payload.get("exp", 0) < time.time():
+            return None
+        return payload
+    except Exception:
+        return None
+
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', '')
+        token = None
+        if auth_header.startswith('Bearer '):
+            token = auth_header[7:].strip()
+        elif 'auth_token' in request.cookies:
+            token = request.cookies.get('auth_token')
+        
+        payload = verify_auth_token(token)
+        if not payload:
+            return jsonify({
+                "error": "Unauthorized",
+                "message": "กรุณาเข้าสู่ระบบด้วยรหัสผ่านก่อนเข้าถึงข้อมูล"
+            }), 401
+        
+        request.auth_user = payload
+        return f(*args, **kwargs)
+    return decorated
+
+# Pre-warm PaddleOCR Model so it is 100% loaded in RAM before accepting requests
+try:
+    print("[Startup] Pre-warming PaddleOCR AI engine in memory...")
+    from ocr_service import get_ocr_engine
+    _init_engine = get_ocr_engine()
+    print("[Startup] PaddleOCR AI model is pre-warmed and ready for instant inference!")
+except Exception as _e:
+    print(f"[Startup Pre-warm Note] {_e}")
 
 app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
@@ -181,9 +260,22 @@ def get_contacts():
 def auth_login():
     data = request.get_json() or {}
     email = data.get('email', '').strip().lower()
+    passcode = data.get('password', '').strip() or data.get('passcode', '').strip()
     
     if not email:
         return jsonify({"success": False, "message": "กรุณากรอกอีเมล"}), 400
+        
+    if not passcode:
+        return jsonify({"success": False, "message": "กรุณากรอกรหัสผ่านเข้าใช้งาน"}), 400
+        
+    if passcode != SBR_PASSCODE:
+        return jsonify({"success": False, "message": "รหัสผ่านเข้าใช้งานไม่ถูกต้อง"}), 401
+    
+    username = email.split('@')[0]
+    is_allowed = any(
+        u.lower() == email or u.lower() == username or u.lower() in email 
+        for u in ALLOWED_USERS
+    )
     
     contacts = get_contacts()
     matched_contact = None
@@ -192,53 +284,47 @@ def auth_login():
     for c in contacts:
         if c.get('email') and str(c.get('email')).strip().lower() == email:
             matched_contact = c
+            is_allowed = True
             break
             
     # 2. Match username prefix (e.g., entering 'somchai' or 'somchai@gistda.or.th')
     if not matched_contact:
-        username = email.split('@')[0]
         for c in contacts:
             c_email = str(c.get('email') or '').strip().lower()
-            if c_email and (c_email == email or c_email.split('@')[0] == username):
+            c_name = str(c.get('name') or '').strip().lower()
+            if (c_email and (c_email == email or c_email.split('@')[0] == username)) or \
+               (f"({username})" in c_name):
                 matched_contact = c
+                is_allowed = True
                 break
 
-    if matched_contact:
-        return jsonify({
-            "success": True,
-            "user": {
-                "name": matched_contact.get('name'),
-                "nickname": matched_contact.get('nickname'),
-                "position": matched_contact.get('position'),
-                "email": matched_contact.get('email') or email,
-                "section": matched_contact.get('section'),
-                "sheet": matched_contact.get('sheet'),
-                "is_head": matched_contact.get('is_head', False)
-            }
-        })
-    
-    # Fallback: If valid organizational domain, allow login as guest/staff
-    if "@" in email:
-        domain = email.split('@')[1]
-        if domain == "gistda.or.th" or domain.endswith(".gistda.or.th"):
-            fallback_user = {
-                "name": email.split('@')[0],
-                "nickname": None,
-                "position": "บุคลากร สทอภ.",
-                "email": email,
-                "section": "สทอภ.",
-                "sheet": "ทั่วไป",
-                "is_head": False
-            }
-            return jsonify({
-                "success": True,
-                "user": fallback_user
-            })
+    if not is_allowed and "@" in email and (email.endswith("gistda.or.th") or email.endswith(".gistda.or.th")):
+        is_allowed = True
 
+    if not is_allowed:
+        return jsonify({"success": False, "message": "ไม่มีสิทธิ์เข้าใช้งานระบบนี้ (อนุญาตเฉพาะบุคคลที่ได้รับอนุมัติเท่านั้น)"}), 403
+
+    user_info = {
+        "name": matched_contact.get('name') if matched_contact else ('คุณ Pakim (ผู้ดูแลระบบ)' if 'pakim' in email else email),
+        "nickname": matched_contact.get('nickname') if matched_contact else ('Pakim' if 'pakim' in email else None),
+        "position": matched_contact.get('position') if matched_contact else 'บุคลากร สทอภ.',
+        "email": matched_contact.get('email') if matched_contact else email,
+        "section": matched_contact.get('section') if matched_contact else 'สทอภ.',
+        "sheet": matched_contact.get('sheet', 'ทั่วไป') if matched_contact else 'ทั่วไป',
+        "is_head": matched_contact.get('is_head', False) if matched_contact else ('pakim' in email)
+    }
+
+    token = generate_auth_token(email)
     return jsonify({
-        "success": False,
-        "message": "ไม่พบอีเมลนี้ในระบบบุคลากร กรุณาตรวจสอบอีเมลอีกครั้ง"
-    }), 404
+        "success": True,
+        "token": token,
+        "user": user_info
+    })
+
+@app.route('/api/auth/verify', methods=['GET'])
+@require_auth
+def auth_verify():
+    return jsonify({"success": True, "user": getattr(request, 'auth_user', {})})
 
 
 # Define Schema for Gemini Bill Extraction
@@ -637,17 +723,15 @@ def update_total_paragraph(total_p, total_items, grand_total, thai_text):
         underline_style = docx.enum.text.WD_UNDERLINE.DOTTED if is_underlined else False
         set_run_font_enhanced(run, 'TH SarabunPSK', 16, bold=is_bold, underline=underline_style, spacing=spacing_val)
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
-
 @app.route('/api/contacts')
+@require_auth
 def api_contacts():
     """Return all contacts from the organization Excel file."""
     contacts = get_contacts()
     return jsonify(contacts)
 
 @app.route('/api/contacts/search')
+@require_auth
 def api_contacts_search():
     """Search contacts by name substring (case-insensitive)."""
     q = request.args.get('q', '').strip()
@@ -659,6 +743,7 @@ def api_contacts_search():
     return jsonify(results[:20])  # Limit to 20 results
 
 @app.route('/api/extract-bill', methods=['POST'])
+@require_auth
 def api_extract_bill():
     """
     Endpoint for local backend or Hugging Face Spaces to process receipt images via PaddleOCR.

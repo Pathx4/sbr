@@ -3,10 +3,10 @@ import { HashRouter, Routes, Route, NavLink, useLocation, useNavigate } from 're
 import { motion, AnimatePresence } from 'framer-motion';
 import BudgetPage from './pages/BudgetPage';
 import AutoWordPage from './pages/AutoWordPage';
-import AuthModal from './components/AuthModal';
+import { AuthGate } from './components/AuthGate';
 import { HeaderBar } from './components/layout/HeaderBar';
 import { CommandPalette } from './components/common/CommandPalette';
-import { getStoredUser, clearStoredUser, type AuthUser } from './utils/auth';
+import { getStoredUser, clearAuthSession, getAuthToken, verifyAuthToken, type AuthUser } from './utils/auth';
 import { Calculator, FileText, X, User, LogOut, Sparkles, Zap } from 'lucide-react';
 
 function AnimatedRoutes() {
@@ -35,14 +35,29 @@ function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser());
-  const [isAuthOpen, setIsAuthOpen] = useState<boolean>(!currentUser);
+  const [authToken, setAuthToken] = useState<string | null>(() => getAuthToken());
+  const [isVerifying, setIsVerifying] = useState<boolean>(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!currentUser) {
-      setIsAuthOpen(true);
+    let isMounted = true;
+    if (currentUser && authToken) {
+      verifyAuthToken().then((valid) => {
+        if (!isMounted) return;
+        if (!valid) {
+          clearAuthSession();
+          setCurrentUser(null);
+          setAuthToken(null);
+        }
+        setIsVerifying(false);
+      }).catch(() => {
+        if (isMounted) setIsVerifying(false);
+      });
+    } else {
+      setIsVerifying(false);
     }
-  }, [currentUser]);
+    return () => { isMounted = false; };
+  }, []);
 
   // Global Keyboard Shortcuts (Ctrl+K, Cmd+K, Alt+1, Alt+2, Ctrl+1, Ctrl+2)
   useEffect(() => {
@@ -92,15 +107,15 @@ function MainLayout() {
   }, [navigate]);
 
 
-  const handleLoginSuccess = (user: AuthUser) => {
+  const handleLoginSuccess = (user: AuthUser, token: string) => {
     setCurrentUser(user);
-    setIsAuthOpen(false);
+    setAuthToken(token);
   };
 
   const handleLogout = () => {
-    clearStoredUser();
+    clearAuthSession();
     setCurrentUser(null);
-    setIsAuthOpen(true);
+    setAuthToken(null);
   };
 
   const handleCommandAction = (actionId: string) => {
@@ -110,13 +125,25 @@ function MainLayout() {
     }
   };
 
+  // Loading indicator while verifying stored token
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-[#090d16] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm font-medium">กำลังยืนยันสิทธิ์การเข้าใช้งาน...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ZERO DOM LEAKAGE: If not logged in, render ONLY the AuthGate (F12 bypass proof)
+  if (!currentUser || !authToken) {
+    return <AuthGate onSuccess={handleLoginSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex text-slate-800 antialiased font-sans selection:bg-blue-100 selection:text-blue-900">
-      {/* Auth Access Gate Modal */}
-      <AuthModal
-        isOpen={isAuthOpen}
-        onSuccess={handleLoginSuccess}
-      />
 
       {/* Global Command Palette (Spotlight Search) */}
       <CommandPalette

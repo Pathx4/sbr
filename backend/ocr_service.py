@@ -8,38 +8,45 @@ import cv2
 os.environ['FLAGS_enable_pir_api'] = '0'
 os.environ['FLAGS_enable_pir_in_executor'] = '0'
 os.environ['FLAGS_use_mkldnn'] = '0'
+os.environ['PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK'] = 'True'
+
+import threading
 
 _ocr_engine = None
+_ocr_lock = threading.Lock()
+_ocr_inference_lock = threading.Lock()
 
 def get_ocr_engine():
     global _ocr_engine
     if _ocr_engine is None:
-        try:
-            from paddleocr import PaddleOCR
-            print("Initializing PaddleOCR PP-OCRv5 (Thai + English, High-Performance Mode)...")
-            try:
-                _ocr_engine = PaddleOCR(
-                    lang='th',
-                    use_doc_orientation_classify=False,
-                    use_doc_unwarping=False,
-                    use_textline_orientation=False,
-                    text_det_limit_side_len=960,
-                    text_det_box_thresh=0.55,
-                    text_det_unclip_ratio=1.7,
-                    text_recognition_batch_size=16,
-                    enable_mkldnn=False
-                )
-            except Exception as init_err:
-                print(f"PaddleOCR optimized init fallback: {init_err}")
-                _ocr_engine = PaddleOCR(
-                    lang='th',
-                    use_doc_unwarping=False,
-                    enable_mkldnn=False
-                )
-            print("PaddleOCR Initialized successfully.")
-        except Exception as e:
-            print(f"Error initializing PaddleOCR: {e}")
-            return None
+        with _ocr_lock:
+            if _ocr_engine is None:
+                try:
+                    from paddleocr import PaddleOCR
+                    print("[OCR Engine] Initializing PaddleOCR PP-OCRv5 (Thai + English, High-Performance Mode)...")
+                    try:
+                        _ocr_engine = PaddleOCR(
+                            lang='th',
+                            use_doc_orientation_classify=False,
+                            use_doc_unwarping=False,
+                            use_textline_orientation=False,
+                            text_det_limit_side_len=960,
+                            text_det_box_thresh=0.55,
+                            text_det_unclip_ratio=1.7,
+                            text_recognition_batch_size=16,
+                            enable_mkldnn=False
+                        )
+                    except Exception as init_err:
+                        print(f"[OCR Engine] Optimized init fallback: {init_err}")
+                        _ocr_engine = PaddleOCR(
+                            lang='th',
+                            use_doc_unwarping=False,
+                            enable_mkldnn=False
+                        )
+                    print("[OCR Engine] PaddleOCR Initialized successfully.")
+                except Exception as e:
+                    print(f"[OCR Engine] Error initializing PaddleOCR: {e}")
+                    return None
     return _ocr_engine
 
 

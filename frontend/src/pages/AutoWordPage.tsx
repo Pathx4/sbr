@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { runTesseract, runMultiPassTesseract, setOcrModel } from '../utils/tesseractWorker';
-import { runOcrWithFallback } from '../services/ocrService';
+import { extractWithPaddleOcr } from '../services/ocrService';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
@@ -332,7 +332,7 @@ export default function AutoWordPage() {
                 // 2. Photocopier Scanned PDF: Rendered 300 DPI Canvas processed with OCR
                 if (scanEngineMode === 'paddle') {
                   setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: กำลังส่งภาพประมวลผลด้วย PaddleOCR AI (PP-OCRv5)...`);
-                  const ocrRes = await runOcrWithFallback(page.canvasDataUrl, (msg, pct) => {
+                  const ocrRes = await extractWithPaddleOcr(page.canvasDataUrl, (msg, pct) => {
                     setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: ${msg}`);
                     setScanProgress(Math.round(((i + 0.3 + (pct * 0.5) / 100) / files.length) * 100));
                   });
@@ -439,7 +439,7 @@ export default function AutoWordPage() {
           setScanStatus(`[ใบที่ ${i + 1}/${files.length}] กำลังส่งภาพประมวลผลด้วย PaddleOCR AI (PP-OCRv5 ไทย-อังกฤษ)...`);
           setScanProgress(Math.round(((i + 0.15) / files.length) * 100));
 
-          const ocrRes = await runOcrWithFallback(file, (msg, pct) => {
+          const ocrRes = await extractWithPaddleOcr(file, (msg, pct) => {
             setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${msg}`);
             setScanProgress(Math.round(((i + 0.15 + (pct * 0.7) / 100) / files.length) * 100));
           });
