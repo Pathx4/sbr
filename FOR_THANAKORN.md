@@ -46,15 +46,15 @@
          │               └── ส่งต่อข้อมูลผ่านวงแลนภายใน Docker
          │                       │
          └── 2. Container: "app" (sbr-app)
-                 ├── ทำหน้าที่ Serve หน้าเว็บ React (Frontend)
-                 ├── รัน API Flask + PaddleOCR ภาษาไทยความแม่นยำสูง
-                 └── ให้บริการที่พอร์ต 7860 (เฉพาะในวง Docker ไม่หลุดมาที่ Host)
+                  ├── ทำหน้าที่ Serve หน้าเว็บ React (Frontend)
+                  ├── รัน API Flask + PaddleOCR ภาษาไทยความแม่นยำสูง
+                  └── ให้บริการที่พอร์ต 7860 บนเครือข่ายภายใน Docker (Zero-Port ไม่เปิดพอร์ตบน Host เลย)
 ```
 
-### ทำไมวิธีนี้ถึงไม่ชนกับ Container อื่นในเซิร์ฟเวอร์?
-* ในไฟล์ `docker-compose.yml` **ไม่มีการใส่ `ports:` mapping สู่ Host Windows Server** เลยแม้แต่พอร์ตเดียว
-* พอร์ต `7860` ของแอปจะอยู่เฉพาะในวงแลนเสมือน (Bridge Network) ของ Docker เท่านั้น
-* Container `tunnel` ใช้วิธี **"โทรออก (Outbound)"** ผ่านพอร์ต 443 ธรรมดาออกไปหา Cloudflare ไม่ใช่การเปิดรับคำขอเข้า (Inbound) จึง**ไม่ติด Firewall และไม่ต้องขอ Forward Port จากฝ่าย IT เลย**
+### ทำไมระบบถึงทำงานได้อย่างปลอดภัยและตรงตามโจทย์?
+* ไม่มีการผูกพอร์ตกับ Host (`0 Port Used`) ทำให้ช่อง **Port(s)** ใน **Docker Desktop** ไม่มี localhost มาแย่งพอร์ตในเครื่อง
+* Container `tunnel` ใช้วิธี **"โทรออก (Outbound)"** ผ่านพอร์ต 443 ธรรมดาออกไปหา Cloudflare เพื่อรับ HTTPS เข้ามา จึง**ไม่ติด Firewall และไม่ต้องขอ Forward Port จากฝ่าย IT**
+* เข้าใช้งานได้ผ่าน Cloudflare Tunnel อย่างปลอดภัย 100%
 
 ---
 

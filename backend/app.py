@@ -661,22 +661,34 @@ def api_contacts_search():
 @app.route('/api/extract-bill', methods=['POST'])
 def api_extract_bill():
     """
-    Endpoint for Hugging Face Spaces (or local backend) to process receipt images via PaddleOCR.
-    Expects multipart/form-data with a 'file' field.
-    Returns: { "words": [ { "text": "...", "bbox": { "x0": ..., "y0": ..., "x1": ..., "y1": ... }, "confidence": ... }, ... ] }
+    Endpoint for local backend or Hugging Face Spaces to process receipt images via PaddleOCR.
+    Accepts multipart/form-data ('file') or application/json ({'image': base64_str}).
+    Returns: { "words": [...], "rawText": "..." }
     """
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-        
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-        
+    image_bytes = None
+
+    if 'file' in request.files:
+        file = request.files['file']
+        if file.filename != '':
+            image_bytes = file.read()
+    elif request.is_json:
+        data = request.get_json(silent=True) or {}
+        img_data = data.get('image') or data.get('image_base64')
+        if img_data:
+            if ',' in img_data:
+                img_data = img_data.split(',', 1)[1]
+            try:
+                image_bytes = base64.b64decode(img_data)
+            except Exception as b64_err:
+                return jsonify({"error": f"Invalid base64 image data: {str(b64_err)}"}), 400
+
+    if not image_bytes:
+        return jsonify({"error": "No image data provided. Provide a 'file' or JSON 'image' payload."}), 400
+
     try:
-        from ocr_service import perform_ocr_on_image
-        image_bytes = file.read()
-        words = perform_ocr_on_image(image_bytes)
-        return jsonify({"words": words})
+        from ocr_service import extract_bill_data
+        result = extract_bill_data(image_bytes)
+        return jsonify(result)
     except Exception as e:
         print(f"OCR Error: {str(e)}")
         return jsonify({"error": str(e)}), 500

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { runTesseract, runMultiPassTesseract, setOcrModel, getOcrModel, type OcrModelType } from '../utils/tesseractWorker';
+import { runTesseract, runMultiPassTesseract, setOcrModel } from '../utils/tesseractWorker';
+import { runOcrWithFallback } from '../services/ocrService';
 import { 
   Upload, FileText, FileSpreadsheet, Plus, Trash2, CheckCircle2, 
   AlertCircle, AlertTriangle, Building2, UserCheck, Search, Image as ImageIcon,
@@ -151,6 +152,7 @@ export default function AutoWordPage() {
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
 
   const imageRef = useRef<HTMLImageElement>(null);
+  const viewerContainerRef = useRef<HTMLDivElement>(null);
 
   // OCR state
   const [isScanning, setIsScanning] = useState(false);
@@ -175,8 +177,7 @@ export default function AutoWordPage() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [copiedGrandTotal, setCopiedGrandTotal] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
-  const [scanEngineMode, setScanEngineMode] = useState<'deep' | 'quick'>('deep');
-  const [ocrModelQuality, setOcrModelQuality] = useState<OcrModelType>(getOcrModel());
+  const [scanEngineMode, setScanEngineMode] = useState<'paddle' | 'deep' | 'quick'>('paddle');
 
 
 
@@ -303,241 +304,283 @@ export default function AutoWordPage() {
     setIsScanning(true);
     setScanProgress(0);
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
 
-      // Check if uploaded file is a PDF (e-Tax digital invoice or photocopier scanned PDF)
-      if (isPdfFile(file)) {
-        setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] กำลังโหลดและวิเคราะห์โครงสร้างไฟล์ PDF...`);
-        setScanProgress(Math.round(((i + 0.05) / files.length) * 100));
+        // Check if uploaded file is a PDF (e-Tax digital invoice or photocopier scanned PDF)
+        if (isPdfFile(file)) {
+          setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] กำลังโหลดและวิเคราะห์โครงสร้างไฟล์ PDF...`);
+          setScanProgress(Math.round(((i + 0.05) / files.length) * 100));
 
-        try {
-          const pdfPages = await processPdfDocument(file, (statusText, pct) => {
-            setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] ${statusText}`);
-            setScanProgress(Math.round(((i + (pct / 100) * 0.4) / files.length) * 100));
-          });
+          try {
+            const pdfPages = await processPdfDocument(file, (statusText, pct) => {
+              setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] ${statusText}`);
+              setScanProgress(Math.round(((i + (pct / 100) * 0.4) / files.length) * 100));
+            });
 
-          for (let pIdx = 0; pIdx < pdfPages.length; pIdx++) {
-            const page = pdfPages[pIdx];
-            let pageParsed: any = null;
+            for (let pIdx = 0; pIdx < pdfPages.length; pIdx++) {
+              const page = pdfPages[pIdx];
+              let pageParsed: any = null;
 
-            if (page.isDigital) {
-              // 1. Digital PDF text stream extraction: 100% accurate, zero OCR typo artifacts
-              setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: ดึงข้อมูลดิจิทัลโดยตรง (Typo-Free 100%)...`);
-              setScanProgress(Math.round(((i + 0.5 + ((pIdx + 1) / pdfPages.length) * 0.4) / files.length) * 100));
-              pageParsed = parseThaiReceiptOcr(page.rawText);
-            } else {
-              // 2. Photocopier Scanned PDF: Rendered 300 DPI Canvas processed with Multi-Pass OCR
-              if (scanEngineMode === 'deep') {
-                setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: DeepScan 5.0 (ประมวลผลสแกนความละเอียดสูง)...`);
-                const layers = await preprocessMultiPassImageForOcrDeep5(page.canvasDataUrl);
-                const passResults = await runMultiPassTesseract([
-                  { id: 'main', label: '1/4: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
-                  { id: 'sauvola', label: '2/4: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
-                  { id: 'header', label: '3/4: สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
-                  { id: 'summary', label: '4/4: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
-                ], (stepLabel, stepPct) => {
-                  setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: ${stepLabel}...`);
-                  setScanProgress(Math.round(((i + 0.3 + (stepPct * 0.5) / 100) / files.length) * 100));
-                });
-
-                pageParsed = parseThaiReceiptOcrDeep5({
-                  mainText: passResults.main?.rawText || '',
-                  mainWords: passResults.main?.words || [],
-                  sauvolaText: passResults.sauvola?.rawText || '',
-                  sauvolaWords: passResults.sauvola?.words || [],
-                  headerText: passResults.header?.rawText || '',
-                  summaryText: passResults.summary?.rawText || '',
-                });
+              if (page.isDigital) {
+                // 1. Digital PDF text stream extraction: 100% accurate, zero OCR typo artifacts
+                setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: ดึงข้อมูลดิจิทัลโดยตรง (Typo-Free 100%)...`);
+                setScanProgress(Math.round(((i + 0.5 + ((pIdx + 1) / pdfPages.length) * 0.4) / files.length) * 100));
+                pageParsed = parseThaiReceiptOcr(page.rawText);
               } else {
-                setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: สแกนด่วน...`);
-                const preprocessedUrl = await preprocessImageForOcr(page.canvasDataUrl, 'grayscale');
-                const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
-                  setScanProgress(Math.round(((i + 0.3 + (pct * 0.5) / 100) / files.length) * 100));
-                });
-                pageParsed = parseThaiReceiptOcr(rawText);
+                // 2. Photocopier Scanned PDF: Rendered 300 DPI Canvas processed with OCR
+                if (scanEngineMode === 'paddle') {
+                  setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: กำลังส่งภาพประมวลผลด้วย PaddleOCR AI (PP-OCRv5)...`);
+                  const ocrRes = await runOcrWithFallback(page.canvasDataUrl, (msg, pct) => {
+                    setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: ${msg}`);
+                    setScanProgress(Math.round(((i + 0.3 + (pct * 0.5) / 100) / files.length) * 100));
+                  });
+                  if (ocrRes.parsed && Array.isArray(ocrRes.parsed.items) && ocrRes.parsed.items.length > 0) {
+                    pageParsed = ocrRes.parsed;
+                  } else {
+                    pageParsed = parseThaiReceiptOcr(ocrRes.rawText);
+                  }
+                } else if (scanEngineMode === 'deep') {
+                  setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}/${page.totalPages}: DeepScan 5.0 (ประมวลผลสแกนความละเอียดสูง)...`);
+                  const layers = await preprocessMultiPassImageForOcrDeep5(page.canvasDataUrl);
+                  const passResults = await runMultiPassTesseract([
+                    { id: 'main', label: '1/4: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
+                    { id: 'sauvola', label: '2/4: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
+                    { id: 'header', label: '3/4: สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
+                    { id: 'summary', label: '4/4: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
+                  ], (stepLabel, stepPct) => {
+                    setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: ${stepLabel}...`);
+                    setScanProgress(Math.round(((i + 0.3 + (stepPct * 0.5) / 100) / files.length) * 100));
+                  });
+
+                  pageParsed = parseThaiReceiptOcrDeep5({
+                    mainText: passResults.main?.rawText || '',
+                    mainWords: passResults.main?.words || [],
+                    sauvolaText: passResults.sauvola?.rawText || '',
+                    sauvolaWords: passResults.sauvola?.words || [],
+                    headerText: passResults.header?.rawText || '',
+                    summaryText: passResults.summary?.rawText || '',
+                  });
+                } else {
+                  setScanStatus(`[ไฟล์ที่ ${i + 1}/${files.length}] หน้า ${page.pageNumber}: สแกนด่วน...`);
+                  const preprocessedUrl = await preprocessImageForOcr(page.canvasDataUrl, 'grayscale');
+                  const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+                    setScanProgress(Math.round(((i + 0.3 + (pct * 0.5) / 100) / files.length) * 100));
+                  });
+                  pageParsed = parseThaiReceiptOcr(rawText);
+                }
+              }
+
+              if (pageParsed) {
+                const newInvId = Date.now().toString() + `_${i}_p${pIdx}`;
+                const newInvoice: Invoice = {
+                  id: newInvId,
+                  vendor_name: pageParsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
+                  invoice_number: pageParsed.invoice_number || '',
+                  invoice_date: pageParsed.invoice_date || getTodayThaiDate(),
+                  discount: pageParsed.discount || 0,
+                  items:
+                    pageParsed.items && pageParsed.items.length > 0
+                      ? pageParsed.items.map((item: any, idx: number) => ({
+                          id: Date.now().toString() + '_item_' + idx,
+                          item_code: item.item_code || item.sku || '',
+                          description: item.description,
+                          thai_name: item.thai_name || undefined,
+                          english_name: item.english_name || undefined,
+                          quantity: item.quantity,
+                          unit: item.unit || 'ชิ้น',
+                          unit_price: item.unit_price,
+                          total_price: item.total_price,
+                        }))
+                      : [
+                          {
+                            id: Date.now().toString() + '_item_0',
+                            item_code: '',
+                            description: 'รายการพัสดุ/สินค้า',
+                            quantity: 1,
+                            unit: 'ชิ้น',
+                            unit_price: pageParsed.total_amount || 0,
+                            total_price: pageParsed.total_amount || 0,
+                          },
+                        ],
+                  imagePreview: page.previewUrl,
+                  fileObject: file,
+                  isMultiPage: pdfPages.length > 1,
+                };
+
+                setInvoices((prev) => [...prev, newInvoice]);
+                setActiveInvoiceId(newInvId);
               }
             }
 
-            if (pageParsed) {
-              const newInvId = Date.now().toString() + `_${i}_p${pIdx}`;
-              const newInvoice: Invoice = {
-                id: newInvId,
-                vendor_name: pageParsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
-                invoice_number: pageParsed.invoice_number || '',
-                invoice_date: pageParsed.invoice_date || getTodayThaiDate(),
-                discount: pageParsed.discount || 0,
-                items:
-                  pageParsed.items && pageParsed.items.length > 0
-                    ? pageParsed.items.map((item: any, idx: number) => ({
-                        id: Date.now().toString() + '_item_' + idx,
-                        item_code: item.item_code || '',
-                        description: item.description,
-                        thai_name: item.thai_name || undefined,
-                        english_name: item.english_name || undefined,
-                        quantity: item.quantity,
-                        unit: item.unit || 'ชิ้น',
-                        unit_price: item.unit_price,
-                        total_price: item.total_price,
-                      }))
-                    : [
-                        {
-                          id: Date.now().toString() + '_item_0',
-                          item_code: '',
-                          description: 'รายการพัสดุ/สินค้า',
-                          quantity: 1,
-                          unit: 'ชิ้น',
-                          unit_price: pageParsed.total_amount || 0,
-                          total_price: pageParsed.total_amount || 0,
-                        },
-                      ],
-                imagePreview: page.previewUrl,
-                fileObject: file,
-                isMultiPage: pdfPages.length > 1,
-              };
+            setStatusMsg({
+              type: 'success',
+              text: `ประมวลผลไฟล์ PDF "${file.name}" จำนวน ${pdfPages.length} หน้าสำเร็จ!`,
+            });
+          } catch (pdfErr: any) {
+            console.error('PDF parsing error:', pdfErr);
+            setStatusMsg({
+              type: 'error',
+              text: `เกิดข้อผิดพลาดในการอ่านไฟล์ PDF: ${pdfErr?.message || 'ไม่สามารถเปิดไฟล์ได้'}`,
+            });
+          }
+          continue;
+        }
 
-              setInvoices((prev) => [...prev, newInvoice]);
-              setActiveInvoiceId(newInvId);
-            }
+        // Process standard image file
+        const imagePreview = URL.createObjectURL(file);
+        let parsed: any = null;
+
+        if (scanEngineMode === 'paddle') {
+          // ====================================================================
+          // PADDLEOCR AI (PP-OCRv5 HIGH-PRECISION DEEP LEARNING)
+          // ====================================================================
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] กำลังส่งภาพประมวลผลด้วย PaddleOCR AI (PP-OCRv5 ไทย-อังกฤษ)...`);
+          setScanProgress(Math.round(((i + 0.15) / files.length) * 100));
+
+          const ocrRes = await runOcrWithFallback(file, (msg, pct) => {
+            setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${msg}`);
+            setScanProgress(Math.round(((i + 0.15 + (pct * 0.7) / 100) / files.length) * 100));
+          });
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] จัดโครงสร้างตารางข้อมูล & ตรวจสอบสมดุลคณิตศาสตร์...`);
+          setScanProgress(Math.round(((i + 0.92) / files.length) * 100));
+
+          if (ocrRes.parsed && Array.isArray(ocrRes.parsed.items) && ocrRes.parsed.items.length > 0) {
+            parsed = ocrRes.parsed;
+          } else {
+            parsed = parseThaiReceiptOcr(ocrRes.rawText);
           }
 
-          setStatusMsg({
-            type: 'success',
-            text: `ประมวลผลไฟล์ PDF "${file.name}" จำนวน ${pdfPages.length} หน้าสำเร็จ!`,
+        } else if (scanEngineMode === 'deep') {
+          // ====================================================================
+          // DEEPSCAN 5.0: ULTRA-HIGH PRECISION (6-PASS SPATIAL CONSENSUS & MATH MATRIX)
+          // ====================================================================
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 1/6: กำลังหมุนปรับระนาบตรง (Auto-Deskew) & เกลี่ยแสงลบเงาพับ...`);
+          setScanProgress(Math.round(((i + 0.05) / files.length) * 100));
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 2/6: กำลังสังเคราะห์ภาพ 6 มิติความละเอียดสูง (3000px Super-Sampling)...`);
+          setScanProgress(Math.round(((i + 0.12) / files.length) * 100));
+          const layers = await preprocessMultiPassImageForOcrDeep5(file);
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/6: กำลังสแกนถอดรหัสข้อความแบบ Deep Multi-Pass Analysis...`);
+          
+          const passResults = await runMultiPassTesseract([
+            { id: 'main', label: '1/4: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
+            { id: 'sauvola', label: '2/4: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
+            { id: 'header', label: '3/4: สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
+            { id: 'summary', label: '4/4: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
+          ], (stepLabel, stepPct) => {
+            setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${stepLabel}...`);
+            setScanProgress(Math.round(((i + 0.15 + (stepPct * 0.65) / 100) / files.length) * 100));
           });
-        } catch (pdfErr: any) {
-          console.error('PDF parsing error:', pdfErr);
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: เทียบเคียงคำศัพท์ผ่านระบบพจนานุกรมไทย-อังกฤษ & ถอดรหัสคำเพี้ยน (Dictionary & Linguistic Decoder)...`);
+          setScanProgress(Math.round(((i + 0.85) / files.length) * 100));
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/4: ตรวจสอบสมดุลคณิตศาสตร์ & กรองรายการซ้ำ...`);
+          setScanProgress(Math.round(((i + 0.95) / files.length) * 100));
+
+          parsed = parseThaiReceiptOcrDeep5({
+            mainText: passResults.main?.rawText || '',
+            mainWords: passResults.main?.words || [],
+            sauvolaText: passResults.sauvola?.rawText || '',
+            sauvolaWords: passResults.sauvola?.words || [],
+            headerText: passResults.header?.rawText || '',
+            summaryText: passResults.summary?.rawText || '',
+          });
+
+        } else {
+          // ====================================================================
+          // QUICK SCAN: SINGLE-PASS FAST
+          // ====================================================================
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สแกนด่วน: กำลังปรับความคมชัดภาพ...`);
+          setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
+          const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สแกนด่วน: กำลังถอดข้อความด้วย Tesseract.js OCR...`);
+          const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
+            setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
+          });
+
+          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] กำลังจัดโครงสร้างตารางข้อมูล...`);
+          setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
+          parsed = parseThaiReceiptOcr(rawText);
+        }
+
+        if (!parsed) continue;
+
+        const newInvId = Date.now().toString() + '_' + i;
+        const newInvoice: Invoice = {
+          id: newInvId,
+          vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
+          invoice_number: parsed.invoice_number || '',
+          invoice_date: parsed.invoice_date || getTodayThaiDate(),
+          discount: parsed.discount || 0,
+          items:
+            parsed.items && parsed.items.length > 0
+              ? parsed.items.map((item: any, idx: number) => ({
+                  id: Date.now().toString() + '_item_' + idx,
+                  item_code: item.item_code || item.sku || '',
+                  description: item.description,
+                  thai_name: item.thai_name || undefined,
+                  english_name: item.english_name || undefined,
+                  quantity: item.quantity,
+                  unit: item.unit || 'ชิ้น',
+                  unit_price: item.unit_price,
+                  total_price: item.total_price,
+                }))
+              : [
+                  {
+                    id: Date.now().toString() + '_item_0',
+                    item_code: '',
+                    description: 'รายการพัสดุ/สินค้า',
+                    quantity: 1,
+                    unit: 'ชิ้น',
+                    unit_price: parsed.total_amount || 0,
+                    total_price: parsed.total_amount || 0,
+                  },
+                ],
+          imagePreview,
+          fileObject: file,
+        };
+
+        // Duplicate invoice number check
+        if (
+          parsed.invoice_number &&
+          invoices.some(
+            (inv) => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase()
+          )
+        ) {
           setStatusMsg({
             type: 'error',
-            text: `เกิดข้อผิดพลาดในการอ่านไฟล์ PDF: ${pdfErr?.message || 'ไม่สามารถเปิดไฟล์ได้'}`,
+            text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" มีอยู่ในระบบแล้ว!`,
           });
         }
-        continue;
-      }
 
-      // Process standard image file
-      const imagePreview = URL.createObjectURL(file);
-      let parsed: any = null;
-
-      if (scanEngineMode === 'deep') {
-        // ====================================================================
-        // DEEPSCAN 5.0: ULTRA-HIGH PRECISION (6-PASS SPATIAL CONSENSUS & MATH MATRIX)
-        // ====================================================================
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 1/6: กำลังหมุนปรับระนาบตรง (Auto-Deskew) & เกลี่ยแสงลบเงาพับ...`);
-        setScanProgress(Math.round(((i + 0.05) / files.length) * 100));
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 2/6: กำลังสังเคราะห์ภาพ 6 มิติความละเอียดสูง (3000px Super-Sampling)...`);
-        setScanProgress(Math.round(((i + 0.12) / files.length) * 100));
-        const layers = await preprocessMultiPassImageForOcrDeep5(file);
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/6: กำลังสแกนถอดรหัสข้อความแบบ Deep Multi-Pass Analysis...`);
-        
-        const passResults = await runMultiPassTesseract([
-          { id: 'main', label: '1/4: สแกนภาพรวมคมชัดสูง (สระและวรรณยุกต์)', src: layers.passMain },
-          { id: 'sauvola', label: '2/4: สแกนดึงหมึกพิมพ์คมชัด & ตัวเลขตาราง (Sauvola)', src: layers.passSauvola },
-          { id: 'header', label: '3/4: สแกนเจาะลึกชื่อร้านค้า & เลขประจำตัวผู้เสียภาษี', src: layers.passHeader },
-          { id: 'summary', label: '4/4: สแกนเจาะลึกยอดสุทธิ, ส่วนลด & VAT 7%', src: layers.passSummary },
-        ], (stepLabel, stepPct) => {
-          setScanStatus(`[ใบที่ ${i + 1}/${files.length}] ${stepLabel}...`);
-          setScanProgress(Math.round(((i + 0.15 + (stepPct * 0.65) / 100) / files.length) * 100));
-        });
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 3/4: เทียบเคียงคำศัพท์ผ่านระบบพจนานุกรมไทย-อังกฤษ & ถอดรหัสคำเพี้ยน (Dictionary & Linguistic Decoder)...`);
-        setScanProgress(Math.round(((i + 0.85) / files.length) * 100));
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สเต็ป 4/4: ตรวจสอบสมดุลคณิตศาสตร์ & กรองรายการซ้ำ...`);
-        setScanProgress(Math.round(((i + 0.95) / files.length) * 100));
-
-        parsed = parseThaiReceiptOcrDeep5({
-          mainText: passResults.main?.rawText || '',
-          mainWords: passResults.main?.words || [],
-          sauvolaText: passResults.sauvola?.rawText || '',
-          sauvolaWords: passResults.sauvola?.words || [],
-          headerText: passResults.header?.rawText || '',
-          summaryText: passResults.summary?.rawText || '',
-        });
-
-      } else {
-        // ====================================================================
-        // QUICK SCAN: SINGLE-PASS FAST
-        // ====================================================================
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สแกนด่วน: กำลังปรับความคมชัดภาพ...`);
-        setScanProgress(Math.round(((i + 0.1) / files.length) * 100));
-        const preprocessedUrl = await preprocessImageForOcr(file, 'grayscale');
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] สแกนด่วน: กำลังถอดข้อความด้วย Tesseract.js OCR...`);
-        const { rawText } = await runTesseract(preprocessedUrl, (pct) => {
-          setScanProgress(Math.round(((i + 0.2 + (pct * 0.6) / 100) / files.length) * 100));
-        });
-
-        setScanStatus(`[ใบที่ ${i + 1}/${files.length}] กำลังจัดโครงสร้างตารางข้อมูล...`);
-        setScanProgress(Math.round(((i + 0.9) / files.length) * 100));
-        parsed = parseThaiReceiptOcr(rawText);
-      }
-
-      if (!parsed) continue;
-
-      const newInvId = Date.now().toString() + '_' + i;
-      const newInvoice: Invoice = {
-        id: newInvId,
-        vendor_name: parsed.vendor_name || 'ร้านค้า / บริษัทผู้ขาย',
-        invoice_number: parsed.invoice_number || '',
-        invoice_date: parsed.invoice_date || getTodayThaiDate(),
-        discount: parsed.discount || 0,
-        items:
-          parsed.items && parsed.items.length > 0
-            ? parsed.items.map((item: any, idx: number) => ({
-                id: Date.now().toString() + '_item_' + idx,
-                item_code: item.item_code || '',
-                description: item.description,
-                thai_name: item.thai_name || undefined,
-                english_name: item.english_name || undefined,
-                quantity: item.quantity,
-                unit: item.unit || 'ชิ้น',
-                unit_price: item.unit_price,
-                total_price: item.total_price,
-              }))
-            : [
-                {
-                  id: Date.now().toString() + '_item_0',
-                  item_code: '',
-                  description: 'รายการพัสดุ/สินค้า',
-                  quantity: 1,
-                  unit: 'ชิ้น',
-                  unit_price: parsed.total_amount || 0,
-                  total_price: parsed.total_amount || 0,
-                },
-              ],
-        imagePreview,
-        fileObject: file,
-      };
-
-      // Duplicate invoice number check
-      if (
-        parsed.invoice_number &&
-        invoices.some(
-          (inv) => inv.invoice_number.trim().toLowerCase() === parsed.invoice_number.trim().toLowerCase()
-        )
-      ) {
-        setStatusMsg({
-          type: 'error',
-          text: `⚠️ เตือนภัยบิลซ้ำ: ใบเสร็จเลขที่ "${parsed.invoice_number}" มีอยู่ในระบบแล้ว!`,
+        setInvoices((prev) => [...prev, newInvoice]);
+        setActiveInvoiceId(newInvId);
+        setScanProgress(Math.round(((i + 1) / files.length) * 100));
+        setStatusMsg({ 
+          type: 'success', 
+          text: scanEngineMode === 'paddle'
+            ? 'สแกนสำเร็จด้วย PaddleOCR AI (PP-OCRv5 ภาษาไทยและตัวเลขแม่นยำสูงสุด)!'
+            : scanEngineMode === 'deep' 
+            ? 'สแกนด้วย DeepScan 5.0 สำเร็จ!' 
+            : 'สแกนด่วนสำเร็จ!' 
         });
       }
-
-      setInvoices((prev) => [...prev, newInvoice]);
-      setActiveInvoiceId(newInvId);
-      setScanProgress(Math.round(((i + 1) / files.length) * 100));
-      setStatusMsg({ 
-        type: 'success', 
-        text: scanEngineMode === 'deep' 
-          ? `สแกนด้วย DeepScan 5.0 (6 มิติ + Spatial Consensus + ตรวจสมดุลเงิน 100%) สำเร็จ!` 
-          : `สแกนด่วนสำเร็จ!` 
+    } catch (err: any) {
+      console.error('File scan error:', err);
+      setStatusMsg({
+        type: 'error',
+        text: `เกิดข้อผิดพลาดในการสแกนไฟล์: ${err?.message || 'ไม่สามารถประมวลผล OCR ได้ โปรดลองใหม่อีกครั้ง'}`,
       });
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
-
-    setIsScanning(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   // Pan & Zoom Controls
@@ -546,14 +589,26 @@ export default function AutoWordPage() {
     setPanPosition({ x: 0, y: 0 });
   };
 
-  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY < 0 ? 1.15 : 0.88;
-    setZoomLevel(prev => {
-      const next = Math.max(0.5, Math.min(4.0, prev * zoomFactor));
-      return Math.round(next * 100) / 100;
-    });
-  };
+  // Non-passive wheel event listener prevents browser window scrolling while zooming invoice image
+  useEffect(() => {
+    const el = viewerContainerRef.current;
+    if (!el) return;
+
+    const onWheelNative = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.88;
+      setZoomLevel(prev => {
+        const next = Math.max(0.5, Math.min(4.0, prev * zoomFactor));
+        return Math.round(next * 100) / 100;
+      });
+    };
+
+    el.addEventListener('wheel', onWheelNative, { passive: false, capture: true });
+    return () => {
+      el.removeEventListener('wheel', onWheelNative, { capture: true } as any);
+    };
+  }, [activeInvoice?.id, activeInvoice?.imagePreview]);
 
   // Smooth Mouse Pan Handlers
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -869,68 +924,56 @@ export default function AutoWordPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             {/* DeepScan 5.0 vs Quick Scan Mode Switch */}
+            {/* OCR Engine Switch */}
             <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-inner">
               <button
                 type="button"
-                onClick={() => setScanEngineMode('deep')}
+                onClick={() => {
+                  setScanEngineMode('paddle');
+                  setStatusMsg({ type: 'success', text: 'เปิดใช้งาน PaddleOCR AI (PP-OCRv5 โมเดล Deep Learning ภาษาไทยแม่นยำสูงสุด)' });
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  scanEngineMode === 'paddle'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="PaddleOCR (PP-OCRv5): ปัญญาประดิษฐ์ Deep Learning ถอดข้อความภาษาไทยและตัวเลขตารางแม่นยำสูงสุด"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                <span>🚀 PaddleOCR (AI แม่นยำสูงสุด)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setScanEngineMode('deep');
+                  setOcrModel('best');
+                  setStatusMsg({ type: 'success', text: 'เปิดใช้งาน Tesseract.js DeepScan 5.0 (Offline บนเบราว์เซอร์)' });
+                }}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                   scanEngineMode === 'deep'
-                    ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200/60'
+                    ? 'bg-white text-indigo-700 shadow-xs border border-indigo-200/60'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="สแกนเจาะลึก 6 มิติซ้อน + หมุนตรง Auto-Deskew + เทียบพจนานุกรมศัพท์พัสดุไทย 5.0 + ตรวจสมดุลคณิตศาสตร์ 100% (แนะนำเพื่อความแม่นยำสูงสุด)"
+                title="Tesseract.js DeepScan 5.0: สแกนเจาะลึก 4 เลเยอร์บนเบราว์เซอร์"
               >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                <span>🔬 DeepScan 5.0 (แม่นยำสูงสุด)</span>
+                <Zap className="w-3.5 h-3.5 text-indigo-600" />
+                <span>🎯 Tesseract Deep</span>
               </button>
               <button
                 type="button"
-                onClick={() => setScanEngineMode('quick')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                onClick={() => {
+                  setScanEngineMode('quick');
+                  setOcrModel('fast');
+                  setStatusMsg({ type: 'success', text: 'เปิดใช้งาน Tesseract.js สแกนด่วน' });
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
                   scanEngineMode === 'quick'
-                    ? 'bg-white text-blue-700 shadow-sm border border-blue-200/60'
+                    ? 'bg-white text-blue-700 shadow-xs border border-blue-200/60'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="สแกนรอบเดียวเน้นความเร็ว"
+                title="Tesseract.js สแกนด่วนรอบเดียว"
               >
                 <span>⚡ สแกนด่วน</span>
-              </button>
-            </div>
-
-            {/* Neural OCR Model Quality Switch */}
-            <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-inner">
-              <button
-                type="button"
-                onClick={() => {
-                  setOcrModel('best');
-                  setOcrModelQuality('best');
-                  setStatusMsg({ type: 'success', text: 'เปิดใช้งานโมเดล Tessdata Best (ความแม่นยำภาษาไทยและอังกฤษสูงสุด 100%)' });
-                }}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                  ocrModelQuality === 'best'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="โมเดล Tessdata Best: ปัญญาประดิษฐ์ LSTM เต็มรูปแบบ ถอดสระ วรรณยุกต์ไทย และแยกภาษาอังกฤษแม่นยำสูงสุด"
-              >
-                <Zap className="w-3 h-3" />
-                <span>🎯 Tessdata Best</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setOcrModel('fast');
-                  setOcrModelQuality('fast');
-                  setStatusMsg({ type: 'success', text: 'เปิดใช้งานโมเดล Fast Standard' });
-                }}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                  ocrModelQuality === 'fast'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="โมเดล Fast: เน้นความเร็ว"
-              >
-                <span>⚡ Fast</span>
               </button>
             </div>
 
@@ -1158,14 +1201,15 @@ export default function AutoWordPage() {
           {activeInvoice && activeInvoice.imagePreview ? (
             <div className="space-y-3">
               <div
+                ref={viewerContainerRef}
                 className={`relative bg-slate-950 rounded-2xl overflow-hidden select-none border border-slate-300 min-h-[440px] max-h-[620px] flex items-center justify-center shadow-inner ${
                   isPanning ? 'cursor-grabbing' : 'cursor-grab'
                 }`}
+                style={{ overscrollBehavior: 'contain', touchAction: 'none' }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
-                onWheel={handleWheel}
               >
                 <img
                   ref={imageRef}

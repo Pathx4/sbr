@@ -2,12 +2,11 @@ version: '3.8'
 
 services:
   app:
+    image: sbrv1-app:latest
     build:
       context: .
       dockerfile: Dockerfile
-    # ไม่ต้องเปิดพอร์ตสู่ Host (Zero Inbound Port) เพื่อไม่ให้ชนกับ Container อื่นบน Server
-    # ports:
-    #   - "7860:7860"
+    command: gunicorn --workers 1 --threads 1 --timeout 300 -b 0.0.0.0:7860 app:app
     environment:
       - PORT=7860
     restart: unless-stopped
@@ -16,3 +15,5 @@ services:
     image: cloudflare/cloudflared:latest
     command: tunnel --no-autoupdate --url http://app:7860
     restart: unless-stopped
+    depends_on:
+      - app

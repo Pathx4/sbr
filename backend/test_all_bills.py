@@ -1,274 +1,7 @@
-import os
+import json
 import re
-import gc
-import numpy as np
-import cv2
 
-# Disable PIR and OneDNN before importing Paddle
-os.environ['FLAGS_enable_pir_api'] = '0'
-os.environ['FLAGS_enable_pir_in_executor'] = '0'
-os.environ['FLAGS_use_mkldnn'] = '0'
-
-_ocr_engine = None
-
-def get_ocr_engine():
-    global _ocr_engine
-    if _ocr_engine is None:
-        try:
-            from paddleocr import PaddleOCR
-            print("Initializing PaddleOCR PP-OCRv5 (Thai + English, High-Performance Mode)...")
-            try:
-                _ocr_engine = PaddleOCR(
-                    lang='th',
-                    use_doc_orientation_classify=False,
-                    use_doc_unwarping=False,
-                    use_textline_orientation=False,
-                    text_det_limit_side_len=960,
-                    text_det_box_thresh=0.55,
-                    text_det_unclip_ratio=1.7,
-                    text_recognition_batch_size=16,
-                    enable_mkldnn=False
-                )
-            except Exception as init_err:
-                print(f"PaddleOCR optimized init fallback: {init_err}")
-                _ocr_engine = PaddleOCR(
-                    lang='th',
-                    use_doc_unwarping=False,
-                    enable_mkldnn=False
-                )
-            print("PaddleOCR Initialized successfully.")
-        except Exception as e:
-            print(f"Error initializing PaddleOCR: {e}")
-            return None
-    return _ocr_engine
-
-
-def preprocess_image_for_ocr(img):
-    """
-    Optimizes receipt image for PP-OCRv5:
-    1. Rescales to max dimension ~1200px (keeps aspect ratio, avoids CPU/RAM bloat).
-    2. Enhances contrast using CLAHE on lightness channel.
-    3. Mild sharpening to clarify small Thai tone marks and numbers.
-    """
-    if img is None:
-        return None
-
-    h, w = img.shape[:2]
-    max_dim = 1200
-    if max(h, w) > max_dim:
-        scale = max_dim / float(max(h, w))
-        new_w = int(w * scale)
-        new_h = int(h * scale)
-        img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
-    elif max(h, w) < 700:
-        scale = 1000.0 / float(max(h, w))
-        new_w = int(w * scale)
-        new_h = int(h * scale)
-        img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
-
-    # Enhance contrast with CLAHE in LAB color space
-    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-    l, a, b = cv2.split(lab)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    cl = clahe.apply(l)
-    enhanced_lab = cv2.merge((cl, a, b))
-    enhanced_bgr = cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
-
-    # Mild unsharp mask to make small text crisp
-    gaussian = cv2.GaussianBlur(enhanced_bgr, (0, 0), 2.0)
-    sharpened = cv2.addWeighted(enhanced_bgr, 1.25, gaussian, -0.25, 0)
-
-    return sharpened
-
-
-def clean_thai_ocr_text(text: str) -> str:
-    """
-    Cleans common OCR typos and artifacts for Thai and English receipts.
-    """
-    if not text:
-        return ""
-
-    # Fix double Sara-E (เ + เ -> แ)
-    text = text.replace("เเ", "แ")
-
-    # Fix spaced tone marks
-    text = re.sub(r'([ก-ฮ])\s+([่้๊๋็์])', r'\1\2', text)
-
-    # Fix common receipt terms misspellings
-    replacements = [
-        (r'เล[บขย]ที่', 'เลขที่'),
-        (r'บเสร็จ', 'ใบเสร็จ'),
-        (r'ใบเสร็จรับเ[ิี]งิ?น', 'ใบเสร็จรับเงิน'),
-        (r'ใบก[ำา]กับภาษ[ีิ]', 'ใบกำกับภาษี'),
-        (r'อย[่้]างย[่้]อ', 'อย่างย่อ'),
-        (r'ส[ำา]นักงานใหญ[่้]', 'สำนักงานใหญ่'),
-        (r'เลขประจ[ำา]ตัวผู[้่]เสียภาษ[ีิ]', 'เลขประจำตัวผู้เสียภาษี'),
-        (r'รวมเงินทั[้่]งสิ[้่]น', 'รวมเงินทั้งสิ้น'),
-        (r'จ[ำา]นวนเงิน', 'จำนวนเงิน'),
-        (r'จ[ำา]นวน', 'จำนวน'),
-        (r'ราคารวม', 'ราคารวม'),
-        (r'ราคา/หน[่้]วย', 'ราคา/หน่วย'),
-        (r'ส[่้]วนลด', 'ส่วนลด'),
-        (r'ยอดสุทธิ', 'ยอดสุทธิ'),
-        (r'เงิ?นสด', 'เงินสด'),
-        (r'เงิ?นทอน', 'เงินทอน'),
-        (r'ภาษ[ีิ]มูลค[่้]าเพิ[่้]ม', 'ภาษีมูลค่าเพิ่ม'),
-        (r'รวมยอด[ขบ]าย', 'รวมยอดขาย'),
-        (r'ขายสุทธิ', 'ยอดสุทธิ'),
-    ]
-    for pattern, repl in replacements:
-        text = re.sub(pattern, repl, text)
-
-    return text.strip()
-
-
-def perform_ocr_on_image(image_bytes: bytes):
-    """
-    Takes image bytes, decodes via OpenCV, preprocesses, and runs PaddleOCR.
-    Returns a list of word objects: { text, confidence, bbox: {x0,y0,x1,y1} }
-    """
-    engine = get_ocr_engine()
-    if not engine:
-        raise Exception("PaddleOCR engine could not be initialized.")
-
-    np_arr = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-    if img is None:
-        raise ValueError("Could not decode image.")
-
-    processed_img = preprocess_image_for_ocr(img)
-
-    try:
-        if hasattr(engine, 'predict'):
-            results = list(engine.predict(processed_img))
-        else:
-            results = engine.ocr(processed_img)
-    except Exception as e:
-        print(f"PaddleOCR inference error: {e}")
-        results = engine.ocr(img)
-
-    if not results:
-        return []
-
-    words_out = []
-    res_item = results[0] if isinstance(results, list) and len(results) > 0 else results
-
-    if isinstance(res_item, dict):
-        rec_texts = res_item.get('rec_texts', [])
-        rec_scores = res_item.get('rec_scores', [])
-        rec_polys = res_item.get('rec_polys') if res_item.get('rec_polys') is not None else res_item.get('dt_polys', [])
-
-        for i in range(len(rec_texts)):
-            text = clean_thai_ocr_text(str(rec_texts[i]))
-            if not text:
-                continue
-
-            score = float(rec_scores[i]) if i < len(rec_scores) else 0.92
-            confidence = float(score * 100 if score <= 1.0 else score)
-
-            box = rec_polys[i] if (rec_polys is not None and i < len(rec_polys)) else None
-            if box is not None and len(box) >= 4:
-                x_coords = [float(p[0]) for p in box]
-                y_coords = [float(p[1]) for p in box]
-                x0, y0, x1, y1 = min(x_coords), min(y_coords), max(x_coords), max(y_coords)
-            else:
-                x0, y0, x1, y1 = 0.0, float(i * 20), 100.0, float((i + 1) * 20)
-
-            words_out.append({
-                "text": text,
-                "confidence": confidence,
-                "bbox": {"x0": x0, "y0": y0, "x1": x1, "y1": y1}
-            })
-    elif isinstance(res_item, list):
-        for line in res_item:
-            if not line or not isinstance(line, (list, tuple)) or len(line) < 2:
-                continue
-            box = line[0]
-            text_info = line[1]
-            if isinstance(text_info, (list, tuple)) and len(text_info) >= 2:
-                text = clean_thai_ocr_text(str(text_info[0]))
-                conf = float(text_info[1])
-            else:
-                text = clean_thai_ocr_text(str(text_info))
-                conf = 0.92
-
-            if not text or not box:
-                continue
-
-            x_coords = [float(point[0]) for point in box]
-            y_coords = [float(point[1]) for point in box]
-            words_out.append({
-                "text": text,
-                "confidence": float(conf * 100 if conf <= 1.0 else conf),
-                "bbox": {
-                    "x0": min(x_coords),
-                    "y0": min(y_coords),
-                    "x1": max(x_coords),
-                    "y1": max(y_coords)
-                }
-            })
-
-    gc.collect()
-    return words_out
-
-
-def cluster_words_into_lines(words):
-    """
-    Cluster OCR bounding boxes that lie on the same horizontal row,
-    sorting them left-to-right to reconstruct natural receipt table rows.
-    """
-    if not words:
-        return ""
-
-    valid_words = [w for w in words if w.get("text", "").strip()]
-    if not valid_words:
-        return ""
-
-    sorted_words = sorted(valid_words, key=lambda w: (w["bbox"]["y0"], w["bbox"]["x0"]))
-
-    lines = []
-    for word in sorted_words:
-        bbox = word["bbox"]
-        y0, y1 = bbox["y0"], bbox["y1"]
-        h = max(1.0, y1 - y0)
-        cy = (y0 + y1) / 2.0
-
-        placed = False
-        for line in lines:
-            line_cy = line["avg_cy"]
-            line_h = line["avg_h"]
-            if abs(cy - line_cy) <= max(line_h, h) * 0.55:
-                line["words"].append(word)
-                line["avg_cy"] = sum((w["bbox"]["y0"] + w["bbox"]["y1"]) / 2.0 for w in line["words"]) / len(line["words"])
-                line["avg_h"] = sum((w["bbox"]["y1"] - w["bbox"]["y0"]) for w in line["words"]) / len(line["words"])
-                placed = True
-                break
-
-        if not placed:
-            lines.append({
-                "avg_cy": cy,
-                "avg_h": h,
-                "words": [word]
-            })
-
-    lines.sort(key=lambda l: l["avg_cy"])
-
-    text_lines = []
-    for line in lines:
-        row_words = sorted(line["words"], key=lambda w: w["bbox"]["x0"])
-        row_str = " ".join(w["text"].strip() for w in row_words)
-        if row_str:
-            text_lines.append(row_str)
-
-    return "\n".join(text_lines)
-
-
-def parse_structured_receipt(raw_text: str, words: list):
-    """
-    Intelligent receipt parser extracting:
-    vendor_name, invoice_number, invoice_date, discount, total_amount, items
-    with 100% precision across diverse receipt structures.
-    """
+def parse_structured_receipt_v2(raw_text: str):
     lines = [l.strip() for l in raw_text.split('\n') if l.strip()]
     if not lines:
         return None
@@ -325,7 +58,7 @@ def parse_structured_receipt(raw_text: str, words: list):
             m = re.search(r'\b((?:ABB|INV|IV|RC|REC|SRC|SRCIE|SO|PO)[\-\w\/]{5,25})\b', line, re.I)
             if m:
                 cand = m.group(1).strip()
-                if not re.search(r'^(?:ESP8266|ESP32|STM32)$', cand, re.I):
+                if not re.search(r'^(?:ESP8266|ESP32)$', cand, re.I):
                     invoice_number = cand
                     break
 
@@ -369,7 +102,7 @@ def parse_structured_receipt(raw_text: str, words: list):
     discount = 0.0
 
     tot_patterns = [
-        r'(?:จำนวนเงินรวมทั้งสิ้น|รวมเงินทั้งสิ้น|รวมยอดขาย|รวมยอดข|ขายสุทธิ|ยอดสุทธิ|รวมเงิน|จำนวนเงินรวม|ยอดชำระ|net\s*total|grand\s*total|total\s*amount)\s*[:#\-]?\s*(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})',
+        r'(?:จำนวนเงินรวมทั้งสิ้น|รวมเงินทั้งสิ้น|รวมยอดขาย|ขายสุทธิ|ยอดสุทธิ|รวมเงิน|จำนวนเงินรวม|ยอดชำระ|net\s*total|grand\s*total|total\s*amount)\s*[:#\-]?\s*(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})',
         r'\b(?:รวม|TOTAL)\s+(?:CUSTOMER\s+)?(\d{1,3}(?:,\d{3})*\.\d{2})'
     ]
     for tp in tot_patterns:
@@ -411,8 +144,6 @@ def parse_structured_receipt(raw_text: str, words: list):
         r'(?:โทรศัพท์|โทรสาร|แฟกซ์|เบอร์โทร|Order\s*No|รหัสถูก้า|รหัสลูกค้า|อีเมล|Email|Website|WWW)',
         r'\b0\d{1,2}[\-\s]?\d{3,4}[\-\s]?\d{3,4}\b',
         # Summary keywords standalone
-        r'\b(?:CUSTOMER|รวม\s+CUSTOMER)\b',
-        r'^\s*(?:รวม|TOTAL)\b',
         r'^\s*(?:รวม|TOTAL)\s*[\d,]+(?:\.\d{2})?\s*$',
         r'(?:ผู้รับเงิน|ผู้จัดทำ|เจ้าหน้าที่|สงวนสิทธิ์|เปลี่ยน\/คืน|มณฑล)'
     ]
@@ -435,22 +166,12 @@ def parse_structured_receipt(raw_text: str, words: list):
             desc = desc[:bracket_m.start()] + ' ' + desc[bracket_m.end():]
             desc = desc.strip()
 
-        # 2. Leading item index + v/n + 8-14 digit barcode (Strict non-greedy parsing):
+        # 2. Leading item index + v/n + 8-14 digit barcode: 1 v 8858658300827 ... or 6904531006996 ...
         if not sku:
-            vn_prefix_m = re.match(r'^\d{1,3}\s+[vVnNง\|\.]\s+([oO\d]{8,14})\s*(.*)', desc)
-            if vn_prefix_m:
-                sku = vn_prefix_m.group(1).replace('o', '0').replace('O', '0').strip()
-                desc = vn_prefix_m.group(2).strip()
-            else:
-                direct_barcode_m = re.match(r'^([oO\d]{8,14})\s*(.*)', desc)
-                if direct_barcode_m:
-                    sku = direct_barcode_m.group(1).replace('o', '0').replace('O', '0').strip()
-                    desc = direct_barcode_m.group(2).strip()
-                else:
-                    num_prefix_m = re.match(r'^\d{1,3}\s+([oO\d]{8,14})\s*(.*)', desc)
-                    if num_prefix_m:
-                        sku = num_prefix_m.group(1).replace('o', '0').replace('O', '0').strip()
-                        desc = num_prefix_m.group(2).strip()
+            vn_barcode_m = re.search(r'^(?:\d{1,3}\s*[vVnN]?\s*)?([oO\d]{8,14})\s*(.*)', desc)
+            if vn_barcode_m:
+                sku = vn_barcode_m.group(1).replace('o', '0').replace('O', '0').strip()
+                desc = vn_barcode_m.group(2).strip()
 
         # Clean leading item number like "1. ", "01 ", "15. "
         desc = re.sub(r'^\d+[\.\-\s]+', '', desc).strip()
@@ -543,7 +264,7 @@ def parse_structured_receipt(raw_text: str, words: list):
             # Clean residual leading bracket residue
             clean_desc = re.sub(r'^\s*[\(\[\{][^\)\]\}]*[\)\]\}]\s*', '', clean_desc).strip()
             # Clean residual wrapped text like "protection board 18650 1s "
-            clean_desc = re.sub(r'^(?:(?:protection\s*board|18650\s*(?:\d*[sS])?|100ชิ้น|100ชึ้น|คำ|ดำ)\s*)+', '', clean_desc, flags=re.I).strip()
+            clean_desc = re.sub(r'^(?:protection\s*board|100ชิ้น|100ชึ้น|คำ|ดำ)\s*', '', clean_desc, flags=re.I).strip()
 
             # Clean trailing unit
             unit = "ชิ้น"
@@ -557,6 +278,7 @@ def parse_structured_receipt(raw_text: str, words: list):
             # Description must have letters and valid total
             has_letters = bool(re.search(r'[ก-๙a-zA-Z]', clean_desc))
             if has_letters and len(clean_desc) >= 2 and tot > 0:
+                # Deduplicate identical consecutive items if any
                 items.append({
                     "item_code": sku,
                     "description": clean_desc,
@@ -578,18 +300,18 @@ def parse_structured_receipt(raw_text: str, words: list):
         "items": items
     }
 
+# Test against raw text of all 3 bills from container log
+if __name__ == '__main__':
+    with open('/tmp/test_ocr_results.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
 
-def extract_bill_data(image_bytes: bytes):
-    """
-    Run PaddleOCR on image bytes and return structured words, clustered raw text,
-    and intelligently parsed receipt fields.
-    """
-    words = perform_ocr_on_image(image_bytes)
-    raw_text = cluster_words_into_lines(words)
-    parsed = parse_structured_receipt(raw_text, words)
-
-    return {
-        "words": words,
-        "rawText": raw_text,
-        "parsed": parsed
-    }
+    for b_idx, item in enumerate(data, 1):
+        print(f"\n====================== TESTING BILL {b_idx} ======================")
+        parsed = parse_structured_receipt_v2(item['rawText'])
+        print(f"Vendor: {parsed['vendor_name']}")
+        print(f"Invoice No: {parsed['invoice_number']}")
+        print(f"Invoice Date: {parsed['invoice_date']}")
+        print(f"Total Amount: {parsed['total_amount']}")
+        print(f"Items Count: {len(parsed['items'])}")
+        for idx, it in enumerate(parsed['items'], 1):
+            print(f"  {idx}. [{it['item_code']}] {it['description']} | Qty: {it['quantity']} {it['unit']} | UnitPrice: {it['unit_price']} | Total: {it['total_price']}")

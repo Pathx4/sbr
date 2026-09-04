@@ -59,6 +59,70 @@ function createPatchedWorkerUrl(): string {
   return URL.createObjectURL(blob);
 }
 
+function spawnWorkerPromise(
+  lang: string,
+  oem: OEM,
+  options: {
+    workerPath: string;
+    workerBlobURL: boolean;
+    corePath?: string;
+    langPath?: string;
+    gzip: boolean;
+    logger?: (m: any) => void;
+  },
+  timeoutMs = 35000
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    let workerInstance: any = null;
+
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        if (workerInstance) {
+          try { workerInstance.terminate(); } catch (_) {}
+        }
+        reject(new Error(`Tesseract initialization timed out after ${timeoutMs}ms`));
+      }
+    }, timeoutMs);
+
+    createWorker(lang, oem, {
+      ...options,
+      logger: options.logger,
+      errorHandler: (err: any) => {
+        const msg = typeof err === 'string' ? err : err?.message ?? String(err);
+        if (msg.includes(NOISY_PARAM_WARNING)) return;
+        console.error('[Tesseract error]', err);
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          if (workerInstance) {
+            try { workerInstance.terminate(); } catch (_) {}
+          }
+          reject(new Error(msg));
+        }
+      },
+    } as any)
+      .then((w) => {
+        workerInstance = w;
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve(w);
+        } else {
+          try { w.terminate(); } catch (_) {}
+        }
+      })
+      .catch((err) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(err);
+        }
+      });
+  });
+}
+
 export type OcrModelType = 'best' | 'fast';
 let currentModel: OcrModelType = 'best';
 
@@ -77,34 +141,42 @@ export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
       const patchedWorkerPath = createPatchedWorkerUrl();
-      const langPath = currentModel === 'best'
-        ? 'https://cdn.jsdelivr.net/gh/tesseract-ocr/tessdata_best@main'
-        : 'https://cdn.jsdelivr.net/gh/tesseract-ocr/tessdata_fast@main';
+      const logger = (m: any) => {
+        const msg = typeof m === 'string' ? m : m?.message ?? '';
+        if (msg.includes(NOISY_PARAM_WARNING)) return;
+        console.log('[Tesseract Neural]', m);
+      };
+
+      const oem = currentModel === 'best' ? OEM.LSTM_ONLY : OEM.DEFAULT;
+      // Use verified SIMD core to avoid Emscripten relaxedsimd missing function DotProductSSE
+      const corePath = currentModel === 'best'
+        ? 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v7.0.0/tesseract-core-simd-lstm.wasm.js'
+        : 'https://cdn.jsdelivr.net/npm/tesseract.js-core@v7.0.0/tesseract-core-simd.wasm.js';
 
       let w: any;
       try {
-        w = await createWorker(lang, OEM.LSTM_ONLY, {
+        // Attempt 1: Load official integerized model (4.0.0_best_int) with verified SIMD WASM core
+        w = await spawnWorkerPromise(lang, oem, {
           workerPath: patchedWorkerPath,
           workerBlobURL: false,
-          langPath,
-          logger: (m: any) => {
-            const msg = typeof m === 'string' ? m : m?.message ?? '';
-            if (msg.includes(NOISY_PARAM_WARNING)) return;
-            console.log('[Tesseract Neural]', m);
-          },
-          errorHandler: (err: any) => {
-            const msg = typeof err === 'string' ? err : err?.message ?? String(err);
-            if (msg.includes(NOISY_PARAM_WARNING)) return;
-            console.error('[Tesseract error]', err);
-          },
-        } as any);
-      } catch (err) {
-        console.warn('Fallback to standard model repository:', err);
-        w = await createWorker(lang, OEM.LSTM_ONLY, {
-          workerPath: patchedWorkerPath,
-          workerBlobURL: false,
-          logger: () => {},
-        } as any);
+          corePath,
+          gzip: true,
+          logger,
+        }, 35000);
+      } catch (primaryErr) {
+        console.warn(`[Tesseract] SIMD core failed, falling back to standard CDN core:`, primaryErr);
+        try {
+          // Attempt 2: Fallback without explicit corePath
+          w = await spawnWorkerPromise(lang, oem, {
+            workerPath: patchedWorkerPath,
+            workerBlobURL: false,
+            gzip: true,
+            logger,
+          }, 35000);
+        } catch (fallbackErr) {
+          workerPromise = null;
+          throw fallbackErr;
+        }
       }
 
       await w.setParameters({
@@ -114,7 +186,10 @@ export async function initWorker(lang: string = 'tha+eng') {
       });
 
       return w;
-    })();
+    })().catch((err) => {
+      workerPromise = null;
+      throw err;
+    });
   }
   return workerPromise;
 }
@@ -183,8 +258,15 @@ export async function runMultiPassTesseract(
 
 export async function terminateWorker() {
   if (workerPromise) {
-    const w = await workerPromise;
-    await w.terminate();
+    const p = workerPromise;
     workerPromise = null;
+    try {
+      const w = await p;
+      if (w && typeof w.terminate === 'function') {
+        await w.terminate();
+      }
+    } catch (_) {
+      // ignore termination errors
+    }
   }
 }

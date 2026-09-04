@@ -948,16 +948,22 @@ export function isHeaderLine(line: string): boolean {
   if (/(?:ใบกำกับภาษี|ใบเสร็จรับเงิน|Tax\s*Invoice|Receipt|ต้นฉบับ|สำเนา|เอกสารออกเป็นชุด|หน้าที่|หน้า\s*\d|Page\s*\d)/i.test(l)) {
     return true;
   }
-  // 5. Address / Location (including Thai abbreviations ต. อ. จ. ม. ถ. ซ.)
-  if (/(?:ที่อยู่|ม\.\s*\d|หมู่\s*\d|ต\.|ตำบล|อ\.|อำเภอ|จ\.|จังหวัด|แขวง|เขต|กทม|กรุงเทพ|ถนน|ถ\.|ซอย|ซ\.|รหัสไปรษณีย์|Address)/i.test(l)) {
+  // 5. Address / Location (including Thai abbreviations ต. อ. จ. ม. ถ. ซ. and house numbers)
+  if (/(?:ที่อยู่|เลขที่\s*\d+|ม\.\s*\d+|หมู่\s*\d+|ต\.|ตำบล|ด่ำบถ|อ\.|อำเภอ|จ\.|จังหวัด|จังหวัค|แขวง|เขต|กทม|กรุงเทพ|ถนน|ถ\.|ซอย|ซ\.|รหัสไปรษณีย์|Address)/i.test(l)) {
+    return true;
+  }
+  if (/(?:สุขุมวิท|ทุ่งสุขลา|ทุ่งสุขถลา|ศรีราชา|ศรีราซ่า|หนองขาม|ชลบุรี|พญาไท|บางนา|พระราม)/i.test(l)) {
     return true;
   }
   // 6. Postal Code at end of line (e.g. "จ.ชลบุรี 20230")
   if (/\b\d{5}$/.test(l) && /(?:ชลบุรี|กรุงเทพ|เชียงใหม่|ระยอง|นนทบุรี|ปทุมธานี|สมุทร|[ก-๙]{3,})/i.test(l)) {
     return true;
   }
-  // 7. Contact / Telecom
-  if (/(?:โทรศัพท์|โทรสาร|โทร\.|โทร\s|Tel|Fax|Email|Website|WWW)/i.test(l)) {
+  // 7. Contact / Telecom (including OCR typos like โnรศัพwท์)
+  if (/(?:[โI][nNน]ร(?:ศ[ัั][พw]ท์)?|โทรศัพท์|โทรสาร|โทร\.|โทร\s|Tel|Fax|Email|Website|WWW|Order\s*No|รหัสถูก้า|รหัสลูกค้า)/i.test(l)) {
+    return true;
+  }
+  if (/\b0\d{1,2}[\-\s]?\d{3,4}[\-\s]?\d{3,4}\b/.test(l)) {
     return true;
   }
   // 8. Customer / Buyer
@@ -968,8 +974,11 @@ export function isHeaderLine(line: string): boolean {
   if (/(?:เลขที่ใบกำกับ|เลขที่ใบเสร็จ|เลขที่เอกสาร|Invoice\s*No|Doc\s*No|วันที่|Date)/i.test(l)) {
     return true;
   }
-  // 10. Bare Date lines e.g. "11/08/2569"
+  // 10. Bare Date lines e.g. "11/08/2569", "11 ส.ค. 2569", "5 มิถุนายน 2569"
   if (/^\s*(?:วันที่\s*)?\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\s*$/.test(l)) {
+    return true;
+  }
+  if (/\b\d{1,2}\s*(?:ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\b/i.test(l)) {
     return true;
   }
 
@@ -982,7 +991,11 @@ export function isHeaderLine(line: string): boolean {
  */
 export function isSummaryOrFooterLine(line: string): boolean {
   if (/^\s*%/i.test(line)) return true;
-  return /(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|มูลค่าสินค้า|ฐานภาษี|ภาษีมูลค่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|จำนวนชิ้นรวม|SUBTOTAL|TOTAL|GRAND TOTAL|VAT|TAX|NET TOTAL|TOTAL DUE|BALANCE|เงื่อนไข|สินค้าสั่งพิเศษ|ใบเสร็จรับเงินนี้จะสมบูรณ์|ผู้รับเงิน|ผู้จ่ายเงิน|CASHIER|เงินสด|ทอนเงิน|CHANGE)/i.test(line);
+  if (/\([ก-๙\s]*(?:บาท|สตางค์|ถ้วน)[ก-๙\s]*\)/i.test(line)) return true;
+  if (/(?:บาทถ้วน|สตางค์)/i.test(line)) return true;
+  if (/\b\d{1,2}\s*(?:ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\b/i.test(line)) return true;
+  if (/^\s*(?:รวม|TOTAL)\s*[\d,]+(?:\.\d{2})?\s*$/i.test(line)) return true;
+  return /(?:รวมเป็นเงิน|รวมเงิน|ยอดรวม|รวมยอด|มูลค่าสินค้า|ฐานภาษี|มูลค่าฐานภาษี|ภาษีมูลค่าเพิ่ม|ภาษีมูลก่าเพิ่ม|ยอดเงินสุทธิ|จำนวนเงินทั้งสิ้น|ยอดสุทธิ|ยอดชำระ|จำนวนเงินรวม|ราคารวม|จำนวนชิ้นรวม|สินค้าที่มีภาษี|สินค้าที่เสีย|สินค้าที่ยกเว้น|SUBTOTAL|TOTAL|GRAND\s*TOTAL|VAT|TAX|NET\s*TOTAL|TOTAL\s*DUE|BALANCE|เงื่อนไข|สินค้าสั่งพิเศษ|ใบเสร็จรับเงินนี้จะสมบูรณ์|ผู้รับเงิน|ผู้จ่ายเงิน|CASHIER|เงินสด|ทอนเงิน|CHANGE|ซำระเงิน|ชำระเงิน|มัดจำ)/i.test(line);
 }
 
 /**
@@ -1058,33 +1071,48 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
   // Extract leading Barcode (8-14 digits) or SKU with optional index & tax flag (v, V, ง, N, |, #)
   let item_code = '';
 
-  // Pattern A: Barcode preceded by optional line number and tax/status flag (v, V, ง, N, |)
-  // e.g. "3 ง 8851899501107 กาวแท่ง TAI-FC" or "10 v 8859298504125 เคเบิลแกลนด"
-  const prefixBarcodeMatch = line.match(/^\s*(?:(?:\d{1,3}|[๐-๙]{1,3})\s*[vVง\|\.\-\)]*\s+)?(\d{8,14})\s+(.+)$/);
-  if (prefixBarcodeMatch) {
-    item_code = prefixBarcodeMatch[1];
-    line = prefixBarcodeMatch[2].trim();
+  // Pattern 0: Bracketed SKU anywhere in line: [P0002], [M0103], [P0417]
+  const bracketSkuMatch = line.match(/\[([a-zA-Z0-9\-\_]{3,15})\]/);
+  if (bracketSkuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(bracketSkuMatch[1])) {
+    item_code = bracketSkuMatch[1];
+    line = (line.slice(0, bracketSkuMatch.index) + ' ' + line.slice(bracketSkuMatch.index! + bracketSkuMatch[0].length)).trim();
   } else {
-    // Pattern B: Embedded barcode after wrapped trailing text e.g. "100ชิ้น ดำ 8 ง 2000603173666 หัวแร้ง"
-    const embeddedBarcodeMatch = line.match(/^(?:.*?\s+)?(?:\d{1,3}\s*[vVง\|\.\-\)]*\s+)(\d{8,14})\s+(.+)$/);
-    if (embeddedBarcodeMatch) {
-      item_code = embeddedBarcodeMatch[1];
-      line = embeddedBarcodeMatch[2].trim();
+    // Pattern A: Barcode preceded by explicit line number and tax/status flag (v, V, ง, N, |)
+    // e.g. "3 ง 8851899501107 กาวแท่ง TAI-FC" or "10 v 8859298504125 เคเบิลแกลนด"
+    const prefixBarcodeMatch = line.match(/^\s*(?:\d{1,3}|[๐-๙]{1,3})\s+[vVnNง\|\.]\s+([oO\d]{8,14})\s*(.+)$/);
+    if (prefixBarcodeMatch) {
+      item_code = prefixBarcodeMatch[1].replace(/o/g, '0').replace(/O/g, '0');
+      line = prefixBarcodeMatch[2].trim();
     } else {
-      const splitMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s+(.+)$/);
-      if (splitMatch && splitMatch[2].length + splitMatch[3].length >= 12 && splitMatch[2].length + splitMatch[3].length <= 14) {
-        item_code = splitMatch[2] + splitMatch[3];
-        line = splitMatch[4].trim();
+      // Pattern B: Direct barcode at start of line: e.g. "6904531006996 TOSHINO..." or "8858658300827..."
+      const directBarcodeMatch = line.match(/^([oO\d]{8,14})\s*(.+)$/);
+      if (directBarcodeMatch) {
+        item_code = directBarcodeMatch[1].replace(/o/g, '0').replace(/O/g, '0');
+        line = directBarcodeMatch[2].trim();
       } else {
-        const barcodeMatch = line.match(/^(\d{8,14})\s*(.+)$/);
-        if (barcodeMatch) {
-          item_code = barcodeMatch[1];
-          line = barcodeMatch[2].trim();
+        // Pattern C: Bare number prefix before barcode: e.g. "1 8858658300827..."
+        const barePrefixMatch = line.match(/^\s*(?:\d{1,3}|[๐-๙]{1,3})\s+([oO\d]{8,14})\s*(.+)$/);
+        if (barePrefixMatch) {
+          item_code = barePrefixMatch[1].replace(/o/g, '0').replace(/O/g, '0');
+          line = barePrefixMatch[2].trim();
         } else {
-          const skuMatch = line.match(/^([A-Za-z0-9\-]{4,15})\s+(.+)$/);
-          if (skuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(skuMatch[1])) {
-            item_code = skuMatch[1];
-            line = skuMatch[2].trim();
+          // Pattern D: Embedded barcode after wrapped trailing text e.g. "100ชิ้น ดำ 8 ง 2000603173666 หัวแร้ง"
+          const embeddedBarcodeMatch = line.match(/^(?:.*?\s+)?(?:\d{1,3}\s*[vVง\|\.\-\)]*\s*)([oO\d]{8,14})\s*(.+)$/);
+          if (embeddedBarcodeMatch) {
+            item_code = embeddedBarcodeMatch[1].replace(/o/g, '0').replace(/O/g, '0');
+            line = embeddedBarcodeMatch[2].trim();
+          } else {
+            const splitMatch = line.match(/^\s*(?:(\d{1,2})[\s\.\)]+)?(\d{4,7})\s+(\d{5,8})\s+(.+)$/);
+            if (splitMatch && splitMatch[2].length + splitMatch[3].length >= 12 && splitMatch[2].length + splitMatch[3].length <= 14) {
+              item_code = splitMatch[2] + splitMatch[3];
+              line = splitMatch[4].trim();
+            } else {
+              const skuMatch = line.match(/^([A-Za-z0-9\-]{4,15})\s+(.+)$/);
+              if (skuMatch && !/^(?:TOTAL|VAT|PRICE|QTY|ITEM|DOC|INV|ORDER)$/i.test(skuMatch[1])) {
+                item_code = skuMatch[1];
+                line = skuMatch[2].trim();
+              }
+            }
           }
         }
       }
@@ -1207,6 +1235,11 @@ export function parseUniversalItemLine(rawLine: string): ParsedReceiptItem | nul
   let rawDesc = tokens.slice(0, descTokensEndIndex).join(' ').trim();
   if (!rawDesc) return null;
 
+  // Clean residual wrapped text or prefixes like "protection board 18650 1s " or "100ชิ้น ดำ"
+  rawDesc = rawDesc.replace(/^(?:(?:protection\s*board|18650\s*(?:\d*[sS])?|100ชิ้น|100ชึ้น|คำ|ดำ)\s*)+/gi, '').trim();
+  rawDesc = rawDesc.replace(/^\s*[\(\[\{][^\)\]\}]*[\)\]\}]\s*/, '').trim();
+  rawDesc = rawDesc.replace(/^[oO\d]{8,14}\s*/, '').trim();
+
   // Dynamic unit normalization
   if (/^แพ[ค็ค]+10$/i.test(unit)) unit = 'แพ็ค (10 ด้าม)';
   else if (/^แพ[ค็ค]+/i.test(unit)) unit = 'แพ็ค';
@@ -1295,24 +1328,24 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
     if (/\((?:RECEIPT|TAX\s*INVOICE)[^\)]*\)/i.test(line)) continue;
 
     const match = line.match(
-      /(?:เลขที่เอกสาร|เลขที่ใบกำกับภาษี|เลขที่ใบกำกับ|เลขที่ใบเสร็จ|เลขที่|Tax\s*Invoice\s*No\.?|TAX\s*INV(?:\.|\s*NO)?|TAX\s*NO\.?|INV\s*NO\.?|DOC\s*NO\.?|Document\s*No\.?|TIV|No\.?)[^\w\d]*([A-Z0-9\/\-]{4,25})/i
+      /(?:เลขที่เอกสาร|เลขที่ใบกำกับภาษี|เลขที่ใบกำกับ|เลขที่ใบเสร็จ|เลขที่|Tax\s*Invoice\s*No\.?|TAX\s*INV(?:\.|\s*NO)?|TAX\s*NO\.?|INV\s*NO\.?|DOC\s*NO\.?|Document\s*No\.?|TIV|\bNo\.?)[^\w\d]*([A-Z0-9\/\-]{4,25})/i
     );
     if (
       match &&
       match[1] &&
       !/^\d{13}$/.test(match[1]) &&
-      !/^(?:COMPANY|LIMITED|TAX|BRANCH|PAGE|ORIGINAL|COPY|INVOICE|RECEIPT|OICE)$/i.test(match[1])
+      !/^(?:COMPANY|LIMITED|TAX|BRANCH|PAGE|ORIGINAL|COPY|INVOICE|RECEIPT|OICE|ESP8266|ESP32|STM32|ARDUINO|RASPBERRY|TOTAL|AMOUNT|PRICE|CUSTOMER|DISCOUNT)$/i.test(match[1])
     ) {
       invoice_number = match[1];
       break;
     }
   }
 
-  // Fallback: Detect standard invoice code formats e.g. ABB-20260312-0892, RC-6902-8812, IV-6902-0044
+  // Fallback: Detect standard invoice code formats e.g. ABB-20260312-0892, RC-6902-8812, IV-6902-0044, SRCIE26060061787
   if (!invoice_number) {
     for (const line of lines) {
-      const codeMatch = line.match(/\b((?:ABB|INV|IV|RC|REC|TAX|SO|PO)[\-\d\/]{5,25})\b/i);
-      if (codeMatch && !/^\d{13}$/.test(codeMatch[1])) {
+      const codeMatch = line.match(/\b((?:ABB|INV|IV|RC|REC|TAX|SRC|SRCIE|SO|PO)[\-\w\/]{5,25})\b/i);
+      if (codeMatch && !/^\d{13}$/.test(codeMatch[1]) && !/^(?:ESP8266|ESP32|STM32)$/i.test(codeMatch[1])) {
         invoice_number = codeMatch[1];
         break;
       }
@@ -1478,9 +1511,9 @@ export function parseThaiReceiptOcr(ocrData: any, headerData: any = ''): ParsedR
   let grandTotalCandidate = 0;
 
   for (const l of summaryLines) {
-    // Priority 1: True Grand Total (ยอดรวมสุทธิ / ยอดเงินสุทธิ / ยอดสุทธิ / รวมทั้งสิ้น / TOTAL AMOUNT / GRAND TOTAL)
+    // Priority 1: True Grand Total (ยอดรวมสุทธิ / ยอดเงินสุทธิ / ยอดสุทธิ / รวมทั้งสิ้น / TOTAL AMOUNT / GRAND TOTAL / รวม CUSTOMER)
     if (grandTotalCandidate === 0) {
-      const grandMatch = l.match(/(?:ยอดรวมสุทธิ|ยอดเงินสุทธิ|ยอดสุทธิ|รวมทั้งสิ้น|จำนวนเงินทั้งสิ้น|ยอดชำระ|Grand\s*Total|Total\s*Amount|Net\s*Total)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
+      const grandMatch = l.match(/(?:ยอดรวมสุทธิ|ยอดเงินสุทธิ|ยอดสุทธิ|รวมทั้งสิ้น|จำนวนเงินทั้งสิ้น|ยอดชำระ|Grand\s*Total|Total\s*Amount|Net\s*Total|\bรวม\s+(?:CUSTOMER\s+)?|\bTOTAL\s+(?:CUSTOMER\s+)?)[^\d]*([\d,]+(?:\.\d{2}|\.-))/i);
       if (grandMatch) {
         grandTotalCandidate = parseFloat(grandMatch[1].replace(/\.-/, '.00').replace(/,/g, '')) || 0;
       }
