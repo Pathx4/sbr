@@ -10,21 +10,6 @@ export interface OcrExtractionResponse {
   engine: 'paddle' | 'tesseract';
 }
 
-/**
- * Convert a base64 Data URL to a Blob
- */
-function dataUrlToBlob(dataUrl: string): Blob {
-  const arr = dataUrl.split(',');
-  const mimeMatch = arr[0].match(/:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new Blob([u8arr], { type: mime });
-}
 
 /**
  * Send receipt image to PaddleOCR (PP-OCRv5) on backend with Bearer Auth
@@ -35,48 +20,31 @@ export async function extractWithPaddleOcr(
   onProgress?: (status: string, percent: number) => void,
   timeoutMs = 300000
 ): Promise<OcrResult & { parsed?: any }> {
-  let formData: FormData | null = null;
-  let jsonPayload: { image: string } | null = null;
-
+  // Convert image to Base64
+  let base64Image = '';
   if (typeof imageSource === 'string') {
-    if (imageSource.startsWith('data:')) {
-      const blob = dataUrlToBlob(imageSource);
-      formData = new FormData();
-      formData.append('file', blob, 'receipt.jpg');
-    } else {
-      jsonPayload = { image: imageSource };
-    }
-  } else if (imageSource instanceof File) {
-    formData = new FormData();
-    formData.append('file', imageSource, imageSource.name || 'receipt.jpg');
-  } else if (imageSource instanceof Blob) {
-    formData = new FormData();
-    formData.append('file', imageSource, 'receipt.jpg');
+    base64Image = imageSource;
+  } else if (imageSource instanceof File || imageSource instanceof Blob) {
+    base64Image = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(imageSource);
+    });
   }
 
   const authHeaders = getAuthHeaders();
 
-  if (onProgress) onProgress('กำลังส่งภาพและเชื่อมต่อ PaddleOCR AI (PP-OCRv5)...', 35);
+  if (onProgress) onProgress('กำลังส่งภาพและเชื่อมต่อ AI Vision LPU...', 40);
 
   try {
-    let response;
-    if (formData) {
-      response = await axios.post('/api/extract-bill', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          ...authHeaders,
-        },
-        timeout: timeoutMs,
-      });
-    } else {
-      response = await axios.post('/api/extract-bill', jsonPayload, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeaders,
-        },
-        timeout: timeoutMs,
-      });
-    }
+    const response = await axios.post('/api/extract-bill', { image: base64Image }, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      timeout: timeoutMs,
+    });
 
     if (onProgress) onProgress('PaddleOCR สแกนถอดข้อความสำเร็จ 100%', 95);
 
