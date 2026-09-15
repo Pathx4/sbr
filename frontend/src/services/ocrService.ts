@@ -69,7 +69,7 @@ export async function extractWithPaddleOcr(
       throw new Error('เซิร์ฟเวอร์ใช้เวลาประมวลผลนานเกินกำหนด กรุณากดลองใหม่อีกครั้ง');
     }
     const serverErr = err.response?.data?.error || err.response?.data?.message || err.message;
-    throw new Error(`ไม่สามารถเชื่อมต่อ PaddleOCR เซิร์ฟเวอร์ได้: ${serverErr}`);
+    throw new Error(`ไม่สามารถประมวลผลสแกนใบเสร็จได้: ${serverErr}`);
   }
 }
 

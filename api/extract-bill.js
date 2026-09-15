@@ -1,5 +1,5 @@
 // Vercel Serverless Function: /api/extract-bill
-// High-Speed Thai Receipt Extraction via Groq Vision LPU (Qwen 3.8 / 3.6 Vision)
+// High-Speed Thai Receipt Extraction via Groq Vision LPU (Llama 3.2 Vision / Qwen 3.8 & 3.6 / Scout) & Gemini Fallback
 
 export const config = {
   maxDuration: 60,
@@ -25,9 +25,11 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey && !geminiKey) {
     return res.status(500).json({
-      error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY ใน Environment Variables ของ Vercel (กรุณาไปที่ Project Settings > Environment Variables เพื่อเพิ่ม GROQ_API_KEY)',
+      error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY หรือ GEMINI_API_KEY ใน Environment Variables ของ Vercel (กรุณาไปที่ Project Settings > Environment Variables เพื่อเพิ่มคีย์)',
     });
   }
 
@@ -73,52 +75,159 @@ export default async function handler(req, res) {
 }
 ตอบเฉพาะ JSON เท่านั้น ไม่ต้องมีคำอธิบายอื่น`;
 
-    // Try primary model, fallback to secondary model if rate-limited
-    const modelsToTry = ['qwen/qwen3.8-27b', 'qwen/qwen3.6-27b'];
-    let lastError = null;
     let rawContent = null;
+    let usedEngine = 'groq';
+    let lastError = null;
 
-    for (const model of modelsToTry) {
+    if (apiKey) {
+      // Determine models to try on Groq
+      const explicitModel = process.env.GROQ_VISION_MODEL || process.env.GROQ_MODEL;
+      const knownVisionCandidates = [
+        'llama-3.2-11b-vision-preview',
+        'llama-3.2-90b-vision-preview',
+        'qwen/qwen3.6-27b',
+        'qwen/qwen3.8-27b',
+        'meta-llama/llama-4-scout-17b-16e-instruct',
+      ];
+
+      let availableModelIds = [];
       try {
-        const groqResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
+        const modelsResp = await fetch('https://api.groq.com/openai/v1/models', {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           },
-          body: JSON.stringify({
-            model: model,
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: prompt },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:image/jpeg;base64,${cleanBase64}`,
-                    },
-                  },
-                ],
-              },
-            ],
-            temperature: 0.1,
-            max_tokens: 2048,
-          }),
         });
-
-        if (groqResp.ok) {
-          const data = await groqResp.json();
-          rawContent = data.choices?.[0]?.message?.content;
-          if (rawContent) break;
-        } else {
-          const errText = await groqResp.text();
-          console.warn(`Groq model ${model} failed (${groqResp.status}):`, errText);
-          lastError = new Error(`Groq API Error (${groqResp.status}): ${errText}`);
+        if (modelsResp.ok) {
+          const modelsData = await modelsResp.json();
+          availableModelIds = (modelsData.data || []).map((m) => m.id);
+          console.log('[Groq Vision] Available models for this key:', availableModelIds);
         }
-      } catch (err) {
-        lastError = err;
+      } catch (fetchErr) {
+        console.warn('[Groq Vision] Could not fetch models list:', fetchErr.message);
+      }
+
+      // Build prioritized models list
+      const modelsToTry = [];
+      if (explicitModel) {
+        modelsToTry.push(explicitModel);
+      }
+
+      if (availableModelIds.length > 0) {
+        for (const candidate of knownVisionCandidates) {
+          if (availableModelIds.includes(candidate) && !modelsToTry.includes(candidate)) {
+            modelsToTry.push(candidate);
+          }
+        }
+        for (const id of availableModelIds) {
+          const lower = id.toLowerCase();
+          if ((lower.includes('vision') || lower.includes('scout') || lower.includes('vl')) && !modelsToTry.includes(id)) {
+            modelsToTry.push(id);
+          }
+        }
+      }
+
+      // Add remaining default candidates
+      for (const candidate of knownVisionCandidates) {
+        if (!modelsToTry.includes(candidate)) {
+          modelsToTry.push(candidate);
+        }
+      }
+
+      console.log('[Groq Vision] Trying models in order:', modelsToTry);
+
+      for (const model of modelsToTry) {
+        try {
+          const groqResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: prompt },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:image/jpeg;base64,${cleanBase64}`,
+                      },
+                    },
+                  ],
+                },
+              ],
+              temperature: 0.1,
+              max_tokens: 2048,
+            }),
+          });
+
+          if (groqResp.ok) {
+            const data = await groqResp.json();
+            rawContent = data.choices?.[0]?.message?.content;
+            if (rawContent) {
+              usedEngine = `groq (${model})`;
+              break;
+            }
+          } else {
+            const errText = await groqResp.text();
+            console.warn(`Groq model ${model} failed (${groqResp.status}):`, errText);
+            lastError = new Error(`Groq API Error (${groqResp.status}): ${errText}`);
+          }
+        } catch (err) {
+          lastError = err;
+        }
+      }
+    }
+
+    // Optional Google Gemini Fallback if Groq fails or rate limits
+    if (!rawContent && geminiKey) {
+      console.log('[Extract-Bill] Attempting Google Gemini fallback...');
+      const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+      for (const gModel of geminiModels) {
+        try {
+          const gResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: prompt },
+                    {
+                      inline_data: {
+                        mime_type: 'image/jpeg',
+                        data: cleanBase64,
+                      },
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.1,
+                response_mime_type: 'application/json',
+              },
+            }),
+          });
+
+          if (gResp.ok) {
+            const gData = await gResp.json();
+            rawContent = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawContent) {
+              usedEngine = `gemini (${gModel})`;
+              break;
+            }
+          } else {
+            const gErrText = await gResp.text();
+            console.warn(`Gemini model ${gModel} failed (${gResp.status}):`, gErrText);
+          }
+        } catch (gErr) {
+          console.warn(`Gemini model ${gModel} error:`, gErr.message);
+        }
       }
     }
 
@@ -174,7 +283,7 @@ export default async function handler(req, res) {
       words: [],
       rawText: rawTextLines.join('\n'),
       parsed: parsedData,
-      engine: 'groq-qwen-vision',
+      engine: usedEngine,
       success: true,
     });
   } catch (error) {
