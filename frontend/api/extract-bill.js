@@ -153,7 +153,7 @@ export default async function handler(req, res) {
   // 1. Check Gemini Vision First if configured
   if (geminiKey) {
     console.log('[Extract-Bill] Attempting Google Gemini Vision...');
-    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
     for (const gModel of geminiModels) {
       try {
         const gResp = await fetch(
