@@ -11,7 +11,8 @@ export const config = {
 };
 
 function cleanJsonString(str) {
-  let clean = str.trim();
+  if (!str) return '{}';
+  let clean = String(str).trim();
   if (clean.startsWith('```json')) {
     clean = clean.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
   } else if (clean.startsWith('```')) {
@@ -22,15 +23,21 @@ function cleanJsonString(str) {
 }
 
 function normalizeParsedReceipt(parsedData) {
+  if (!parsedData || typeof parsedData !== 'object') return;
   if (parsedData.total_amount) parsedData.total_amount = Number(parsedData.total_amount) || 0;
   if (parsedData.discount) parsedData.discount = Number(parsedData.discount) || 0;
   if (Array.isArray(parsedData.items)) {
     parsedData.items = parsedData.items.map((it) => ({
       ...it,
+      item_code: String(it.item_code || ''),
+      description: String(it.description || ''),
+      unit: String(it.unit || 'ชิ้น'),
       quantity: Number(it.quantity) || 1,
       unit_price: Number(it.unit_price) || 0,
       total_price: Number(it.total_price) || 0,
     }));
+  } else {
+    parsedData.items = [];
   }
 }
 
@@ -76,23 +83,54 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  if (!apiKey && !geminiKey) {
-    return res.status(500).json({
-      error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY หรือ GEMINI_API_KEY ใน Environment Variables ของ Vercel (กรุณาไปที่ Project Settings > Environment Variables เพื่อเพิ่มคีย์)',
+  // Safely parse request body regardless of whether Vercel passed object, string, or Buffer
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch (e) {
+      if (body.startsWith('data:image') || body.startsWith('/9j/')) {
+        body = { image: body };
+      } else {
+        body = { ocr_text: body };
+      }
+    }
+  } else if (Buffer.isBuffer(body)) {
+    const str = body.toString('utf-8');
+    try {
+      body = JSON.parse(str);
+    } catch (e) {
+      if (str.startsWith('data:image') || str.startsWith('/9j/')) {
+        body = { image: str };
+      } else {
+        body = { ocr_text: str };
+      }
+    }
+  }
+  body = body || {};
+
+  const ocrText = String(body.ocr_text || body.text || '').trim();
+  let base64Image = body.image || body.image_base64 || body.file || '';
+  if (typeof body === 'string' && (body.startsWith('data:image') || body.startsWith('/9j/'))) {
+    base64Image = body;
+  }
+
+  // If neither OCR text nor image was provided
+  if (!ocrText && !base64Image) {
+    return res.status(400).json({
+      error: 'ไม่พบข้อมูลรูปภาพ (image) หรือข้อความ (ocr_text) สำหรับประมวลผล',
     });
   }
 
   try {
-    const body = req.body || {};
-    const ocrText = (body.ocr_text || body.text || '').trim();
-
     // =========================================================================
     // MODE 1: OCR Text Structuring via Groq Llama 3.3 / Gemini Text Model
-    // Used when client extracted raw text via browser Tesseract or when requested
+    // Used when client extracted raw text via browser Tesseract
     // =========================================================================
     if (ocrText) {
       console.log('[Extract-Bill] Processing via OCR text structuring...');
-      const textPrompt = `กรุณาวิเคราะห์ข้อความที่สแกนได้จากใบเสร็จรับเงิน/ใบกำกับภาษีต่อไปนี้ และสรุปโครงสร้างข้อมูลเป็น JSON ตามรูปแบบนี้เท่านั้น:
+      const textPrompt = `You are a Thai receipt extraction expert.
+Analyze this Thai receipt text and output JSON matching this exact structure:
 {
   "vendor_name": "ชื่อร้านค้าหรือบริษัทผู้ออกใบเสร็จ",
   "invoice_number": "เลขที่ใบเสร็จหรือใบกำกับภาษี (ไม่ใช่ Tax ID)",
@@ -110,16 +148,16 @@ export default async function handler(req, res) {
     }
   ]
 }
-คำแนะนำ:
-1. หากคำในข้อความพิมพ์ติดกันหรือมีตัวสะกดเพี้ยน ให้แก้ไขเป็นภาษาไทยที่ถูกต้องสมบูรณ์
-2. รวมรายการสินค้าให้ครบทุกชิ้น และตรวจสอบยอดรวมตัวเลขให้สอดคล้องกัน
-3. ตอบเฉพาะ JSON เท่านั้น ไม่ต้องมีคำอธิบายอื่น
+Instructions:
+1. Fix any OCR spelling errors in Thai item names.
+2. Include all purchased items with quantities and prices.
+3. Respond ONLY with valid JSON. Do not include explanatory text.
 
-ข้อความจากใบเสร็จ:
+Receipt Text:
 ${ocrText}`;
 
       let parsedData = null;
-      let usedEngine = 'groq-text';
+      let usedEngine = 'local-text';
 
       if (apiKey) {
         const textModelsToTry = [
@@ -139,7 +177,13 @@ ${ocrText}`;
               },
               body: JSON.stringify({
                 model: tModel,
-                messages: [{ role: 'user', content: textPrompt }],
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'You output only valid JSON object matching the requested schema.',
+                  },
+                  { role: 'user', content: textPrompt },
+                ],
                 temperature: 0.1,
                 max_tokens: 2048,
                 response_format: { type: 'json_object' },
@@ -153,6 +197,9 @@ ${ocrText}`;
                 usedEngine = `groq-text (${tModel})`;
                 break;
               }
+            } else {
+              const errTxt = await tResp.text();
+              console.warn(`Groq text model ${tModel} status ${tResp.status}:`, errTxt);
             }
           } catch (tErr) {
             console.warn(`Groq text model ${tModel} failed:`, tErr.message);
@@ -197,21 +244,21 @@ ${ocrText}`;
           success: true,
         });
       }
+
+      // If text AI could not format it, return rawText with success: false so client uses local rule parser
+      return res.status(200).json({
+        words: [],
+        rawText: ocrText,
+        parsed: null,
+        engine: 'fallback-local',
+        success: false,
+        message: 'AI text formatting unavailable, using local client parser',
+      });
     }
 
     // =========================================================================
     // MODE 2: Vision AI Extraction via Image
     // =========================================================================
-    let base64Image = body.image || body.image_base64 || '';
-    if (typeof body === 'string' && body.startsWith('data:image')) {
-      base64Image = body;
-    }
-
-    if (!base64Image) {
-      return res.status(400).json({ error: 'ไม่พบข้อมูลรูปภาพหรือข้อความ OCR สำหรับประมวลผล' });
-    }
-
-    // Clean data URL prefix if needed
     let cleanBase64 = base64Image;
     if (cleanBase64.includes(',')) {
       cleanBase64 = cleanBase64.split(',')[1];
@@ -240,7 +287,7 @@ ${ocrText}`;
     let rawContent = null;
     let usedEngine = 'groq-vision';
 
-    // 1. Check Gemini Vision First if configured (fastest & most reliable for multimodal receipts)
+    // 1. Check Gemini Vision First if configured (Google AI Studio)
     if (geminiKey) {
       console.log('[Extract-Bill] Attempting Google Gemini Vision...');
       const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
@@ -278,7 +325,7 @@ ${ocrText}`;
       }
     }
 
-    // 2. Try Groq Vision if no content yet and apiKey is set
+    // 2. Try Groq Vision ONLY if a vision model is confirmed to exist for this API key
     if (!rawContent && apiKey) {
       let availableModelIds = [];
       try {
@@ -296,7 +343,6 @@ ${ocrText}`;
         console.warn('Could not fetch models list:', fErr.message);
       }
 
-      // Identify genuine vision-capable models that exist in availableModelIds
       const confirmedVisionModels = availableModelIds.filter((id) => {
         const l = id.toLowerCase();
         return l.includes('vision') || l.includes('scout') || l.includes('vl');
@@ -305,8 +351,6 @@ ${ocrText}`;
       if (process.env.GROQ_VISION_MODEL) {
         confirmedVisionModels.unshift(process.env.GROQ_VISION_MODEL);
       }
-
-      console.log('[Extract-Bill] Confirmed vision models on Groq:', confirmedVisionModels);
 
       for (const vModel of confirmedVisionModels) {
         try {
@@ -345,14 +389,14 @@ ${ocrText}`;
         }
       }
 
-      // If Groq has no active vision models in this account:
-      if (!rawContent && confirmedVisionModels.length === 0) {
-        console.log('[Extract-Bill] No active vision models on Groq account. Requesting client OCR fallback.');
+      // If no vision models exist or none succeeded on Groq:
+      if (!rawContent) {
+        console.log('[Extract-Bill] No active vision models on Groq account. Returning vision_unavailable.');
         return res.status(200).json({
           vision_unavailable: true,
           error: 'Groq API Key ในบัญชีนี้ไม่มีโมเดล Vision ที่เปิดใช้งาน',
-          available_models: availableModelIds.slice(0, 10),
-          tip: 'ระบบจะสลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ หรือเพิ่ม GEMINI_API_KEY ใน Vercel เพื่อความรวดเร็วสูงสุด',
+          available_models: availableModelIds.slice(0, 8),
+          tip: 'สลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
         });
       }
     }
@@ -361,7 +405,7 @@ ${ocrText}`;
       return res.status(200).json({
         vision_unavailable: true,
         error: 'โมเดล Vision บนคลาวด์ไม่พร้อมใช้งานชั่วคราว',
-        tip: 'ระบบจะสลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
+        tip: 'สลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
       });
     }
 
@@ -388,8 +432,11 @@ ${ocrText}`;
     });
   } catch (error) {
     console.error('OCR Extraction error:', error);
-    return res.status(500).json({
-      error: error.message || 'เกิดข้อผิดพลาดในการประมวลผลใบเสร็จด้วย AI',
+    // Return vision_unavailable status 200 instead of 500 to allow client fallback without throwing
+    return res.status(200).json({
+      vision_unavailable: true,
+      error: error.message || 'เกิดข้อผิดพลาดในการประมวลผลด้วย Vision AI',
+      tip: 'สลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
     });
   }
 }

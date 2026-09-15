@@ -137,6 +137,8 @@ export function getOcrModel(): OcrModelType {
   return currentModel;
 }
 
+let activeProgressCallback: ((pct: number) => void) | null = null;
+
 export async function initWorker(lang: string = 'tha+eng') {
   if (!workerPromise) {
     workerPromise = (async () => {
@@ -144,7 +146,10 @@ export async function initWorker(lang: string = 'tha+eng') {
       const logger = (m: any) => {
         const msg = typeof m === 'string' ? m : m?.message ?? '';
         if (msg.includes(NOISY_PARAM_WARNING)) return;
-        console.log('[Tesseract Neural]', m);
+        if (m && m.status === 'recognizing text' && typeof m.progress === 'number' && activeProgressCallback) {
+          const pct = Math.min(99, Math.max(1, Math.round(m.progress * 100)));
+          activeProgressCallback(pct);
+        }
       };
 
       const oem = currentModel === 'best' ? OEM.LSTM_ONLY : OEM.DEFAULT;
@@ -199,23 +204,28 @@ export async function runTesseract(
   onProgress?: (pct: number) => void,
   options?: { psm?: string }
 ): Promise<OcrResult> {
-  const w = await initWorker('tha+eng');
-  if (options?.psm) {
-    await w.setParameters({ tessedit_pageseg_mode: options.psm as any });
-  } else {
-    await w.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK as any });
+  activeProgressCallback = onProgress || null;
+  try {
+    const w = await initWorker('tha+eng');
+    if (options?.psm) {
+      await w.setParameters({ tessedit_pageseg_mode: options.psm as any });
+    } else {
+      await w.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_BLOCK as any });
+    }
+
+    const ret = await w.recognize(imageSource);
+    if (onProgress) onProgress(100);
+
+    const rawText = ret.data.text || '';
+    const words: OcrWord[] = ((ret.data as any).words || []).map((w: any) => ({
+      text: w.text,
+      bbox: { x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1 },
+    }));
+
+    return { words, rawText };
+  } finally {
+    activeProgressCallback = null;
   }
-
-  const ret = await w.recognize(imageSource);
-  if (onProgress) onProgress(100);
-
-  const rawText = ret.data.text || '';
-  const words: OcrWord[] = ((ret.data as any).words || []).map((w: any) => ({
-    text: w.text,
-    bbox: { x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1 },
-  }));
-
-  return { words, rawText };
 }
 
 export interface MultiPassItem {
