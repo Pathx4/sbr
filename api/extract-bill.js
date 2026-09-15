@@ -224,19 +224,26 @@ export default async function handler(req, res) {
         if (!targetModels.includes(process.env.GROQ_MODEL)) targetModels.push(process.env.GROQ_MODEL);
       }
 
-      // Identify vision-capable models in available list
+      // Official Groq Vision Models (from Groq Images and Vision documentation)
+      const officialVisionModels = ['qwen/qwen3.6-27b', 'qwen/qwen3.8-27b'];
+      for (const ovm of officialVisionModels) {
+        if (availableModelIds.includes(ovm) && !targetModels.includes(ovm)) {
+          targetModels.push(ovm);
+        }
+      }
+
+      // Identify any other vision-capable models in available list
       const visionModels = availableModelIds.filter((id) => {
         const l = id.toLowerCase();
-        return l.includes('vision') || l.includes('scout') || l.includes('vl');
+        return l.includes('qwen') || l.includes('vision') || l.includes('scout') || l.includes('vl');
       });
       for (const vm of visionModels) {
         if (!targetModels.includes(vm)) targetModels.push(vm);
       }
 
+      // If availableModelIds didn't match but user provided apiKey, try official models
       if (targetModels.length === 0) {
-        return res.status(400).json({
-          error: `บัญชี Groq นี้ไม่มีโมเดล Vision ที่เปิดใช้งาน (โมเดลในบัญชีของคุณ: ${availableModelIds.slice(0, 6).join(', ')}) กรุณาใช้โหมด DeepScan 5.0 ในเครื่อง หรือเพิ่ม GEMINI_API_KEY ใน Vercel`,
-        });
+        targetModels.push('qwen/qwen3.6-27b', 'qwen/qwen3.8-27b');
       }
 
       // Call ONLY confirmed vision models that actually exist
