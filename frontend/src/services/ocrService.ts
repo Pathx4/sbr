@@ -1,7 +1,6 @@
 // frontend/src/services/ocrService.ts
 import axios from 'axios';
-import { runTesseract, type OcrWord, type OcrResult } from '../utils/tesseractWorker';
-import { preprocessImageForOcr, parseThaiReceiptOcr } from '../utils/imageOcrOptimizer';
+import { type OcrWord, type OcrResult } from '../utils/tesseractWorker';
 import { getAuthHeaders } from '../utils/auth';
 
 export interface OcrExtractionResponse {
@@ -85,25 +84,23 @@ export async function compressImageForUpload(imageSource: File | Blob | string):
 }
 
 /**
- * Send receipt image to AI Vision with automatic, resilient
- * in-browser DeepScan OCR + AI text structuring fallback if Cloud Vision is unavailable.
+ * Send receipt image directly to Cloud Vision AI (Groq / Gemini).
+ * NOTE: As requested by the user, if connection fails, DO NOT switch modes.
+ * Report the exact connection error directly so the user is in control.
  */
 export async function extractWithPaddleOcr(
   imageSource: File | Blob | string,
   onProgress?: (status: string, percent: number) => void,
-  _timeoutMs = 300000
+  _timeoutMs = 60000
 ): Promise<OcrResult & { parsed?: any }> {
   const authHeaders = getAuthHeaders();
 
-  if (onProgress) onProgress('กำลังเตรียมรูปภาพและเชื่อมต่อระบบ AI ประมวลผล...', 15);
+  if (onProgress) onProgress('กำลังเตรียมรูปภาพและเชื่อมต่อระบบ AI ประมวลผล...', 25);
 
-  // Compress image to ~300KB to prevent payload errors on Vercel
+  // Compress image to ~300KB to avoid Vercel payload limit issues
   const base64Image = await compressImageForUpload(imageSource);
 
-  if (onProgress) onProgress('กำลังส่งภาพเชื่อมต่อ AI วิเคราะห์ใบเสร็จ...', 25);
-
-  let needBrowserOcrFallback = false;
-  let fallbackReason = '';
+  if (onProgress) onProgress('กำลังส่งภาพเชื่อมต่อระบบ AI ประมวลผลใบเสร็จ...', 60);
 
   try {
     const response = await axios.post(
@@ -118,99 +115,30 @@ export async function extractWithPaddleOcr(
       }
     );
 
-    // 1. Success with parsed data or words from server Vision AI!
-    if (response.data && !response.data.vision_unavailable) {
-      if (Array.isArray(response.data.words) || response.data.parsed) {
-        if (onProgress) onProgress('AI สแกนถอดข้อความสำเร็จ 100%', 95);
-        const rawText = response.data.rawText || (response.data.words || []).map((w: any) => w.text).join('\n');
-        return {
-          words: (response.data.words || []).map((w: any) => ({
-            text: w.text || '',
-            bbox: w.bbox || { x0: 0, y0: 0, x1: 0, y1: 0 },
-          })),
-          rawText,
-          parsed: response.data.parsed || undefined,
-        };
-      }
+    if (response.data?.parsed) {
+      if (onProgress) onProgress('AI สแกนถอดข้อความสำเร็จ 100%', 100);
+      const rawText = response.data.rawText || (response.data.words || []).map((w: any) => w.text).join('\n');
+      return {
+        words: (response.data.words || []).map((w: any) => ({
+          text: w.text || '',
+          bbox: w.bbox || { x0: 0, y0: 0, x1: 0, y1: 0 },
+        })),
+        rawText,
+        parsed: response.data.parsed,
+      };
     }
 
-    // 2. Server responded that vision model is unavailable on this API key/provider
-    if (response.data?.vision_unavailable) {
-      needBrowserOcrFallback = true;
-      fallbackReason = response.data.error || 'โมเดล Vision ไม่พร้อมใช้งาน';
-    }
+    throw new Error(response.data?.error || 'เซิร์ฟเวอร์ AI ไม่ส่งคืนข้อมูลใบเสร็จ');
   } catch (err: any) {
     if (err.response?.status === 401) {
       throw new Error('เซสชันการเข้าสู่ระบบหมดอายุ กรุณาเข้าสู่ระบบใหม่');
     }
-    // If server returned 400, 404, 500, or network error: smoothly fallback to browser OCR
-    console.warn('[OCR Service] Server vision processing encountered error, activating browser OCR fallback:', err.message);
-    needBrowserOcrFallback = true;
-    fallbackReason = err.response?.data?.error || err.message;
+    const errorMsg = err.response?.data?.error || err.message || 'ไม่สามารถเชื่อมต่อระบบ Cloud AI ได้';
+    console.error('[OCR Service] Error:', errorMsg);
+    // User explicitly requested: "เชื่อมต่อไม่ได้ก็ไม่ต้องสลับโหมดให้"
+    // Stop immediately and throw error so the user sees the real reason
+    throw new Error(errorMsg);
   }
-
-  // =========================================================================
-  // AUTOMATIC CLIENT-SIDE TESSERACT + CLOUD AI STRUCTURING FALLBACK
-  // =========================================================================
-  if (needBrowserOcrFallback) {
-    console.log('[OCR Service] Initiating browser OCR + AI structuring fallback. Reason:', fallbackReason);
-    if (onProgress) onProgress('สลับไปอ่านตัวอักษรในเบราว์เซอร์...', 35);
-
-    let ocrResult: OcrResult;
-    try {
-      // 1. Preprocess & run client-side Tesseract OCR
-      const preprocessedUrl = await preprocessImageForOcr(imageSource as any, 'grayscale');
-      ocrResult = await runTesseract(preprocessedUrl, (pct) => {
-        const displayPct = Math.min(84, Math.round(35 + pct * 0.49));
-        if (onProgress) onProgress(`กำลังสแกนตัวอักษรในเบราว์เซอร์... ${displayPct}%`, displayPct);
-      });
-    } catch (ocrErr: any) {
-      console.warn('[OCR Service] Browser Tesseract error, attempting raw image parse:', ocrErr);
-      ocrResult = { words: [], rawText: '' };
-    }
-
-    if (onProgress) onProgress('กำลังให้ AI วิเคราะห์จัดตารางข้อมูลและคำนวณยอดเงิน...', 85);
-
-    // 2. Send extracted raw text to server for fast LLM structuring (Llama 3.3 / Gemini)
-    let aiParsed: any = null;
-    if (ocrResult.rawText && ocrResult.rawText.trim().length > 0) {
-      try {
-        const textResponse = await axios.post(
-          '/api/extract-bill',
-          { ocr_text: ocrResult.rawText },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              ...authHeaders,
-            },
-            timeout: 25000,
-          }
-        );
-
-        if (textResponse.data?.success && textResponse.data?.parsed) {
-          aiParsed = textResponse.data.parsed;
-          console.log('[OCR Service] Successfully structured raw OCR text via Cloud AI:', textResponse.data.engine);
-        }
-      } catch (llmErr) {
-        console.warn('[OCR Service] Cloud text structuring unavailable, using local rule parser:', llmErr);
-      }
-    }
-
-    // 3. If AI structuring succeeded, use it; otherwise fallback to local rule-based Thai parser
-    const finalParsed = aiParsed && Array.isArray(aiParsed.items) && aiParsed.items.length > 0
-      ? aiParsed
-      : parseThaiReceiptOcr(ocrResult.rawText);
-
-    if (onProgress) onProgress('ประมวลผลใบเสร็จสำเร็จ 100%', 100);
-
-    return {
-      words: ocrResult.words,
-      rawText: ocrResult.rawText,
-      parsed: finalParsed,
-    };
-  }
-
-  throw new Error('ไม่สามารถประมวลผลการสแกนใบเสร็จได้ โปรดลองใหม่อีกครั้ง');
 }
 
 /**

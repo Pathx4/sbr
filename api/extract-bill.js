@@ -1,5 +1,5 @@
 // Vercel Serverless Function: /api/extract-bill
-// Hybrid Thai Receipt Extraction: Groq Vision / Gemini Vision / Groq Llama 3.3 Text Parser
+// Direct Groq / Gemini Vision AI Extraction (No decommissioned models, no guessing)
 
 export const config = {
   maxDuration: 60,
@@ -75,7 +75,6 @@ export default async function handler(req, res) {
       groq_configured: Boolean(apiKey),
       gemini_configured: Boolean(geminiKey),
       available_groq_models: groqModels,
-      supported_modes: ['image_vision', 'ocr_text_structuring'],
     });
   }
 
@@ -83,7 +82,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Safely parse request body regardless of whether Vercel passed object, string, or Buffer
+  if (!apiKey && !geminiKey) {
+    return res.status(500).json({
+      error: 'ยังไม่ได้ตั้งค่า GROQ_API_KEY หรือ GEMINI_API_KEY ใน Environment Variables ของ Vercel (กรุณาไปที่ Project Settings > Environment Variables เพื่อเพิ่มคีย์)',
+    });
+  }
+
+  // Parse request body safely
   let body = req.body;
   if (typeof body === 'string') {
     try {
@@ -91,8 +96,6 @@ export default async function handler(req, res) {
     } catch (e) {
       if (body.startsWith('data:image') || body.startsWith('/9j/')) {
         body = { image: body };
-      } else {
-        body = { ocr_text: body };
       }
     }
   } else if (Buffer.isBuffer(body)) {
@@ -102,169 +105,28 @@ export default async function handler(req, res) {
     } catch (e) {
       if (str.startsWith('data:image') || str.startsWith('/9j/')) {
         body = { image: str };
-      } else {
-        body = { ocr_text: str };
       }
     }
   }
   body = body || {};
 
-  const ocrText = String(body.ocr_text || body.text || '').trim();
   let base64Image = body.image || body.image_base64 || body.file || '';
   if (typeof body === 'string' && (body.startsWith('data:image') || body.startsWith('/9j/'))) {
     base64Image = body;
   }
 
-  // If neither OCR text nor image was provided
-  if (!ocrText && !base64Image) {
+  if (!base64Image) {
     return res.status(400).json({
-      error: 'ไม่พบข้อมูลรูปภาพ (image) หรือข้อความ (ocr_text) สำหรับประมวลผล',
+      error: 'ไม่พบข้อมูลรูปภาพ (image) สำหรับประมวลผล',
     });
   }
 
-  try {
-    // =========================================================================
-    // MODE 1: OCR Text Structuring via Groq Llama 3.3 / Gemini Text Model
-    // Used when client extracted raw text via browser Tesseract
-    // =========================================================================
-    if (ocrText) {
-      console.log('[Extract-Bill] Processing via OCR text structuring...');
-      const textPrompt = `You are a Thai receipt extraction expert.
-Analyze this Thai receipt text and output JSON matching this exact structure:
-{
-  "vendor_name": "ชื่อร้านค้าหรือบริษัทผู้ออกใบเสร็จ",
-  "invoice_number": "เลขที่ใบเสร็จหรือใบกำกับภาษี (ไม่ใช่ Tax ID)",
-  "invoice_date": "วันที่ในใบเสร็จ (แปลงเป็นรูปแบบไทย เช่น 04/06/2569 หรือ วัน/เดือน/ปี)",
-  "discount": 0.0,
-  "total_amount": 0.0,
-  "items": [
-    {
-      "item_code": "รหัสสินค้าหรือบาร์โค้ดถ้ามี",
-      "description": "ชื่อรายการสินค้าหรือพัสดุ",
-      "quantity": 1,
-      "unit": "หน่วยนับ (เช่น ชิ้น, กล่อง, แพ็ค, ม้วน, แท่ง, เมตร)",
-      "unit_price": 0.0,
-      "total_price": 0.0
-    }
-  ]
-}
-Instructions:
-1. Fix any OCR spelling errors in Thai item names.
-2. Include all purchased items with quantities and prices.
-3. Respond ONLY with valid JSON. Do not include explanatory text.
+  let cleanBase64 = base64Image;
+  if (cleanBase64.includes(',')) {
+    cleanBase64 = cleanBase64.split(',')[1];
+  }
 
-Receipt Text:
-${ocrText}`;
-
-      let parsedData = null;
-      let usedEngine = 'local-text';
-
-      if (apiKey) {
-        const textModelsToTry = [
-          'llama-3.3-70b-versatile',
-          'llama-3.1-8b-instant',
-          'qwen-2.5-32b',
-          'mixtral-8x7b-32768',
-        ];
-        for (const tModel of textModelsToTry) {
-          try {
-            const tResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-              },
-              body: JSON.stringify({
-                model: tModel,
-                messages: [
-                  {
-                    role: 'system',
-                    content: 'You output only valid JSON object matching the requested schema.',
-                  },
-                  { role: 'user', content: textPrompt },
-                ],
-                temperature: 0.1,
-                max_tokens: 2048,
-                response_format: { type: 'json_object' },
-              }),
-            });
-            if (tResp.ok) {
-              const tData = await tResp.json();
-              const content = tData.choices?.[0]?.message?.content;
-              if (content) {
-                parsedData = JSON.parse(cleanJsonString(content));
-                usedEngine = `groq-text (${tModel})`;
-                break;
-              }
-            } else {
-              const errTxt = await tResp.text();
-              console.warn(`Groq text model ${tModel} status ${tResp.status}:`, errTxt);
-            }
-          } catch (tErr) {
-            console.warn(`Groq text model ${tModel} failed:`, tErr.message);
-          }
-        }
-      }
-
-      if (!parsedData && geminiKey) {
-        // Fallback to Gemini text
-        try {
-          const gResp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: textPrompt }] }],
-                generationConfig: { temperature: 0.1, response_mime_type: 'application/json' },
-              }),
-            }
-          );
-          if (gResp.ok) {
-            const gData = await gResp.json();
-            const gText = gData.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (gText) {
-              parsedData = JSON.parse(cleanJsonString(gText));
-              usedEngine = 'gemini-text';
-            }
-          }
-        } catch (gErr) {
-          console.warn('Gemini text fallback error:', gErr.message);
-        }
-      }
-
-      if (parsedData) {
-        normalizeParsedReceipt(parsedData);
-        return res.status(200).json({
-          words: [],
-          rawText: ocrText,
-          parsed: parsedData,
-          engine: usedEngine,
-          success: true,
-        });
-      }
-
-      // If text AI could not format it, return rawText with success: false so client uses local rule parser
-      return res.status(200).json({
-        words: [],
-        rawText: ocrText,
-        parsed: null,
-        engine: 'fallback-local',
-        success: false,
-        message: 'AI text formatting unavailable, using local client parser',
-      });
-    }
-
-    // =========================================================================
-    // MODE 2: Vision AI Extraction via Image
-    // =========================================================================
-    let cleanBase64 = base64Image;
-    if (cleanBase64.includes(',')) {
-      cleanBase64 = cleanBase64.split(',')[1];
-    }
-
-    const visionPrompt = `กรุณาอ่านข้อมูลจากรูปใบเสร็จนี้อย่างละเอียด และสรุปเป็น JSON ตามโครงสร้างนี้เท่านั้น:
+  const visionPrompt = `กรุณาอ่านข้อมูลจากรูปใบเสร็จนี้อย่างละเอียด และสรุปเป็น JSON ตามโครงสร้างนี้เท่านั้น:
 {
   "vendor_name": "ชื่อร้านค้าหรือบริษัทผู้ออกใบเสร็จ",
   "invoice_number": "เลขที่ใบเสร็จหรือใบกำกับภาษี",
@@ -284,75 +146,101 @@ ${ocrText}`;
 }
 ตอบเฉพาะ JSON เท่านั้น ไม่ต้องมีคำอธิบายอื่น`;
 
-    let rawContent = null;
-    let usedEngine = 'groq-vision';
+  let rawContent = null;
+  let usedEngine = '';
+  let lastErrorMsg = '';
 
-    // 1. Check Gemini Vision First if configured (Google AI Studio)
-    if (geminiKey) {
-      console.log('[Extract-Bill] Attempting Google Gemini Vision...');
-      const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
-      for (const gModel of geminiModels) {
-        try {
-          const gResp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${geminiKey}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [
-                      { text: visionPrompt },
-                      { inline_data: { mime_type: 'image/jpeg', data: cleanBase64 } },
-                    ],
-                  },
-                ],
-                generationConfig: { temperature: 0.1, response_mime_type: 'application/json' },
-              }),
-            }
-          );
-          if (gResp.ok) {
-            const gData = await gResp.json();
-            rawContent = gData.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (rawContent) {
-              usedEngine = `gemini-vision (${gModel})`;
-              break;
-            }
+  // 1. Check Gemini Vision First if configured
+  if (geminiKey) {
+    console.log('[Extract-Bill] Attempting Google Gemini Vision...');
+    const geminiModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    for (const gModel of geminiModels) {
+      try {
+        const gResp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${geminiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: visionPrompt },
+                    { inline_data: { mime_type: 'image/jpeg', data: cleanBase64 } },
+                  ],
+                },
+              ],
+              generationConfig: { temperature: 0.1, response_mime_type: 'application/json' },
+            }),
           }
-        } catch (gErr) {
-          console.warn(`Gemini vision model ${gModel} failed:`, gErr.message);
+        );
+        if (gResp.ok) {
+          const gData = await gResp.json();
+          rawContent = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawContent) {
+            usedEngine = `gemini-vision (${gModel})`;
+            break;
+          }
+        } else {
+          const gErrText = await gResp.text();
+          console.warn(`Gemini vision ${gModel} failed (${gResp.status}):`, gErrText);
         }
+      } catch (gErr) {
+        console.warn(`Gemini vision ${gModel} error:`, gErr.message);
       }
     }
+  }
 
-    // 2. Try Groq Vision ONLY if a vision model is confirmed to exist for this API key
-    if (!rawContent && apiKey) {
-      let availableModelIds = [];
-      try {
-        const modelsResp = await fetch('https://api.groq.com/openai/v1/models', {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          },
-        });
-        if (modelsResp.ok) {
-          const mData = await modelsResp.json();
-          availableModelIds = (mData.data || []).map((m) => m.id);
-        }
-      } catch (fErr) {
-        console.warn('Could not fetch models list:', fErr.message);
+  // 2. Groq Vision: Only use confirmed, existing vision models to prevent any 400/404 decommission errors
+  if (!rawContent && apiKey) {
+    let availableModelIds = [];
+    try {
+      const modelsResp = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        },
+      });
+      if (modelsResp.ok) {
+        const mData = await modelsResp.json();
+        availableModelIds = (mData.data || []).map((m) => m.id);
+      } else {
+        const mErr = await modelsResp.text();
+        lastErrorMsg = `Groq API Key ผิดพลาด (${modelsResp.status}): ${mErr}`;
+      }
+    } catch (fErr) {
+      lastErrorMsg = `ไม่สามารถเชื่อมต่อ Groq API: ${fErr.message}`;
+    }
+
+    if (availableModelIds.length > 0) {
+      // Find models that exist on this specific Groq key and support vision
+      const targetModels = [];
+
+      // Check environment variable preference if specified
+      if (process.env.GROQ_VISION_MODEL && availableModelIds.includes(process.env.GROQ_VISION_MODEL)) {
+        targetModels.push(process.env.GROQ_VISION_MODEL);
+      }
+      if (process.env.GROQ_MODEL && availableModelIds.includes(process.env.GROQ_MODEL)) {
+        if (!targetModels.includes(process.env.GROQ_MODEL)) targetModels.push(process.env.GROQ_MODEL);
       }
 
-      const confirmedVisionModels = availableModelIds.filter((id) => {
+      // Identify vision-capable models in available list
+      const visionModels = availableModelIds.filter((id) => {
         const l = id.toLowerCase();
         return l.includes('vision') || l.includes('scout') || l.includes('vl');
       });
-
-      if (process.env.GROQ_VISION_MODEL) {
-        confirmedVisionModels.unshift(process.env.GROQ_VISION_MODEL);
+      for (const vm of visionModels) {
+        if (!targetModels.includes(vm)) targetModels.push(vm);
       }
 
-      for (const vModel of confirmedVisionModels) {
+      if (targetModels.length === 0) {
+        return res.status(400).json({
+          error: `บัญชี Groq นี้ไม่มีโมเดล Vision ที่เปิดใช้งาน (โมเดลในบัญชีของคุณ: ${availableModelIds.slice(0, 6).join(', ')}) กรุณาใช้โหมด DeepScan 5.0 ในเครื่อง หรือเพิ่ม GEMINI_API_KEY ใน Vercel`,
+        });
+      }
+
+      // Call ONLY confirmed vision models that actually exist
+      for (const vModel of targetModels) {
         try {
           const groqResp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -383,33 +271,26 @@ ${ocrText}`;
               usedEngine = `groq-vision (${vModel})`;
               break;
             }
+          } else {
+            const errText = await groqResp.text();
+            console.warn(`Groq model ${vModel} error:`, errText);
+            lastErrorMsg = `Groq API Error (${groqResp.status}): ${errText}`;
           }
         } catch (vErr) {
-          console.warn(`Groq vision model ${vModel} error:`, vErr.message);
+          lastErrorMsg = vErr.message;
         }
       }
-
-      // If no vision models exist or none succeeded on Groq:
-      if (!rawContent) {
-        console.log('[Extract-Bill] No active vision models on Groq account. Returning vision_unavailable.');
-        return res.status(200).json({
-          vision_unavailable: true,
-          error: 'Groq API Key ในบัญชีนี้ไม่มีโมเดล Vision ที่เปิดใช้งาน',
-          available_models: availableModelIds.slice(0, 8),
-          tip: 'สลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
-        });
-      }
     }
+  }
 
-    if (!rawContent) {
-      return res.status(200).json({
-        vision_unavailable: true,
-        error: 'โมเดล Vision บนคลาวด์ไม่พร้อมใช้งานชั่วคราว',
-        tip: 'สลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
-      });
-    }
+  if (!rawContent) {
+    return res.status(500).json({
+      error: lastErrorMsg || 'ไม่สามารถประมวลผลสแกนใบเสร็จผ่านระบบ Cloud Vision AI ได้',
+    });
+  }
 
-    // Parse and normalize JSON
+  // Parse and normalize JSON
+  try {
     const parsedData = JSON.parse(cleanJsonString(rawContent));
     normalizeParsedReceipt(parsedData);
 
@@ -430,13 +311,9 @@ ${ocrText}`;
       engine: usedEngine,
       success: true,
     });
-  } catch (error) {
-    console.error('OCR Extraction error:', error);
-    // Return vision_unavailable status 200 instead of 500 to allow client fallback without throwing
-    return res.status(200).json({
-      vision_unavailable: true,
-      error: error.message || 'เกิดข้อผิดพลาดในการประมวลผลด้วย Vision AI',
-      tip: 'สลับไปอ่านตัวอักษรในเบราว์เซอร์อัตโนมัติ',
+  } catch (parseErr) {
+    return res.status(500).json({
+      error: `ถอดรหัสข้อมูล JSON จากโมเดล AI ล้มเหลว: ${parseErr.message}`,
     });
   }
 }
